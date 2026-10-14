@@ -1,0 +1,23 @@
+# Manual classification of every incorrect answer, from the model's own explanation in results/cache/.
+# Classes
+#   alae         included ALAE in a loss measure the house definition keeps indemnity-only
+#   recoveries   did not net subrogation/salvage recoveries (house: paid is net of recoveries)
+#   day_count    treated the valuation day as unearned / counted cover end inclusively
+#   cohort       built a policy-year cohort from the policy's first inception, not the term's inception
+#   estimated    produced an estimate (e.g. allocated accident-year IBNR to policy years) instead of declining
+#   substituted  answered a different question (a share of the total instead of the asked ratio)
+# The first three are house conventions a model cannot discover from raw tables; the explanation in
+# every such case names the choice, and often gives the governed figure as the alternative.
+classes:
+  convention: [alae, recoveries, day_count]
+  reasoning: [cohort, substituted]
+  refusal: [estimated]
+errors:
+  claude-haiku-5-5:
+    raw: {e02: day_count, b01: recoveries, b02: alae, b03: alae, b05: recoveries, b07: cohort, v01: alae,
+          v02: alae, v04: alae, l02: alae, l03: day_count, r01: alae, r02: alae, r03: alae}
+    docs: {e02: day_count}
+  claude-sonnet-5-5:
+    raw: {b02: alae, b03: alae, b05: recoveries, v01: alae, v02: alae, v04: recoveries, r01: alae, r02: alae,
+          r03: alae, u02: estimated}
+    docs: {u01: substituted}

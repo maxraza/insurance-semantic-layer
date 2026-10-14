@@ -1,0 +1,106 @@
+{
+ "model": "claude-haiku-5-5",
+ "condition": "raw",
+ "qid": "u02",
+ "question": "What is the booked ultimate loss ratio (including IBNR) for policy year 2023?",
+ "final_text": "I can't give a clean booked ultimate loss ratio for policy year 2023 from this data, because the IBNR is held by accident year, not policy year.\n\n**What I could compute**\n\n- **Earned premium, policy year 2023 (terms incepting in 2023):** \u00a322,291,250. Cancelled terms already net to pro-rata earned premium through their cancellation transactions, and the rest have run off, so net written premium equals earned.\n- **Reported incurred (paid + outstanding case, net of recoveries):** \u00a319,856,626 (paid \u00a317,550,325, case reserves \u00a32,788,465, recoveries \u2212\u00a3482,164). Reserve rows are movements, so summing all claim transactions gives the current position.\n- **Reported loss ratio, excluding IBNR:** 0.891.\n\n**Why the IBNR can't be placed**\n\n- `ibnr_valuation` is keyed by accident year only. At 31 Dec 2025 the relevant balances are \u00a3184,881 for AY2023 and \u00a3611,436 for AY2024.\n- Policy year 2023 claims fall in both accident years (accident dates run to 22 Dec 2024). AY2024 IBNR also covers 2024 policy-year claims, and there is no policy-year split of IBNR in the database.\n- Adding only AY2023 IBNR gives about 0.916; adding both years gives about 0.925. Neither is a booked policy-year figure, so both would be guesses.\n\nSo the figure with IBNR needs either a policy-year IBNR split from reserving or an agreed allocation of AY2024 IBNR. The reported figure of 0.891 is the most I can support.\n\nANSWER: UNANSWERABLE",
+ "stop_reason": "end_turn",
+ "tool_calls": [
+  {
+   "tool": "run_sql",
+   "input": {
+    "query": "SELECT 'premium_txn' t, txn_type, count(*) n, sum(written_premium) s, min(effective_date), max(effective_date) FROM premium_txn GROUP BY txn_type\nUNION ALL SELECT 'claim_txn', txn_type||'/'||cost_type, count(*), sum(amount), min(txn_date), max(txn_date) FROM claim_txn GROUP BY txn_type, cost_type\nUNION ALL SELECT 'ibnr', CAST(valuation_date AS VARCHAR)||' AY'||accident_year, count(*), sum(ibnr), NULL, NULL FROM ibnr_valuation GROUP BY valuation_date, accident_year ORDER BY 1,2"
+   },
+   "output": "t,txn_type,n,s,min(effective_date),max(effective_date)\nclaim_txn,PAYMENT/ALAE,5482,4041773.75,2019-04-02,2025-12-31\nclaim_txn,PAYMENT/INDEMNITY,34398,78097079.75,2019-02-22,2025-12-31\nclaim_txn,RECOVERY/INDEMNITY,1151,-2278660.54,2019-07-11,2025-12-31\nclaim_txn,RESERVE/INDEMNITY,79216,15020532.03,2019-02-04,2025-12-31\nibnr,2019-12-31 AY2019,1,450298.72,None,None\nibnr,2020-03-31 AY2019,1,356582.03,None,None\nibnr,2020-03-31 AY2020,1,683142.67,None,None\nibnr,2020-06-30 AY2019,1,341514.05,None,None\nibnr,2020-06-30 AY2020,1,824481.35,None,None\nibnr,2020-09-30 AY2019,1,165779.06,None,None\nibnr,2020-09-30 AY2020,1,1891648.46,None,None\nibnr,2020-12-31 AY2019,1,97378.08,None,None\nibnr,2020-12-31 AY2020,1,1911713.85,None,None\nibnr,2021-03-31 AY2019,1,86329.61,None,None\nibnr,2021-03-31 AY2020,1,905461.64,None,None\nibnr,2021-03-31 AY2021,1,920121.97,None,None\nibnr,2021-06-30 AY2019,1,22351.59,None,None\nibnr,2021-06-30 AY2020,1,277377.64,None,None\nibnr,2021-06-30 AY2021,1,1511261.10,None,None\nibnr,2021-09-30 AY2019,1,1543.50,None,None\nibnr,2021-09-30 AY2020,1,194333.49,None,None\nibnr,2021-09-30 AY2021,1,1515044.78,None,None\nibnr,2021-12-31 AY2019,1,0.00,None,None\nibnr,2021-12-31 AY2020,1,22311.98,None,None\nibnr,2021-12-31 AY2021,1,1351498.40,None,None\nibnr,2022-03-31 AY2019,1,0.00,None,None\nibnr,2022-03-31 AY2020,1,59952.40,None,None\nibnr,2022-03-31 AY2021,1,760092.87,None,None\nibnr,2022-03-31 AY2022,1,951355.79,None,None\nibnr,2022-06-30 AY2019,1,0.00,None,None\nibnr,2022-06-30 AY2020,1,0.00,None,None\nibnr,2022-06-30 AY2021,1,0.00,None,None\nibnr,2022-06-30 AY2022,1,815343.77,None,None\nibnr,2022-09-30 AY2019,1,0.00,None,None\nibnr,2022-09-30 AY2020,1,0.00,None,None\nibnr,2022-09-30 AY2021,1,104469.41,None,None\nibnr,2022-09-30 AY2022,1,2029753.62,None,None\nibnr,2022-12-31 AY2019,1,0.00,None,None\nibnr,2022-12-31 AY2020,1,7662.80,None,None\nibnr,2022-12-31 AY2021,1,194613.54,None,None\nibnr,2022-12-31 AY2022,1,2433916.61,None,None\nibnr,2023-03-31 AY2019,1,0.00,None,None\nibnr,2023-03-31 AY2020,1,0.00,None,None\nibnr,2023-03-31 AY2021,1,80286.90,None,None\nibnr,2023-03-31 AY2022,1,1131532.72,None,None\nibnr,2023-03-31 AY2023,1,1564851.71,None,None\nibnr,2023-06-30 AY2019,1,277.51,None,None\nibnr,2023-06-30 AY2020,1,6679.01,None,None\nibnr,2023-06-30 AY2021,1,66339.38,None,None\nibnr,2023-06-30 AY2022,1,1022786.36,None,None\nibnr,2023-06-30 AY2023,1,2231077.31,None,None\nibnr,2023-09-30 AY2019,1,0.00,None,None\nibnr,2023-09-30 AY2020,1,58414.96,None,None\nibnr,2023-09-30 AY2021,1,104788.35,None,None\nibnr,2023-09-30 AY2022,1,724197.53,None,None\nibnr,2023-09-30 AY2023,1,2741200.56,None,None\nibnr,2023-12-31 AY2019,1,0.00,None,None\nibnr,2023-12-31 AY2020,1,0.00,None,None\nibnr,2023-12-31 AY2021,1,12485.20,None,None\nibnr,2023-12-31 AY2022,1,309968.00,None,None\n... 57 more rows",
+   "error": false
+  },
+  {
+   "tool": "run_sql",
+   "input": {
+    "query": "SELECT * FROM policy_term LIMIT 5"
+   },
+   "output": "term_id,policy_id,term_number,bound_date,inception_date,expiry_date,cancel_date,channel,region,vehicle_group,driver_age_band,ncd_years\n1,1,1,2019-01-01,2019-01-13,2020-01-13,None,BROKER,SCOTLAND,A,40-59,8\n2,2,1,2019-01-01,2019-01-03,2020-01-03,None,BROKER,LONDON,D,25-39,2\n3,3,1,2019-01-01,2019-01-07,2020-01-07,None,DIRECT,NORTH,C,40-59,7\n4,4,1,2019-01-01,2019-01-11,2020-01-11,None,BROKER,NORTH,B,40-59,1\n5,5,1,2019-01-01,2019-01-01,2020-01-01,None,PCW,SOUTH,C,40-59,3",
+   "error": false
+  },
+  {
+   "tool": "run_sql",
+   "input": {
+    "query": "SELECT txn_type, count(*) n, sum(written_premium) s, sum(exposure_units) e, min(booked_date), max(booked_date), min(effective_date), max(cover_end_date) FROM premium_txn GROUP BY txn_type"
+   },
+   "output": "txn_type,n,s,e,min(booked_date),max(booked_date),min(effective_date),max(cover_end_date)\nCANCEL,13081,-4423904.86,-13081.000,2019-02-02,2025-12-31,2019-01-28,2026-12-07\nRENEWAL,96764,66470703.32,96764.000,2019-12-15,2025-12-31,2020-01-01,2027-01-20\nMTA,22310,466631.74,0.000,2019-02-08,2025-12-31,2019-02-05,2026-12-07\nNEW,113555,74247233.10,113555.000,2019-01-01,2025-12-31,2019-01-01,2027-01-14",
+   "error": false
+  },
+  {
+   "tool": "run_sql",
+   "input": {
+    "query": "SELECT valuation_date, accident_year, ibnr FROM ibnr_valuation WHERE valuation_date = (SELECT max(valuation_date) FROM ibnr_valuation) ORDER BY accident_year"
+   },
+   "output": "valuation_date,accident_year,ibnr\n2025-12-31,2019,0.00\n2025-12-31,2020,1540.89\n2025-12-31,2021,38210.26\n2025-12-31,2022,163122.73\n2025-12-31,2023,184880.76\n2025-12-31,2024,611435.82\n2025-12-31,2025,4249084.97",
+   "error": false
+  },
+  {
+   "tool": "run_sql",
+   "input": {
+    "query": "SELECT year(inception_date) py, count(*) terms, count(DISTINCT policy_id) pols, min(inception_date), max(inception_date) FROM policy_term GROUP BY 1 ORDER BY 1"
+   },
+   "output": "py,terms,pols,min(inception_date),max(inception_date)\n2019,13496,13496,2019-01-01,2019-12-31\n2020,22042,22042,2020-01-01,2020-12-31\n2021,28339,28339,2021-01-01,2021-12-31\n2022,34188,34188,2022-01-01,2022-12-31\n2023,34397,34397,2023-01-01,2023-12-31\n2024,35350,35350,2024-01-01,2024-12-31\n2025,41306,41306,2025-01-01,2025-12-31\n2026,1201,1201,2026-01-01,2026-01-20",
+   "error": false
+  },
+  {
+   "tool": "run_sql",
+   "input": {
+    "query": "SELECT c.claim_id, c.term_id, c.accident_date, c.report_date, c.closed_date, t.txn_date, t.txn_type, t.cost_type, t.amount FROM claim c JOIN claim_txn t USING(claim_id) WHERE c.claim_id IN (SELECT claim_id FROM claim_txn WHERE txn_type='RESERVE' ORDER BY random() LIMIT 3) ORDER BY 1,t.txn_date"
+   },
+   "output": "claim_id,term_id,accident_date,report_date,closed_date,txn_date,txn_type,cost_type,amount\n6969,54223,2023-02-28,2023-03-12,2024-01-09,2023-03-12,RESERVE,INDEMNITY,1777.69\n6969,54223,2023-02-28,2023-03-12,2024-01-09,2024-01-09,PAYMENT,INDEMNITY,2189.97\n6969,54223,2023-02-28,2023-03-12,2024-01-09,2024-01-09,RESERVE,INDEMNITY,-1777.69\n6969,54223,2023-02-28,2023-03-12,2024-01-09,2024-01-09,PAYMENT,ALAE,128.56\n8206,63303,2024-01-29,2024-02-03,2024-09-27,2024-02-03,RESERVE,INDEMNITY,2911.63\n8206,63303,2024-01-29,2024-02-03,2024-09-27,2024-05-28,PAYMENT,INDEMNITY,1429.72\n8206,63303,2024-01-29,2024-02-03,2024-09-27,2024-05-28,RESERVE,INDEMNITY,-1429.72\n8206,63303,2024-01-29,2024-02-03,2024-09-27,2024-07-04,PAYMENT,INDEMNITY,1706.76\n8206,63303,2024-01-29,2024-02-03,2024-09-27,2024-07-04,RESERVE,INDEMNITY,-1481.91\n8206,63303,2024-01-29,2024-02-03,2024-09-27,2024-08-08,RESERVE,INDEMNITY,2987.27\n8206,63303,2024-01-29,2024-02-03,2024-09-27,2024-08-09,PAYMENT,INDEMNITY,952.62\n8206,63303,2024-01-29,2024-02-03,2024-09-27,2024-08-09,RESERVE,INDEMNITY,-952.62\n8206,63303,2024-01-29,2024-02-03,2024-09-27,2024-09-11,PAYMENT,INDEMNITY,1922.73\n8206,63303,2024-01-29,2024-02-03,2024-09-27,2024-09-11,RESERVE,INDEMNITY,-1922.73\n8206,63303,2024-01-29,2024-02-03,2024-09-27,2024-09-27,PAYMENT,INDEMNITY,743.25\n8206,63303,2024-01-29,2024-02-03,2024-09-27,2024-09-27,RESERVE,INDEMNITY,-111.92\n8206,63303,2024-01-29,2024-02-03,2024-09-27,2024-09-27,PAYMENT,ALAE,940.75\n8556,65877,2024-03-30,2024-04-04,2024-11-02,2024-04-04,RESERVE,INDEMNITY,1770.47\n8556,65877,2024-03-30,2024-04-04,2024-11-02,2024-05-22,PAYMENT,INDEMNITY,430.52\n8556,65877,2024-03-30,2024-04-04,2024-11-02,2024-05-22,RESERVE,INDEMNITY,-430.52\n8556,65877,2024-03-30,2024-04-04,2024-11-02,2024-11-01,RESERVE,INDEMNITY,13.04\n8556,65877,2024-03-30,2024-04-04,2024-11-02,2024-11-02,PAYMENT,INDEMNITY,1440.67\n8556,65877,2024-03-30,2024-04-04,2024-11-02,2024-11-02,RESERVE,INDEMNITY,-1352.99\n8556,65877,2024-03-30,2024-04-04,2024-11-02,2024-11-02,PAYMENT,ALAE,162.11",
+   "error": false
+  },
+  {
+   "tool": "run_sql",
+   "input": {
+    "query": "SELECT count(*) n, count(DISTINCT c.claim_id) claims, min(c.accident_date), max(c.accident_date), sum(CASE WHEN c.closed_date IS NULL THEN 1 ELSE 0 END) open_claims FROM claim c JOIN policy_term t USING(term_id) WHERE year(t.inception_date)=2023"
+   },
+   "output": "n,claims,min(c.accident_date),max(c.accident_date),open_claims\n4254,4254,2023-01-03,2024-12-22,182",
+   "error": false
+  },
+  {
+   "tool": "run_sql",
+   "input": {
+    "query": "SELECT t.term_id, t.term_number, t.inception_date, t.expiry_date, t.cancel_date, p.txn_type, p.booked_date, p.effective_date, p.cover_end_date, p.written_premium, p.exposure_units FROM policy_term t JOIN premium_txn p USING(term_id) WHERE t.term_id IN (SELECT term_id FROM policy_term WHERE year(inception_date)=2023 AND cancel_date IS NOT NULL LIMIT 2) OR t.term_id IN (SELECT term_id FROM policy_term WHERE year(inception_date)=2023 AND cancel_date IS NULL LIMIT 2) ORDER BY 1, p.booked_date"
+   },
+   "output": "term_id,term_number,inception_date,expiry_date,cancel_date,txn_type,booked_date,effective_date,cover_end_date,written_premium,exposure_units\n59196,1,2023-01-01,2024-01-01,None,NEW,2022-12-18,2023-01-01,2024-01-01,399.10,1.000\n59206,1,2023-01-01,2024-01-01,2023-04-05,NEW,2022-12-18,2023-01-01,2024-01-01,371.48,1.000\n59206,1,2023-01-01,2024-01-01,2023-04-05,CANCEL,2023-04-07,2023-04-05,2024-01-01,-275.81,-1.000\n59211,1,2023-01-01,2024-01-01,None,NEW,2022-12-18,2023-01-01,2024-01-01,496.00,1.000\n59267,1,2023-01-01,2024-01-01,2023-10-26,NEW,2022-12-19,2023-01-01,2024-01-01,590.31,1.000\n59267,1,2023-01-01,2024-01-01,2023-10-26,CANCEL,2023-10-30,2023-10-26,2024-01-01,-108.36,-1.000",
+   "error": false
+  },
+  {
+   "tool": "run_sql",
+   "input": {
+    "query": "SELECT count(*) terms, sum(CASE WHEN cancel_date IS NOT NULL THEN 1 ELSE 0 END) cancelled, count(DISTINCT term_id) FROM policy_term WHERE year(inception_date)=2023"
+   },
+   "output": "terms,cancelled,count(DISTINCT term_id)\n34397,2410,34397",
+   "error": false
+  },
+  {
+   "tool": "run_sql",
+   "input": {
+    "query": "WITH ep AS (SELECT sum(p.written_premium) ep FROM premium_txn p JOIN policy_term t USING(term_id) WHERE year(t.inception_date)=2023),\ninc AS (SELECT sum(x.amount) paid_and_case, sum(CASE WHEN x.txn_type='PAYMENT' THEN x.amount ELSE 0 END) paid, sum(CASE WHEN x.txn_type='RESERVE' THEN x.amount ELSE 0 END) case_res, sum(CASE WHEN x.txn_type='RECOVERY' THEN x.amount ELSE 0 END) recov FROM claim_txn x JOIN claim c USING(claim_id) JOIN policy_term t USING(term_id) WHERE year(t.inception_date)=2023)\nSELECT ep.ep, inc.paid_and_case, inc.paid, inc.case_res, inc.recov, inc.paid_and_case/ep.ep AS reported_lr FROM ep, inc"
+   },
+   "output": "ep,paid_and_case,paid,case_res,recov,reported_lr\n22291250.32,19856625.95,17550324.55,2788465.09,-482163.69,0.890781",
+   "error": false
+  },
+  {
+   "tool": "run_sql",
+   "input": {
+    "query": "SELECT t.term_id, t.inception_date, t.expiry_date, count(c.claim_id) FROM policy_term t LEFT JOIN claim c USING(term_id) WHERE year(t.inception_date)=2023 AND c.claim_id IS NOT NULL GROUP BY 1,2,3 HAVING max(c.accident_date) > t.expiry_date LIMIT 5"
+   },
+   "output": "term_id,inception_date,expiry_date,count(c.claim_id)\n(no rows)",
+   "error": false
+  }
+ ],
+ "usage": {
+  "input": 31958,
+  "output": 6730,
+  "cache_read": 12180,
+  "cache_write": 0
+ },
+ "effort": "medium",
+ "prompt_version": "v1"
+}

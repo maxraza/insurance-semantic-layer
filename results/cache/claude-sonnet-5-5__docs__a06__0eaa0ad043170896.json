@@ -1,0 +1,26 @@
+{
+ "model": "claude-sonnet-5-5",
+ "condition": "docs",
+ "qid": "a06",
+ "question": "How much premium did we do in 2025?",
+ "final_text": "We wrote \u00a330,274,839.20 of premium in 2025. This is gross written premium on a calendar basis, meaning every premium transaction booked from 1 January to 31 December 2025. It covers new business, renewals, mid-term adjustments and cancellation returns.\n\nI read \"premium we did\" as written premium. If you meant earned premium, that would be a different figure, and I haven't calculated it.\n\nANSWER: 30274839.20",
+ "stop_reason": "end_turn",
+ "tool_calls": [
+  {
+   "tool": "run_sql",
+   "input": {
+    "query": "select sum(written_premium) wp from premium_txn where booked_date between '2025-01-01' and '2025-12-31'"
+   },
+   "output": "wp\n30274839.20",
+   "error": false
+  }
+ ],
+ "usage": {
+  "input": 328,
+  "output": 282,
+  "cache_read": 10626,
+  "cache_write": 0
+ },
+ "effort": "medium",
+ "prompt_version": "v1"
+}

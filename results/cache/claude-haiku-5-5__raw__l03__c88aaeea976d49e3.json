@@ -1,0 +1,58 @@
+{
+ "model": "claude-haiku-5-5",
+ "condition": "raw",
+ "qid": "l03",
+ "question": "What is the accident-year 2023 loss and ALAE ratio, including IBNR?",
+ "final_text": "**Accident-year 2023 loss and ALAE ratio (including IBNR): 0.966**\n\n- **Earned premium (AY 2023):** \u00a321,365,088. I apportioned each premium transaction (new, renewal, MTA, cancellation) daily over its cover period and took the part falling in 2023.\n- **Incurred indemnity:** \u00a319,438,808. This is indemnity payments plus recoveries plus outstanding case reserves, across the 4,379 claims with accident date in 2023, valued at 31 Dec 2025.\n- **Incurred ALAE:** \u00a31,011,507. This is ALAE payments only.\n- **IBNR (AY 2023, at 31 Dec 2025):** \u00a3184,881.\n\nRatio = (19,438,808 + 1,011,507 + 184,881) / 21,365,088 = 0.966.\n\nCaveats:\n- The data has no ALAE reserve or ALAE IBNR, so the ALAE component is paid-only and the single IBNR figure is added in full as loss.\n- Excluding ALAE, the indemnity-only ratio including IBNR is 0.918.\n\nANSWER: 0.966",
+ "stop_reason": "end_turn",
+ "tool_calls": [
+  {
+   "tool": "run_sql",
+   "input": {
+    "query": "SELECT 'claim_txn' AS t, txn_type, cost_type, COUNT(*) n, SUM(amount) amt FROM claim_txn GROUP BY 1,2,3 UNION ALL SELECT 'premium_txn', txn_type, '', COUNT(*), SUM(written_premium) FROM premium_txn GROUP BY 1,2,3 UNION ALL SELECT 'ibnr', CAST(valuation_date AS VARCHAR), CAST(accident_year AS VARCHAR), COUNT(*), SUM(ibnr) FROM ibnr_valuation GROUP BY 1,2,3 ORDER BY 1,2,3"
+   },
+   "output": "t,txn_type,cost_type,n,amt\nclaim_txn,PAYMENT,ALAE,5482,4041773.75\nclaim_txn,PAYMENT,INDEMNITY,34398,78097079.75\nclaim_txn,RECOVERY,INDEMNITY,1151,-2278660.54\nclaim_txn,RESERVE,INDEMNITY,79216,15020532.03\nibnr,2019-12-31,2019,1,450298.72\nibnr,2020-03-31,2019,1,356582.03\nibnr,2020-03-31,2020,1,683142.67\nibnr,2020-06-30,2019,1,341514.05\nibnr,2020-06-30,2020,1,824481.35\nibnr,2020-09-30,2019,1,165779.06\nibnr,2020-09-30,2020,1,1891648.46\nibnr,2020-12-31,2019,1,97378.08\nibnr,2020-12-31,2020,1,1911713.85\nibnr,2021-03-31,2019,1,86329.61\nibnr,2021-03-31,2020,1,905461.64\nibnr,2021-03-31,2021,1,920121.97\nibnr,2021-06-30,2019,1,22351.59\nibnr,2021-06-30,2020,1,277377.64\nibnr,2021-06-30,2021,1,1511261.10\nibnr,2021-09-30,2019,1,1543.50\nibnr,2021-09-30,2020,1,194333.49\nibnr,2021-09-30,2021,1,1515044.78\nibnr,2021-12-31,2019,1,0.00\nibnr,2021-12-31,2020,1,22311.98\nibnr,2021-12-31,2021,1,1351498.40\nibnr,2022-03-31,2019,1,0.00\nibnr,2022-03-31,2020,1,59952.40\nibnr,2022-03-31,2021,1,760092.87\nibnr,2022-03-31,2022,1,951355.79\nibnr,2022-06-30,2019,1,0.00\nibnr,2022-06-30,2020,1,0.00\nibnr,2022-06-30,2021,1,0.00\nibnr,2022-06-30,2022,1,815343.77\nibnr,2022-09-30,2019,1,0.00\nibnr,2022-09-30,2020,1,0.00\nibnr,2022-09-30,2021,1,104469.41\nibnr,2022-09-30,2022,1,2029753.62\nibnr,2022-12-31,2019,1,0.00\nibnr,2022-12-31,2020,1,7662.80\nibnr,2022-12-31,2021,1,194613.54\nibnr,2022-12-31,2022,1,2433916.61\nibnr,2023-03-31,2019,1,0.00\nibnr,2023-03-31,2020,1,0.00\nibnr,2023-03-31,2021,1,80286.90\nibnr,2023-03-31,2022,1,1131532.72\nibnr,2023-03-31,2023,1,1564851.71\nibnr,2023-06-30,2019,1,277.51\nibnr,2023-06-30,2020,1,6679.01\nibnr,2023-06-30,2021,1,66339.38\nibnr,2023-06-30,2022,1,1022786.36\nibnr,2023-06-30,2023,1,2231077.31\nibnr,2023-09-30,2019,1,0.00\nibnr,2023-09-30,2020,1,58414.96\nibnr,2023-09-30,2021,1,104788.35\nibnr,2023-09-30,2022,1,724197.53\nibnr,2023-09-30,2023,1,2741200.56\nibnr,2023-12-31,2019,1,0.00\nibnr,2023-12-31,2020,1,0.00\nibnr,2023-12-31,2021,1,12485.20\nibnr,2023-12-31,2022,1,309968.00\n... 57 more rows",
+   "error": false
+  },
+  {
+   "tool": "run_sql",
+   "input": {
+    "query": "SELECT 'pt' k, txn_type a, '' b, COUNT(*) n, SUM(written_premium) amt, SUM(exposure_units) u FROM premium_txn GROUP BY 1,2,3\nUNION ALL SELECT 'ibnr_latest', CAST(valuation_date AS VARCHAR), CAST(accident_year AS VARCHAR), COUNT(*), SUM(ibnr), NULL FROM ibnr_valuation WHERE valuation_date=(SELECT MAX(valuation_date) FROM ibnr_valuation) AND accident_year=2023 GROUP BY 1,2,3\nUNION ALL SELECT 'claimstate', CASE WHEN closed_date IS NULL THEN 'open' ELSE 'closed' END, '', COUNT(*), NULL, NULL FROM claim GROUP BY 1,2,3\nUNION ALL SELECT 'res_closed', CASE WHEN c.closed_date IS NULL THEN 'open' ELSE 'closed' END, '', COUNT(*), SUM(t.amount), NULL FROM claim_txn t JOIN claim c USING(claim_id) WHERE t.txn_type='RESERVE' GROUP BY 1,2,3"
+   },
+   "output": "k,a,b,n,amt,u\npt,RENEWAL,,96764,66470703.32,96764.000\npt,CANCEL,,13081,-4423904.86,-13081.000\npt,MTA,,22310,466631.74,0.000\npt,NEW,,113555,74247233.10,113555.000\nibnr_latest,2025-12-31,2023,1,184880.76,None\nclaimstate,open,,1546,None,None\nclaimstate,closed,,22003,None,None\nres_closed,open,,2642,15020532.03,None\nres_closed,closed,,76574,0.00,None",
+   "error": false
+  },
+  {
+   "tool": "run_sql",
+   "input": {
+    "query": "SELECT txn_type, MIN(effective_date), MAX(effective_date), MIN(cover_end_date), MAX(cover_end_date), AVG(DATE_DIFF('day', effective_date, cover_end_date)) d, MIN(exposure_units), MAX(exposure_units), MIN(booked_date), MAX(booked_date) FROM premium_txn GROUP BY 1;\nSELECT * FROM premium_txn WHERE txn_type IN ('CANCEL','MTA') LIMIT 6;"
+   },
+   "output": "premium_txn_id,term_id,txn_type,booked_date,effective_date,cover_end_date,written_premium,exposure_units\n4,3,MTA,2019-03-15,2019-03-13,2020-01-07,-20.62,0.000\n9,7,CANCEL,2019-10-05,2019-10-01,2020-01-03,-89.18,-1.000\n20,17,MTA,2019-10-24,2019-10-24,2020-01-02,-6.39,0.000\n28,24,CANCEL,2019-09-19,2019-09-17,2020-01-14,-129.92,-1.000\n30,25,MTA,2019-07-30,2019-07-27,2020-01-04,-15.66,0.000\n34,28,MTA,2019-09-05,2019-09-02,2020-01-01,39.82,0.000",
+   "error": false
+  },
+  {
+   "tool": "run_sql",
+   "input": {
+    "query": "WITH ep AS (\n SELECT SUM(p.written_premium * GREATEST(0, DATE_DIFF('day', GREATEST(p.effective_date, DATE '2023-01-01'), LEAST(p.cover_end_date, DATE '2023-12-31')) + 1) / DATE_DIFF('day', p.effective_date, p.cover_end_date)) AS earned\n FROM premium_txn p WHERE DATE_DIFF('day', p.effective_date, p.cover_end_date) > 0\n), cl AS (\n SELECT c.claim_id,\n  SUM(CASE WHEN t.cost_type='INDEMNITY' THEN t.amount ELSE 0 END) AS ind,\n  SUM(CASE WHEN t.cost_type='ALAE' THEN t.amount ELSE 0 END) AS alae\n FROM claim c JOIN claim_txn t USING(claim_id)\n WHERE YEAR(c.accident_date)=2023 GROUP BY 1\n), tot AS (SELECT SUM(ind) ind, SUM(alae) alae, COUNT(*) n FROM cl)\nSELECT ep.earned, tot.ind, tot.alae, tot.n, (SELECT ibnr FROM ibnr_valuation WHERE valuation_date='2025-12-31' AND accident_year=2023) ibnr,\n (tot.ind+tot.alae+(SELECT ibnr FROM ibnr_valuation WHERE valuation_date='2025-12-31' AND accident_year=2023))/ep.earned AS ratio,\n (tot.ind+(SELECT ibnr FROM ibnr_valuation WHERE valuation_date='2025-12-31' AND accident_year=2023))/ep.earned AS ind_ratio,\n tot.alae/ep.earned alae_ratio\nFROM ep, tot;"
+   },
+   "output": "earned,ind,alae,n,ibnr,ratio,ind_ratio,alae_ratio\n21365088.04,19438808.25,1011506.65,4379,184880.76,0.965837,0.918493,0.0473439",
+   "error": false
+  },
+  {
+   "tool": "run_sql",
+   "input": {
+    "query": "SELECT txn_type, COUNT(*), SUM(written_premium) FROM premium_txn WHERE DATE_DIFF('day', effective_date, cover_end_date) <= 0 GROUP BY 1;"
+   },
+   "output": "txn_type,count_star(),sum(written_premium)\n(no rows)",
+   "error": false
+  }
+ ],
+ "usage": {
+  "input": 20021,
+  "output": 4177,
+  "cache_read": 12180,
+  "cache_write": 0
+ },
+ "effort": "medium",
+ "prompt_version": "v1"
+}

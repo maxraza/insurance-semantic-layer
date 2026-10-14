@@ -1,0 +1,33 @@
+{
+ "model": "claude-sonnet-5-5",
+ "condition": "semantic",
+ "qid": "r02",
+ "question": "We track the accident-year reported loss ratio quarter by quarter. What is the full-year figure for accident year 2025?",
+ "final_text": "Accident year 2025 has a reported loss ratio of 0.6296 (about 62.96%), valued at 31 December 2025. I took this from the full-year accident-basis figure, not an average of the four quarters. It is paid losses plus case reserves, divided by premium earned in the same period. It excludes IBNR and ALAE, so it will understate the ultimate loss ratio for the year.\n\nANSWER: 0.629642",
+ "stop_reason": "end_turn",
+ "tool_calls": [
+  {
+   "tool": "query_metrics",
+   "input": {
+    "metrics": [
+     "loss_ratio_reported"
+    ],
+    "basis": "accident",
+    "as_of": "2025-12-31",
+    "grain": "year",
+    "period_from": "2025-01-01",
+    "period_to": "2025-12-31"
+   },
+   "output": "period,loss_ratio_reported\n2025,0.629642",
+   "error": false
+  }
+ ],
+ "usage": {
+  "input": 443,
+  "output": 332,
+  "cache_read": 7364,
+  "cache_write": 0
+ },
+ "effort": "medium",
+ "prompt_version": "v1"
+}

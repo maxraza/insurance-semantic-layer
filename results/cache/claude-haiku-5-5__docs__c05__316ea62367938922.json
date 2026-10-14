@@ -1,0 +1,26 @@
+{
+ "model": "claude-haiku-5-5",
+ "condition": "docs",
+ "qid": "c05",
+ "question": "How many claims were reported to us during calendar year 2025?",
+ "final_text": "During calendar year 2025, 4,677 claims were reported to us. I counted claims by `report_date` falling between 1 January and 31 December 2025, across all perils, which is the calendar-basis reported claim count. The data runs to 31 December 2025, so the count is complete for the year.\n\nANSWER: 4677",
+ "stop_reason": "end_turn",
+ "tool_calls": [
+  {
+   "tool": "run_sql",
+   "input": {
+    "query": "SELECT COUNT(*) AS reported_claims_2025 FROM claim WHERE report_date >= DATE '2025-01-01' AND report_date <= DATE '2025-12-31'"
+   },
+   "output": "reported_claims_2025\n4677",
+   "error": false
+  }
+ ],
+ "usage": {
+  "input": 363,
+  "output": 326,
+  "cache_read": 10626,
+  "cache_write": 0
+ },
+ "effort": "medium",
+ "prompt_version": "v1"
+}

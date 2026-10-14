@@ -1,0 +1,26 @@
+{
+ "model": "claude-sonnet-5-5",
+ "condition": "raw",
+ "qid": "c01",
+ "question": "How many quotes did we issue in 2024?",
+ "final_text": "We issued 140,274 quotes in 2024. That counts every row in the quote table with a quote date between 1 January and 31 December 2024. All the quote IDs are distinct, so there are no duplicates in the count.\n\nANSWER: 140274",
+ "stop_reason": "end_turn",
+ "tool_calls": [
+  {
+   "tool": "run_sql",
+   "input": {
+    "query": "select count(*), count(distinct quote_id) from quote where quote_date between '2024-01-01' and '2024-12-31'"
+   },
+   "output": "count_star(),count(DISTINCT quote_id)\n140274,140274",
+   "error": false
+  }
+ ],
+ "usage": {
+  "input": 297,
+  "output": 169,
+  "cache_read": 2030,
+  "cache_write": 2030
+ },
+ "effort": "medium",
+ "prompt_version": "v1"
+}

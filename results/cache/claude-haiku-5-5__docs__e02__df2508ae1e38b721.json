@@ -1,0 +1,42 @@
+{
+ "model": "claude-haiku-5-5",
+ "condition": "docs",
+ "qid": "e02",
+ "question": "How much premium was unearned at 31 December 2024?",
+ "final_text": "Unearned premium at 31 December 2024 was about **\u00a313.59m** (\u00a313,585,360.18), gross of reinsurance.\n\nI took every premium transaction booked on or before 31 Dec 2024 (197,118 rows, net written premium \u00a3106.49m). For each, I calculated the part of its cover period falling after 31 Dec 2024 and pro-rated the premium on that basis. Cancellation and mid-term adjustment rows are included, so the return premiums reduce the unearned balance. Earned to date is \u00a392.90m, and the two figures reconcile to written premium. No rows had zero or negative cover length.\n\nANSWER: 13585360.18",
+ "stop_reason": "end_turn",
+ "tool_calls": [
+  {
+   "tool": "run_sql",
+   "input": {
+    "query": "SELECT txn_type, COUNT(*) n, SUM(written_premium) wp, SUM(exposure_units) eu, MIN(booked_date) mn, MAX(booked_date) mx, SUM(CASE WHEN booked_date<=DATE '2024-12-31' THEN 1 ELSE 0 END) n_booked_2024 FROM premium_txn GROUP BY txn_type;"
+   },
+   "output": "txn_type,n,wp,eu,mn,mx,n_booked_2024\nRENEWAL,96764,66470703.32,96764.000,2019-12-15,2025-12-31,73904\nCANCEL,13081,-4423904.86,-13081.000,2019-02-02,2025-12-31,10456\nNEW,113555,74247233.10,113555.000,2019-01-01,2025-12-31,94902\nMTA,22310,466631.74,0.000,2019-02-08,2025-12-31,17856",
+   "error": false
+  },
+  {
+   "tool": "run_sql",
+   "input": {
+    "query": "SELECT * FROM premium_txn WHERE txn_type='CANCEL' LIMIT 5;"
+   },
+   "output": "premium_txn_id,term_id,txn_type,booked_date,effective_date,cover_end_date,written_premium,exposure_units\n9,7,CANCEL,2019-10-05,2019-10-01,2020-01-03,-89.18,-1.000\n28,24,CANCEL,2019-09-19,2019-09-17,2020-01-14,-129.92,-1.000\n41,32,CANCEL,2019-06-01,2019-05-30,2020-01-15,-330.80,-1.000\n48,37,CANCEL,2019-08-12,2019-08-12,2020-01-08,-322.99,-1.000\n58,45,CANCEL,2019-11-16,2019-11-11,2020-01-06,-70.49,-1.000",
+   "error": false
+  },
+  {
+   "tool": "run_sql",
+   "input": {
+    "query": "\nWITH d AS (SELECT DATE '2024-12-31' AS D),\nt AS (\n  SELECT p.*, (p.cover_end_date - p.effective_date) AS len,\n    GREATEST(p.cover_end_date - GREATEST(p.effective_date, DATE '2024-12-31'), 0) AS rem\n  FROM premium_txn p WHERE p.booked_date <= DATE '2024-12-31'\n)\nSELECT COUNT(*) n, SUM(CASE WHEN len<=0 THEN 1 ELSE 0 END) zero_len,\n  SUM(CASE WHEN len>0 THEN written_premium*rem/len ELSE 0 END) AS unearned,\n  SUM(written_premium) AS wp_booked,\n  SUM(CASE WHEN len>0 THEN written_premium*(len-rem)/len ELSE written_premium END) AS earned_to_date\nFROM t;\n"
+   },
+   "output": "n,zero_len,unearned,wp_booked,earned_to_date\n197118,0,13585360.18,106485824.10,92900463.92",
+   "error": false
+  }
+ ],
+ "usage": {
+  "input": 2925,
+  "output": 1538,
+  "cache_read": 15939,
+  "cache_write": 0
+ },
+ "effort": "medium",
+ "prompt_version": "v1"
+}

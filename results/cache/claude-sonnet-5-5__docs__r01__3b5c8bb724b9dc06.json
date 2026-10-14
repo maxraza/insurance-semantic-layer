@@ -1,0 +1,26 @@
+{
+ "model": "claude-sonnet-5-5",
+ "condition": "docs",
+ "qid": "r01",
+ "question": "What was the accident-year 2024 reported loss ratio for drivers aged 17-24?",
+ "final_text": "The accident-year 2024 reported loss ratio for drivers aged 17-24 is about **0.747**, valued at 31 December 2025.\n\n- **Reported loss:** \u00a33,232,833. This is indemnity payments net of recoveries, plus case reserves, on claims with a 2024 accident date. It excludes ALAE and IBNR. I used only transactions dated on or before 31 December 2025.\n- **Earned premium:** \u00a34,327,481. This is 2024 premium earned pro rata over each transaction's cover period. On an accident basis it is the premium earned in the same period.\n- **Segment:** The 17-24 band comes from the policy term's driver age band.\n\nANSWER: 0.747",
+ "stop_reason": "end_turn",
+ "tool_calls": [
+  {
+   "tool": "run_sql",
+   "input": {
+    "query": "with ep as (\nselect sum(p.written_premium * greatest(0, date_diff('day', greatest(p.effective_date, date '2024-01-01'), least(p.cover_end_date, date '2025-01-01')))*1.0/ date_diff('day', p.effective_date, p.cover_end_date)) e\nfrom premium_txn p join policy_term t using(term_id)\nwhere t.driver_age_band='17-24' and p.booked_date<=date '2025-12-31'),\nrl as (\nselect sum(x.amount) l from claim_txn x join claim c using(claim_id) join policy_term t on t.term_id=c.term_id\nwhere t.driver_age_band='17-24' and c.accident_date between date '2024-01-01' and date '2024-12-31'\nand x.txn_date<=date '2025-12-31' and x.cost_type='INDEMNITY')\nselect e,l,l/e from ep,rl"
+   },
+   "output": "e,l,(l / e)\n4327481.00,3232832.53,0.747047",
+   "error": false
+  }
+ ],
+ "usage": {
+  "input": 745,
+  "output": 791,
+  "cache_read": 10626,
+  "cache_write": 0
+ },
+ "effort": "medium",
+ "prompt_version": "v1"
+}

@@ -1,0 +1,26 @@
+{
+ "model": "claude-sonnet-5-5",
+ "condition": "raw",
+ "qid": "s04",
+ "question": "What was the average number of vehicles in force across the four quarter-ends of 2025?",
+ "final_text": "The average number of vehicles in force across the four 2025 quarter-ends was 37,551.\n\nI counted a vehicle as in force at a date if its policy term had started on or before that date and expired after it. I also excluded any term cancelled on or before that date. Each in-force term is one vehicle, and no policy had more than one term in force at any of the dates.\n\n| Quarter-end | Vehicles in force |\n|---|---|\n| 31 Mar 2025 | 35,517 |\n| 30 Jun 2025 | 36,701 |\n| 30 Sep 2025 | 38,079 |\n| 31 Dec 2025 | 39,907 |\n\nThe four counts total 150,204, and dividing by 4 gives 37,551.\n\nANSWER: 37551",
+ "stop_reason": "end_turn",
+ "tool_calls": [
+  {
+   "tool": "run_sql",
+   "input": {
+    "query": "with d(d) as (values (date '2025-03-31'),(date '2025-06-30'),(date '2025-09-30'),(date '2025-12-31'))\nselect d, count(*) n, count(distinct policy_id) p from d join policy_term t on t.inception_date<=d and t.expiry_date>d and (t.cancel_date is null or t.cancel_date>d) group by d order by d"
+   },
+   "output": "d,n,p\n2025-03-31,35517,35517\n2025-06-30,36701,36701\n2025-09-30,38079,38079\n2025-12-31,39907,39907",
+   "error": false
+  }
+ ],
+ "usage": {
+  "input": 551,
+  "output": 612,
+  "cache_read": 4060,
+  "cache_write": 0
+ },
+ "effort": "medium",
+ "prompt_version": "v1"
+}

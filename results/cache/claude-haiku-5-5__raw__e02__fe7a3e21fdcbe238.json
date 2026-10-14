@@ -1,0 +1,58 @@
+{
+ "model": "claude-haiku-5-5",
+ "condition": "raw",
+ "qid": "e02",
+ "question": "How much premium was unearned at 31 December 2024?",
+ "final_text": "Unearned premium at 31 December 2024 was about **\u00a313.59m** (\u00a313,585,360.18).\n\nMethod: I took every premium transaction (NEW, RENEWAL, MTA, CANCEL) booked on or before 31 Dec 2024 and spread its written premium pro rata over its cover period (effective date to cover end date). The share falling after 31 Dec 2024 is the unearned part. No transaction had a zero or negative cover length. Cancellations are handled by their own negative CANCEL transactions, which are effective from the cancel date, so they release the unearned premium correctly.\n\nANSWER: 13585360.18",
+ "stop_reason": "end_turn",
+ "tool_calls": [
+  {
+   "tool": "run_sql",
+   "input": {
+    "query": "SELECT txn_type, COUNT(*) n, SUM(written_premium) wp, MIN(effective_date) mn_eff, MAX(cover_end_date) mx_end, MIN(booked_date) mn_book, MAX(booked_date) mx_book, SUM(CASE WHEN booked_date>DATE '2024-12-31' THEN 1 ELSE 0 END) booked_after FROM premium_txn GROUP BY txn_type ORDER BY 1"
+   },
+   "output": "txn_type,n,wp,mn_eff,mx_end,mn_book,mx_book,booked_after\nCANCEL,13081,-4423904.86,2019-01-28,2026-12-07,2019-02-02,2025-12-31,2625\nMTA,22310,466631.74,2019-02-05,2026-12-07,2019-02-08,2025-12-31,4454\nNEW,113555,74247233.10,2019-01-01,2027-01-14,2019-01-01,2025-12-31,18653\nRENEWAL,96764,66470703.32,2020-01-01,2027-01-20,2019-12-15,2025-12-31,22860",
+   "error": false
+  },
+  {
+   "tool": "run_sql",
+   "input": {
+    "query": "SELECT * FROM premium_txn WHERE term_id IN (SELECT term_id FROM premium_txn LIMIT 3) ORDER BY term_id, booked_date"
+   },
+   "output": "premium_txn_id,term_id,txn_type,booked_date,effective_date,cover_end_date,written_premium,exposure_units\n1,1,NEW,2019-01-01,2019-01-13,2020-01-13,301.57,1.000\n2,2,NEW,2019-01-01,2019-01-03,2020-01-03,1071.49,1.000\n3,3,NEW,2019-01-01,2019-01-07,2020-01-07,418.20,1.000\n4,3,MTA,2019-03-15,2019-03-13,2020-01-07,-20.62,0.000",
+   "error": false
+  },
+  {
+   "tool": "run_sql",
+   "input": {
+    "query": "SELECT p.term_id, p.txn_type, p.booked_date, p.effective_date, p.cover_end_date, p.written_premium, p.exposure_units, t.inception_date, t.expiry_date, t.cancel_date FROM premium_txn p JOIN policy_term t USING(term_id) WHERE t.cancel_date IS NOT NULL ORDER BY random() LIMIT 12"
+   },
+   "output": "term_id,txn_type,booked_date,effective_date,cover_end_date,written_premium,exposure_units,inception_date,expiry_date,cancel_date\n213481,CANCEL,2024-05-07,2024-05-04,2024-07-11,-152.08,-1.000,2023-07-11,2024-07-11,2024-05-04\n123587,RENEWAL,2021-04-06,2021-04-15,2022-04-15,441.11,1.000,2021-04-15,2022-04-15,2022-04-06\n117262,CANCEL,2020-09-27,2020-09-24,2021-06-27,-228.75,-1.000,2020-06-27,2021-06-27,2020-09-24\n154535,MTA,2025-03-08,2025-03-06,2026-02-12,-42.18,0.000,2025-02-12,2026-02-12,2025-06-14\n69110,NEW,2023-07-08,2023-07-11,2024-07-11,660.39,1.000,2023-07-11,2024-07-11,2024-03-20\n23356,NEW,2020-09-01,2020-09-03,2021-09-03,543.75,1.000,2020-09-03,2021-09-03,2021-08-21\n1773,CANCEL,2020-01-01,2019-12-31,2020-02-13,-38.38,-1.000,2019-02-13,2020-02-13,2019-12-31\n133066,CANCEL,2022-07-30,2022-07-28,2023-05-12,-412.81,-1.000,2022-05-12,2023-05-12,2022-07-28\n117378,RENEWAL,2020-06-22,2020-07-09,2021-07-09,545.90,1.000,2020-07-09,2021-07-09,2021-02-01\n232764,CANCEL,2025-06-08,2025-06-05,2026-02-20,-624.73,-1.000,2025-02-20,2026-02-20,2025-06-05\n43618,CANCEL,2022-03-20,2022-03-18,2023-01-07,-579.75,-1.000,2022-01-07,2023-01-07,2022-03-18\n61956,NEW,2023-02-06,2023-02-20,2024-02-20,518.31,1.000,2023-02-20,2024-02-20,2023-06-07",
+   "error": false
+  },
+  {
+   "tool": "run_sql",
+   "input": {
+    "query": "SELECT COUNT(*) FROM premium_txn WHERE cover_end_date<=effective_date OR effective_date>cover_end_date; SELECT COUNT(*) n, SUM(CASE WHEN t.cancel_date IS NOT NULL THEN 1 ELSE 0 END) cancelled_terms, SUM(CASE WHEN p.txn_type='CANCEL' THEN 1 ELSE 0 END) cancel_txns FROM policy_term t LEFT JOIN premium_txn p USING(term_id)"
+   },
+   "output": "n,cancelled_terms,cancel_txns\n245710,27633,13081",
+   "error": false
+  },
+  {
+   "tool": "run_sql",
+   "input": {
+    "query": "WITH d AS (SELECT DATE '2024-12-31' AS vd),\nx AS (\nSELECT p.written_premium, p.effective_date, p.cover_end_date,\n DATE_DIFF('day', p.effective_date, p.cover_end_date) AS total_days,\n DATE_DIFF('day', GREATEST(p.effective_date, DATE '2024-12-31'), p.cover_end_date) AS unexp_days\nFROM premium_txn p WHERE p.booked_date <= DATE '2024-12-31')\nSELECT ROUND(SUM(CASE WHEN total_days<=0 THEN 0 ELSE written_premium * GREATEST(unexp_days,0)::DOUBLE / total_days END),2) AS unearned,\n SUM(CASE WHEN total_days<=0 THEN 1 ELSE 0 END) zero_len, COUNT(*) n\nFROM x"
+   },
+   "output": "unearned,zero_len,n\n13585360.18,0,197118",
+   "error": false
+  }
+ ],
+ "usage": {
+  "input": 7304,
+  "output": 2589,
+  "cache_read": 8120,
+  "cache_write": 0
+ },
+ "effort": "medium",
+ "prompt_version": "v1"
+}

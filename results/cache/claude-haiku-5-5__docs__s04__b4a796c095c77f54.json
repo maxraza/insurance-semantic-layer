@@ -1,0 +1,34 @@
+{
+ "model": "claude-haiku-5-5",
+ "condition": "docs",
+ "qid": "s04",
+ "question": "What was the average number of vehicles in force across the four quarter-ends of 2025?",
+ "final_text": "The average is **37,551 vehicles in force**, across the four 2025 quarter-ends.\n\nI counted policy terms on cover at each date: inception on or before the date, expiry after it, and no mid-term cancellation effective on or before it. Bound dates are all on or before inception, so the knowledge-date filter changes nothing.\n\n| Quarter-end | Vehicles in force |\n|---|---|\n| 31 Mar 2025 | 35,517 |\n| 30 Jun 2025 | 36,701 |\n| 30 Sep 2025 | 38,079 |\n| 31 Dec 2025 | 39,907 |\n\nSum is 150,204, divided by 4 gives 37,551. This is the average of the four balances, not a single count.\n\nANSWER: 37551",
+ "stop_reason": "end_turn",
+ "tool_calls": [
+  {
+   "tool": "run_sql",
+   "input": {
+    "query": "\nWITH d AS (SELECT * FROM (VALUES (DATE '2025-03-31'), (DATE '2025-06-30'), (DATE '2025-09-30'), (DATE '2025-12-31')) t(as_of))\nSELECT d.as_of,\n  COUNT(*) AS in_force_all,\n  SUM(CASE WHEN pt.bound_date <= d.as_of THEN 1 ELSE 0 END) AS in_force_bound_by_asof,\n  SUM(CASE WHEN pt.inception_date <= d.as_of AND pt.expiry_date > d.as_of AND (pt.cancel_date IS NULL OR pt.cancel_date > d.as_of) AND pt.bound_date <= d.as_of THEN 1 ELSE 0 END) AS in_force_final\nFROM d\nJOIN policy_term pt ON pt.inception_date <= d.as_of AND pt.expiry_date > d.as_of\n  AND (pt.cancel_date IS NULL OR pt.cancel_date > d.as_of)\nGROUP BY d.as_of\nORDER BY d.as_of;\n"
+   },
+   "output": "as_of,in_force_all,in_force_bound_by_asof,in_force_final\n2025-03-31,35517,35517,35517\n2025-06-30,36701,36701,36701\n2025-09-30,38079,38079,38079\n2025-12-31,39907,39907,39907",
+   "error": false
+  },
+  {
+   "tool": "run_sql",
+   "input": {
+    "query": "\nSELECT COUNT(*) AS n, SUM(CASE WHEN bound_date > inception_date THEN 1 ELSE 0 END) AS bound_after_inception,\n SUM(CASE WHEN cancel_date IS NOT NULL THEN 1 ELSE 0 END) AS cancelled,\n SUM(CASE WHEN cancel_date < inception_date THEN 1 ELSE 0 END) AS cancel_before_incep,\n MIN(inception_date), MAX(inception_date)\nFROM policy_term;\n"
+   },
+   "output": "n,bound_after_inception,cancelled,cancel_before_incep,min(inception_date),max(inception_date)\n210319,0,13094,0,2019-01-01,2026-01-20",
+   "error": false
+  }
+ ],
+ "usage": {
+  "input": 1295,
+  "output": 1257,
+  "cache_read": 10626,
+  "cache_write": 0
+ },
+ "effort": "medium",
+ "prompt_version": "v1"
+}

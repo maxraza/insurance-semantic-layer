@@ -1,0 +1,17 @@
+{
+ "model": "claude-sonnet-5-5",
+ "condition": "raw",
+ "qid": "u04",
+ "question": "What will our 2026 accident-year loss ratio be?",
+ "final_text": "The question asks for a forecast of the 2026 accident-year loss ratio. The data runs only to 31 December 2025. It contains no 2026 claims, earned premium or IBNR for accident year 2026, and no plan or forecast. I can't derive this figure without estimating it. Any number I gave would be a guess, not something taken from the data.\n\nI can calculate loss ratios for accident years up to 2025 if that would help. Those could be a reference point, but they wouldn't be a 2026 prediction.\n\nANSWER: UNANSWERABLE",
+ "stop_reason": "end_turn",
+ "tool_calls": [],
+ "usage": {
+  "input": 94,
+  "output": 180,
+  "cache_read": 2030,
+  "cache_write": 0
+ },
+ "effort": "medium",
+ "prompt_version": "v1"
+}

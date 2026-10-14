@@ -1,0 +1,33 @@
+{
+ "model": "claude-haiku-5-5",
+ "condition": "semantic",
+ "qid": "e02",
+ "question": "How much premium was unearned at 31 December 2024?",
+ "final_text": "Unearned premium at 31 December 2024 was \u00a313,515,392.14, taken from the calendar-basis unearned premium measure as at that date (no segment filters applied).\n\nANSWER: 13515392.14",
+ "stop_reason": "end_turn",
+ "tool_calls": [
+  {
+   "tool": "query_metrics",
+   "input": {
+    "metrics": [
+     "unearned_premium"
+    ],
+    "basis": "calendar",
+    "as_of": "2024-12-31",
+    "grain": "year",
+    "period_from": "2024-01-01",
+    "period_to": "2024-12-31"
+   },
+   "output": "period,unearned_premium\n2024,13515392.14",
+   "error": false
+  }
+ ],
+ "usage": {
+  "input": 397,
+  "output": 259,
+  "cache_read": 7364,
+  "cache_write": 0
+ },
+ "effort": "medium",
+ "prompt_version": "v1"
+}

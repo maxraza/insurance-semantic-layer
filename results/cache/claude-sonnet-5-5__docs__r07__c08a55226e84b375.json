@@ -1,0 +1,26 @@
+{
+ "model": "claude-sonnet-5-5",
+ "condition": "docs",
+ "qid": "r07",
+ "question": "What was the accident-year 2023 claim frequency for vehicle group E?",
+ "final_text": "The accident-year 2023 claim frequency for vehicle group E is about 0.1636 reported claims per earned car-year.\n\n- **Claims:** 547 claims in vehicle group E with a 2023 accident date, counting only those reported by 31 December 2025. This includes claims later closed without payment.\n- **Exposure:** 3,343.74 car-years earned during calendar 2023 for vehicle group E. Each premium transaction's exposure is earned pro rata over its cover period, and cancellations reduce it.\n- **Ratio:** 547 / 3,343.74 = 0.1636.\n\nANSWER: 0.1636",
+ "stop_reason": "end_turn",
+ "tool_calls": [
+  {
+   "tool": "run_sql",
+   "input": {
+    "query": "with e as (select sum(p.exposure_units * greatest(0, date_diff('day', greatest(p.effective_date, date '2023-01-01'), least(p.cover_end_date, date '2024-01-01')))::double / date_diff('day', p.effective_date, p.cover_end_date)) ex\nfrom premium_txn p join policy_term t using(term_id) where t.vehicle_group='E' and p.booked_date<=date '2025-12-31'),\nc as (select count(*) n from claim c join policy_term t using(term_id) where t.vehicle_group='E' and c.accident_date between date '2023-01-01' and date '2023-12-31' and c.report_date<=date '2025-12-31')\nselect n, ex, n/ex from c, e"
+   },
+   "output": "n,ex,(n / ex)\n547,3343.74,0.163589",
+   "error": false
+  }
+ ],
+ "usage": {
+  "input": 746,
+  "output": 727,
+  "cache_read": 10824,
+  "cache_write": 0
+ },
+ "effort": "medium",
+ "prompt_version": "v1"
+}

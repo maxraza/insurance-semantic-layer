@@ -1,0 +1,26 @@
+{
+ "model": "claude-sonnet-5-5",
+ "condition": "raw",
+ "qid": "a06",
+ "question": "How much premium did we do in 2025?",
+ "final_text": "Gross written premium booked in 2025 was **\u00a330,274,839.20**. This is net of cancellations and includes new business, renewals and mid-term adjustments (MTAs).\n\n| Transaction type | 2025 written premium (\u00a3) |\n|---|---|\n| New business | 13,916,006.79 |\n| Renewals | 17,264,002.22 |\n| MTAs | 106,173.07 |\n| Cancellations | \u22121,011,342.88 |\n| **Total** | **30,274,839.20** |\n\n\"Premium we did\" could also mean earned premium. I took it to mean written premium, using the booked date. Grouping by effective date instead gives a slightly different total.\n\nANSWER: 30274839.20",
+ "stop_reason": "end_turn",
+ "tool_calls": [
+  {
+   "tool": "run_sql",
+   "input": {
+    "query": "select txn_type, count(*), sum(written_premium), sum(case when year(booked_date)=2025 then written_premium end) w_booked, sum(case when year(effective_date)=2025 then written_premium end) w_eff from premium_txn group by 1"
+   },
+   "output": "txn_type,count_star(),sum(written_premium),w_booked,w_eff\nRENEWAL,96764,66470703.32,17264002.22,17137930.54\nNEW,113555,74247233.10,13916006.79,13905002.72\nMTA,22310,466631.74,106173.07,106074.90\nCANCEL,13081,-4423904.86,-1011342.88,-1005293.34",
+   "error": false
+  }
+ ],
+ "usage": {
+  "input": 503,
+  "output": 525,
+  "cache_read": 4060,
+  "cache_write": 0
+ },
+ "effort": "medium",
+ "prompt_version": "v1"
+}

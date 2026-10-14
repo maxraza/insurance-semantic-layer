@@ -1,0 +1,66 @@
+{
+ "model": "claude-haiku-5-5",
+ "condition": "raw",
+ "qid": "l02",
+ "question": "What is the accident-year 2024 paid loss ratio?",
+ "final_text": "**Accident-year 2024 paid loss ratio: 0.617**\n\n- **Paid losses (AY2024):** claims with accident date in 2024, all PAYMENT transactions (indemnity 14,509,038 + ALAE 652,731), less RECOVERY transactions (\u2212507,664). Total 14,654,105.\n- **Earned premium (2024):** written premium from all premium transactions, earned pro rata daily over each transaction's cover period, counted only for the part falling in calendar 2024. Total 23,748,558.\n- **Ratio:** 14,654,105 / 23,748,558 = 0.617.\n\nAlternatives, depending on definition: gross of recoveries it is 0.638; indemnity only, net of recoveries, it is 0.611. I have included ALAE and netted recoveries as the main definition. The earned-premium method is my own pro-rata approximation, since the schema has no earned-premium table.\n\nANSWER: 0.617",
+ "stop_reason": "end_turn",
+ "tool_calls": [
+  {
+   "tool": "run_sql",
+   "input": {
+    "query": "SELECT 'claim_txn' AS t, txn_type, cost_type, COUNT(*) n, SUM(amount) amt FROM claim_txn GROUP BY 1,2,3 UNION ALL SELECT 'premium_txn', txn_type, '', COUNT(*), SUM(written_premium) FROM premium_txn GROUP BY 1,2,3 ORDER BY 1,2,3"
+   },
+   "output": "t,txn_type,cost_type,n,amt\nclaim_txn,PAYMENT,ALAE,5482,4041773.75\nclaim_txn,PAYMENT,INDEMNITY,34398,78097079.75\nclaim_txn,RECOVERY,INDEMNITY,1151,-2278660.54\nclaim_txn,RESERVE,INDEMNITY,79216,15020532.03\npremium_txn,CANCEL,,13081,-4423904.86\npremium_txn,MTA,,22310,466631.74\npremium_txn,NEW,,113555,74247233.10\npremium_txn,RENEWAL,,96764,66470703.32",
+   "error": false
+  },
+  {
+   "tool": "run_sql",
+   "input": {
+    "query": "SELECT MIN(accident_date), MAX(accident_date), COUNT(*) FROM claim WHERE EXTRACT(year FROM accident_date)=2024; SELECT * FROM ibnr_valuation ORDER BY 1,2 LIMIT 60;"
+   },
+   "output": "valuation_date,accident_year,ibnr\n2019-12-31,2019,450298.72\n2020-03-31,2019,356582.03\n2020-03-31,2020,683142.67\n2020-06-30,2019,341514.05\n2020-06-30,2020,824481.35\n2020-09-30,2019,165779.06\n2020-09-30,2020,1891648.46\n2020-12-31,2019,97378.08\n2020-12-31,2020,1911713.85\n2021-03-31,2019,86329.61\n2021-03-31,2020,905461.64\n2021-03-31,2021,920121.97\n2021-06-30,2019,22351.59\n2021-06-30,2020,277377.64\n2021-06-30,2021,1511261.10\n2021-09-30,2019,1543.50\n2021-09-30,2020,194333.49\n2021-09-30,2021,1515044.78\n2021-12-31,2019,0.00\n2021-12-31,2020,22311.98\n2021-12-31,2021,1351498.40\n2022-03-31,2019,0.00\n2022-03-31,2020,59952.40\n2022-03-31,2021,760092.87\n2022-03-31,2022,951355.79\n2022-06-30,2019,0.00\n2022-06-30,2020,0.00\n2022-06-30,2021,0.00\n2022-06-30,2022,815343.77\n2022-09-30,2019,0.00\n2022-09-30,2020,0.00\n2022-09-30,2021,104469.41\n2022-09-30,2022,2029753.62\n2022-12-31,2019,0.00\n2022-12-31,2020,7662.80\n2022-12-31,2021,194613.54\n2022-12-31,2022,2433916.61\n2023-03-31,2019,0.00\n2023-03-31,2020,0.00\n2023-03-31,2021,80286.90\n2023-03-31,2022,1131532.72\n2023-03-31,2023,1564851.71\n2023-06-30,2019,277.51\n2023-06-30,2020,6679.01\n2023-06-30,2021,66339.38\n2023-06-30,2022,1022786.36\n2023-06-30,2023,2231077.31\n2023-09-30,2019,0.00\n2023-09-30,2020,58414.96\n2023-09-30,2021,104788.35\n2023-09-30,2022,724197.53\n2023-09-30,2023,2741200.56\n2023-12-31,2019,0.00\n2023-12-31,2020,0.00\n2023-12-31,2021,12485.20\n2023-12-31,2022,309968.00\n2023-12-31,2023,3068439.64\n2024-03-31,2019,64837.26\n2024-03-31,2020,212592.74\n2024-03-31,2021,179429.31",
+   "error": false
+  },
+  {
+   "tool": "run_sql",
+   "input": {
+    "query": "SELECT txn_type, booked_date, effective_date, cover_end_date, written_premium, exposure_units, term_id FROM premium_txn WHERE term_id IN (SELECT term_id FROM premium_txn WHERE txn_type='CANCEL' LIMIT 2) OR term_id IN (SELECT term_id FROM premium_txn WHERE txn_type='MTA' LIMIT 2) OR term_id IN (SELECT term_id FROM premium_txn WHERE txn_type='NEW' LIMIT 2) ORDER BY term_id, booked_date"
+   },
+   "output": "txn_type,booked_date,effective_date,cover_end_date,written_premium,exposure_units,term_id\nNEW,2019-01-01,2019-01-13,2020-01-13,301.57,1.000,1\nNEW,2019-01-01,2019-01-03,2020-01-03,1071.49,1.000,2\nNEW,2019-01-01,2019-01-07,2020-01-07,418.20,1.000,3\nMTA,2019-03-15,2019-03-13,2020-01-07,-20.62,0.000,3\nNEW,2019-01-01,2019-01-03,2020-01-03,346.29,1.000,7\nCANCEL,2019-10-05,2019-10-01,2020-01-03,-89.18,-1.000,7\nNEW,2019-01-01,2019-01-02,2020-01-02,555.54,1.000,17\nMTA,2019-10-24,2019-10-24,2020-01-02,-6.39,0.000,17\nNEW,2019-01-01,2019-01-14,2020-01-14,398.49,1.000,24\nCANCEL,2019-09-19,2019-09-17,2020-01-14,-129.92,-1.000,24",
+   "error": false
+  },
+  {
+   "tool": "run_sql",
+   "input": {
+    "query": "SELECT COUNT(*) n_claims_2024, SUM(CASE WHEN t.txn_type='PAYMENT' THEN t.amount ELSE 0 END) pay, SUM(CASE WHEN t.txn_type='RECOVERY' THEN t.amount ELSE 0 END) rec FROM claim_txn t JOIN claim c USING(claim_id) WHERE EXTRACT(year FROM c.accident_date)=2024 AND t.booked_date <= DATE '2025-12-31'; SELECT cost_type, txn_type, SUM(amount) FROM claim_txn t JOIN claim c USING(claim_id) WHERE EXTRACT(year FROM c.accident_date)=2024 GROUP BY 1,2;"
+   },
+   "output": "error: Binder Error: Table \"t\" does not have a column named \"booked_date\"\n\nCandidate bindings: : \"txn_date\"\n\nLINE 1: ...(claim_id) WHERE EXTRACT(year FROM c.accident_date)=2024 AND t.booked_date <= DATE '2025-12-31'\n                                                                        ^",
+   "error": true
+  },
+  {
+   "tool": "run_sql",
+   "input": {
+    "query": "WITH ep AS (\n SELECT SUM(written_premium * GREATEST(0, DATE_DIFF('day', GREATEST(effective_date, DATE '2024-01-01'), LEAST(cover_end_date, DATE '2025-01-01')))::DOUBLE / NULLIF(DATE_DIFF('day', effective_date, cover_end_date),0)) AS earned\n FROM premium_txn WHERE effective_date < DATE '2025-01-01' AND cover_end_date > DATE '2024-01-01'\n),\ncl AS (\n SELECT\n  SUM(CASE WHEN t.txn_type='PAYMENT' AND t.cost_type='INDEMNITY' THEN t.amount ELSE 0 END) AS pay_ind,\n  SUM(CASE WHEN t.txn_type='PAYMENT' AND t.cost_type='ALAE' THEN t.amount ELSE 0 END) AS pay_alae,\n  SUM(CASE WHEN t.txn_type='RECOVERY' THEN t.amount ELSE 0 END) AS recov\n FROM claim_txn t JOIN claim c USING(claim_id) WHERE EXTRACT(year FROM c.accident_date)=2024\n)\nSELECT ep.earned, cl.pay_ind, cl.pay_alae, cl.recov, (cl.pay_ind+cl.pay_alae)/ep.earned AS lr_gross_paid, (cl.pay_ind+cl.pay_alae+cl.recov)/ep.earned AS lr_net_paid, cl.pay_ind/ep.earned AS lr_ind_only FROM ep, cl\""
+   },
+   "output": "error: Parser Error: unterminated quoted identifier at or near \"\"\"\n\nLINE 12: ... lr_net_paid, cl.pay_ind/ep.earned AS lr_ind_only FROM ep, cl\"\n                                                                         ^",
+   "error": true
+  },
+  {
+   "tool": "run_sql",
+   "input": {
+    "query": "WITH ep AS (\n SELECT SUM(written_premium * GREATEST(0, DATE_DIFF('day', GREATEST(effective_date, DATE '2024-01-01'), LEAST(cover_end_date, DATE '2025-01-01')))::DOUBLE / NULLIF(DATE_DIFF('day', effective_date, cover_end_date),0)) AS earned\n FROM premium_txn WHERE effective_date < DATE '2025-01-01' AND cover_end_date > DATE '2024-01-01'\n),\ncl AS (\n SELECT\n  SUM(CASE WHEN t.txn_type='PAYMENT' AND t.cost_type='INDEMNITY' THEN t.amount ELSE 0 END) AS pay_ind,\n  SUM(CASE WHEN t.txn_type='PAYMENT' AND t.cost_type='ALAE' THEN t.amount ELSE 0 END) AS pay_alae,\n  SUM(CASE WHEN t.txn_type='RECOVERY' THEN t.amount ELSE 0 END) AS recov\n FROM claim_txn t JOIN claim c USING(claim_id) WHERE EXTRACT(year FROM c.accident_date)=2024\n)\nSELECT ep.earned, cl.pay_ind, cl.pay_alae, cl.recov, (cl.pay_ind+cl.pay_alae)/ep.earned AS lr_gross_paid, (cl.pay_ind+cl.pay_alae+cl.recov)/ep.earned AS lr_net_paid, cl.pay_ind/ep.earned AS lr_ind_only FROM ep, cl"
+   },
+   "output": "earned,pay_ind,pay_alae,recov,lr_gross_paid,lr_net_paid,lr_ind_only\n23748557.88,14509037.70,652731.35,-507663.93,0.638429,0.617052,0.610944",
+   "error": false
+  }
+ ],
+ "usage": {
+  "input": 15795,
+  "output": 4462,
+  "cache_read": 10150,
+  "cache_write": 0
+ },
+ "effort": "medium",
+ "prompt_version": "v1"
+}

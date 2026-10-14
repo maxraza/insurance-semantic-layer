@@ -1,0 +1,74 @@
+{
+ "model": "claude-haiku-5-5",
+ "condition": "docs",
+ "qid": "r03",
+ "question": "What was the price comparison website channel's accident-year 2024 reported loss ratio?",
+ "final_text": "The accident-year 2024 reported loss ratio for the PCW channel is **0.900** (as at 31 Dec 2025).\n\n- **Reported loss:** \u00a36,221,233. This is indemnity paid (payments net of recoveries, \u00a34,157,225) plus indemnity case reserves (\u00a32,064,008), for claims with a 2024 accident date on PCW policy terms. ALAE and IBNR are excluded, as the glossary defines reported loss.\n- **Earned premium:** \u00a36,910,064. This is written premium on PCW terms, earned pro rata daily over each transaction's cover period, within calendar 2024. On an accident basis this equals the calendar-2024 earned premium.\n- **Channel:** taken from the policy term's channel, the same field the claims and premium rows join to.\n\nI did not add IBNR, so this is the reported ratio, not the ultimate one.\n\nANSWER: 0.900",
+ "stop_reason": "end_turn",
+ "tool_calls": [
+  {
+   "tool": "run_sql",
+   "input": {
+    "query": "SELECT 'term_channel' src, channel, count(*) n FROM policy_term GROUP BY channel\nUNION ALL SELECT 'policy_channel', channel, count(*) FROM policy GROUP BY channel\nUNION ALL SELECT 'quote_channel', channel, count(*) FROM quote GROUP BY channel\nUNION ALL SELECT 'claim_term_channel', pt.channel, count(*) FROM claim c JOIN policy_term pt USING(term_id) GROUP BY pt.channel\nUNION ALL SELECT 'txn_type', txn_type, count(*) FROM claim_txn GROUP BY txn_type\nUNION ALL SELECT 'claim_min_max_accident', NULL, NULL FROM claim LIMIT 0"
+   },
+   "output": "src,channel,n\n(no rows)",
+   "error": false
+  },
+  {
+   "tool": "run_sql",
+   "input": {
+    "query": "SELECT min(accident_date), max(accident_date), max(report_date), max(closed_date) FROM claim;\nSELECT min(txn_date), max(txn_date) FROM claim_txn;\nSELECT min(effective_date), max(effective_date), max(cover_end_date), max(booked_date) FROM premium_txn;"
+   },
+   "output": "min(effective_date),max(effective_date),max(cover_end_date),max(booked_date)\n2019-01-01,2026-01-20,2027-01-20,2025-12-31",
+   "error": false
+  },
+  {
+   "tool": "run_sql",
+   "input": {
+    "query": "SELECT 'term_channel' src, channel, count(*) n FROM policy_term GROUP BY channel\nUNION ALL SELECT 'policy_channel', channel, count(*) FROM policy GROUP BY channel\nUNION ALL SELECT 'txn_type', txn_type, count(*) FROM claim_txn GROUP BY txn_type"
+   },
+   "output": "src,channel,n\nterm_channel,PCW,67272\nterm_channel,DIRECT,78111\nterm_channel,BROKER,64936\npolicy_channel,DIRECT,38985\npolicy_channel,PCW,42343\npolicy_channel,BROKER,32227\ntxn_type,RECOVERY,1151\ntxn_type,RESERVE,79216\ntxn_type,PAYMENT,39880",
+   "error": false
+  },
+  {
+   "tool": "run_sql",
+   "input": {
+    "query": "SELECT min(accident_date), max(accident_date), max(report_date), max(closed_date), min(txn_date), max(txn_date) FROM claim c LEFT JOIN claim_txn t USING(claim_id)"
+   },
+   "output": "min(accident_date),max(accident_date),max(report_date),max(closed_date),min(txn_date),max(txn_date)\n2019-01-21,2025-12-31,2025-12-31,2025-12-31,2019-02-04,2025-12-31",
+   "error": false
+  },
+  {
+   "tool": "run_sql",
+   "input": {
+    "query": "SELECT txn_type, cost_type, count(*), min(amount), max(amount), sum(amount) FROM claim_txn GROUP BY 1,2 ORDER BY 1,2"
+   },
+   "output": "txn_type,cost_type,count_star(),min(amount),max(amount),sum(amount)\nPAYMENT,ALAE,5482,5.38,129243.82,4041773.75\nPAYMENT,INDEMNITY,34398,0.10,1214443.66,78097079.75\nRECOVERY,INDEMNITY,1151,-24511.92,-26.63,-2278660.54\nRESERVE,INDEMNITY,79216,-1214443.66,1529370.74,15020532.03",
+   "error": false
+  },
+  {
+   "tool": "run_sql",
+   "input": {
+    "query": "SELECT txn_type, min(written_premium), max(written_premium), min(exposure_units), max(exposure_units), count(*) FROM premium_txn GROUP BY 1"
+   },
+   "output": "txn_type,min(written_premium),max(written_premium),min(exposure_units),max(exposure_units),count_star()\nNEW,188.75,3902.59,1.000,1.000,113555\nMTA,-328.34,611.67,0.000,0.000,22310\nCANCEL,-3105.45,-6.31,-1.000,-1.000,13081\nRENEWAL,249.83,4058.78,1.000,1.000,96764",
+   "error": false
+  },
+  {
+   "tool": "run_sql",
+   "input": {
+    "query": "\nWITH ep AS (\n  SELECT SUM(p.written_premium * GREATEST(0, DATE_DIFF('day', GREATEST(p.effective_date, DATE '2024-01-01'), LEAST(p.cover_end_date, DATE '2025-01-01'))) * 1.0\n             / NULLIF(DATE_DIFF('day', p.effective_date, p.cover_end_date),0)) AS earned_premium\n  FROM premium_txn p JOIN policy_term t USING(term_id)\n  WHERE t.channel = 'PCW'\n),\nrl AS (\n  SELECT SUM(CASE WHEN ct.txn_type IN ('PAYMENT','RECOVERY') AND ct.cost_type='INDEMNITY' THEN ct.amount ELSE 0 END) AS paid_ind,\n         SUM(CASE WHEN ct.txn_type='RESERVE' AND ct.cost_type='INDEMNITY' THEN ct.amount ELSE 0 END) AS case_res\n  FROM claim c JOIN policy_term t USING(term_id)\n  LEFT JOIN claim_txn ct USING(claim_id)\n  WHERE t.channel='PCW' AND YEAR(c.accident_date)=2024\n)\nSELECT ep.earned_premium, rl.paid_ind, rl.case_res, (rl.paid_ind+rl.case_res) AS reported_loss, (rl.paid_ind+rl.case_res)/ep.earned_premium AS lr_reported\nFROM ep, rl\n"
+   },
+   "output": "earned_premium,paid_ind,case_res,reported_loss,lr_reported\n6910063.79,4157225.31,2064007.82,6221233.13,0.900315",
+   "error": false
+  }
+ ],
+ "usage": {
+  "input": 8873,
+  "output": 3011,
+  "cache_read": 26565,
+  "cache_write": 0
+ },
+ "effort": "medium",
+ "prompt_version": "v1"
+}

@@ -1,0 +1,35 @@
+{
+ "model": "claude-haiku-5-5",
+ "condition": "semantic",
+ "qid": "b02",
+ "question": "What was the calendar-year 2024 reported loss ratio (paid plus change in case reserves, excluding IBNR)?",
+ "final_text": "The calendar-year 2024 reported loss ratio is **0.844** (0.843734), calculated on the calendar basis as of 31 December 2025.\n\n- Reported loss (change in paid plus case reserves over 2024, excluding IBNR and ALAE): \u00a320,037,477\n- Earned premium for 2024: \u00a323,748,558\n- \u00a320,037,477 / \u00a323,748,558 = 0.8437\n\nANSWER: 0.843734",
+ "stop_reason": "end_turn",
+ "tool_calls": [
+  {
+   "tool": "query_metrics",
+   "input": {
+    "metrics": [
+     "loss_ratio_reported",
+     "reported_loss",
+     "earned_premium"
+    ],
+    "basis": "calendar",
+    "as_of": "2025-12-31",
+    "grain": "year",
+    "period_from": "2024-01-01",
+    "period_to": "2024-12-31"
+   },
+   "output": "period,loss_ratio_reported,reported_loss,earned_premium\n2024,0.843734,20037477.44,23748557.88",
+   "error": false
+  }
+ ],
+ "usage": {
+  "input": 644,
+  "output": 586,
+  "cache_read": 7364,
+  "cache_write": 0
+ },
+ "effort": "medium",
+ "prompt_version": "v1"
+}

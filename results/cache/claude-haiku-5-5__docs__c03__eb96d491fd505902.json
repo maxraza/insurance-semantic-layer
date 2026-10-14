@@ -1,0 +1,26 @@
+{
+ "model": "claude-haiku-5-5",
+ "condition": "docs",
+ "qid": "c03",
+ "question": "What was total gross written premium booked in calendar year 2024?",
+ "final_text": "Total gross written premium booked in calendar year 2024 was **\u00a325,702,658.47**, across 41,882 premium transactions (booked 1 Jan to 31 Dec 2024).\n\nBy type:\n- New business: \u00a313,355,087.73\n- Renewals: \u00a313,111,694.98\n- Mid-term adjustments: \u00a391,412.94\n- Cancellation returns: \u2212\u00a3855,537.18\n\nThis is on the calendar (booked-date) basis, gross of reinsurance, and includes the negative cancellation returns, per the glossary definition of written premium.\n\nANSWER: 25702658.47",
+ "stop_reason": "end_turn",
+ "tool_calls": [
+  {
+   "tool": "run_sql",
+   "input": {
+    "query": "SELECT txn_type, COUNT(*) AS n, ROUND(SUM(written_premium),2) AS wp FROM premium_txn WHERE booked_date >= DATE '2024-01-01' AND booked_date < DATE '2025-01-01' GROUP BY txn_type UNION ALL SELECT 'TOTAL', COUNT(*), ROUND(SUM(written_premium),2) FROM premium_txn WHERE booked_date >= DATE '2024-01-01' AND booked_date < DATE '2025-01-01'"
+   },
+   "output": "txn_type,n,wp\nRENEWAL,17509,13111694.98\nMTA,4043,91412.94\nNEW,17978,13355087.73\nCANCEL,2352,-855537.18\nTOTAL,41882,25702658.47",
+   "error": false
+  }
+ ],
+ "usage": {
+  "input": 606,
+  "output": 564,
+  "cache_read": 10626,
+  "cache_write": 0
+ },
+ "effort": "medium",
+ "prompt_version": "v1"
+}

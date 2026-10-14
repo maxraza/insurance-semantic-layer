@@ -1,0 +1,26 @@
+{
+ "model": "claude-sonnet-5-5",
+ "condition": "docs",
+ "qid": "b08",
+ "question": "How many claims with an accident date in 2024 have been reported to us so far?",
+ "final_text": "4,396 claims have an accident date in 2024 and a report date on or before 31 December 2025. This counts every reported claim, including any later closed without payment.\n\nANSWER: 4396",
+ "stop_reason": "end_turn",
+ "tool_calls": [
+  {
+   "tool": "run_sql",
+   "input": {
+    "query": "select count(*), count(distinct claim_id) from claim where accident_date between '2024-01-01' and '2024-12-31' and report_date<='2025-12-31'"
+   },
+   "output": "count_star(),count(DISTINCT claim_id)\n4396,4396",
+   "error": false
+  }
+ ],
+ "usage": {
+  "input": 328,
+  "output": 162,
+  "cache_read": 10626,
+  "cache_write": 0
+ },
+ "effort": "medium",
+ "prompt_version": "v1"
+}

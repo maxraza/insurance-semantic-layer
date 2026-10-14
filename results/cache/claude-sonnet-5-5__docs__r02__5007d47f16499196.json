@@ -1,0 +1,26 @@
+{
+ "model": "claude-sonnet-5-5",
+ "condition": "docs",
+ "qid": "r02",
+ "question": "We track the accident-year reported loss ratio quarter by quarter. What is the full-year figure for accident year 2025?",
+ "final_text": "The accident-year 2025 reported loss ratio is about 0.630, using data as at 31 December 2025.\n\n- **Reported loss:** \u00a317,552,733. This is indemnity payments net of recoveries, plus case reserves, for claims with a 2025 accident date. ALAE and IBNR are excluded.\n- **Earned premium:** \u00a327,877,321. This is premium earned over 2025, pro rata by day. On an accident basis the denominator equals calendar-year earned premium.\n- **Ratio:** 17,552,733 / 27,877,321 = 0.6296, or 0.630 to three decimals.\n\nANSWER: 0.6296",
+ "stop_reason": "end_turn",
+ "tool_calls": [
+  {
+   "tool": "run_sql",
+   "input": {
+    "query": "with l as (select sum(t.amount) loss from claim_txn t join claim c using(claim_id) where c.accident_date between '2025-01-01' and '2025-12-31' and t.txn_date<='2025-12-31' and t.cost_type='INDEMNITY'),\ne as (select sum(written_premium*greatest(0,date_diff('day',greatest(effective_date,date '2025-01-01'),least(cover_end_date,date '2026-01-01')))*1.0/date_diff('day',effective_date,cover_end_date)) ep from premium_txn where booked_date<='2025-12-31')\nselect loss,ep,loss/ep from l,e"
+   },
+   "output": "loss,ep,(loss / ep)\n17552733.04,27877320.72,0.629642",
+   "error": false
+  }
+ ],
+ "usage": {
+  "input": 773,
+  "output": 725,
+  "cache_read": 10626,
+  "cache_write": 0
+ },
+ "effort": "medium",
+ "prompt_version": "v1"
+}

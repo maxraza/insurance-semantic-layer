@@ -1,0 +1,34 @@
+{
+ "model": "claude-sonnet-5-5",
+ "condition": "raw",
+ "qid": "c07",
+ "question": "How much written premium did the broker channel book in 2023?",
+ "final_text": "Broker written premium booked in 2023 was \u00a37,279,940.35. This is the net sum of all premium transactions (new business, renewals, mid-term adjustments and cancellations) with a booked date in 2023. I took the channel from the policy term.\n\nANSWER: 7279940.35",
+ "stop_reason": "end_turn",
+ "tool_calls": [
+  {
+   "tool": "run_sql",
+   "input": {
+    "query": "select t.channel, extract(year from p.booked_date) y, sum(p.written_premium), count(*) from premium_txn p join policy_term t using(term_id) group by 1,2 order by 1,2"
+   },
+   "output": "channel,y,sum(p.written_premium),count_star()\nBROKER,2019,2392200.91,4341\nBROKER,2020,4013477.07,7542\nBROKER,2021,5295229.97,10081\nBROKER,2022,6423543.48,12470\nBROKER,2023,7279940.35,12961\nBROKER,2024,8330738.67,13317\nBROKER,2025,9612723.00,15177\nDIRECT,2019,2879832.75,5272\nDIRECT,2020,4892270.54,9240\nDIRECT,2021,6340553.05,12239\nDIRECT,2022,7630015.71,14960\nDIRECT,2023,8550351.71,15301\nDIRECT,2024,9894118.64,15839\nDIRECT,2025,11689643.05,18468\nPCW,2019,2811903.63,5664\nPCW,2020,4278425.18,8803\nPCW,2021,5287563.60,10972\nPCW,2022,6176186.65,12794\nPCW,2023,6531671.03,12596\nPCW,2024,7477801.16,12726\nPCW,2025,8972473.15,14947",
+   "error": false
+  },
+  {
+   "tool": "run_sql",
+   "input": {
+    "query": "select txn_type, count(*), sum(written_premium) from premium_txn group by 1"
+   },
+   "output": "txn_type,count_star(),sum(written_premium)\nRENEWAL,96764,66470703.32\nCANCEL,13081,-4423904.86\nMTA,22310,466631.74\nNEW,113555,74247233.10",
+   "error": false
+  }
+ ],
+ "usage": {
+  "input": 880,
+  "output": 279,
+  "cache_read": 4060,
+  "cache_write": 0
+ },
+ "effort": "medium",
+ "prompt_version": "v1"
+}

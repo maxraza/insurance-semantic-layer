@@ -1,0 +1,17 @@
+{
+ "model": "claude-sonnet-5-5",
+ "condition": "docs",
+ "qid": "u04",
+ "question": "What will our 2026 accident-year loss ratio be?",
+ "final_text": "The question asks for a forecast of the 2026 accident-year loss ratio. The data runs only to 31 December 2025, so no 2026 accident dates, premium earned, or losses exist yet. The glossary defines loss ratios only for observed periods. It has no projection method or plan assumptions. Any figure would be a guess, not something computed from the data.\n\nI could report the 2025 accident-year loss ratio as a reference point, but that is a different measure from the 2026 ratio you asked for.\n\nANSWER: UNANSWERABLE",
+ "stop_reason": "end_turn",
+ "tool_calls": [],
+ "usage": {
+  "input": 94,
+  "output": 176,
+  "cache_read": 5313,
+  "cache_write": 0
+ },
+ "effort": "medium",
+ "prompt_version": "v1"
+}

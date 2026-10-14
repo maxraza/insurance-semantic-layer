@@ -1,0 +1,33 @@
+{
+ "model": "claude-haiku-5-5",
+ "condition": "semantic",
+ "qid": "l07",
+ "question": "What was the calendar-year 2024 combined ratio (reported loss, change in IBNR, paid ALAE and expenses, over earned premium)?",
+ "final_text": "The calendar-year 2024 combined ratio is 1.07243, using the calendar basis as at 31 December 2025. This is (reported loss + IBNR change + paid ALAE + expenses) divided by earned premium, as defined in the catalogue.\n\nANSWER: 1.07243",
+ "stop_reason": "end_turn",
+ "tool_calls": [
+  {
+   "tool": "query_metrics",
+   "input": {
+    "metrics": [
+     "combined_ratio"
+    ],
+    "basis": "calendar",
+    "as_of": "2025-12-31",
+    "grain": "year",
+    "period_from": "2024-01-01",
+    "period_to": "2024-12-31"
+   },
+   "output": "period,combined_ratio\n2024,1.07243",
+   "error": false
+  }
+ ],
+ "usage": {
+  "input": 458,
+  "output": 285,
+  "cache_read": 7378,
+  "cache_write": 0
+ },
+ "effort": "medium",
+ "prompt_version": "v1"
+}

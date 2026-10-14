@@ -1,0 +1,34 @@
+{
+ "model": "claude-haiku-5-5",
+ "condition": "docs",
+ "qid": "v04",
+ "question": "By how much did accident-year 2022 reported loss (paid plus case) develop between the 31 December 2022 and 31 December 2025 valuations?",
+ "final_text": "Accident-year 2022 reported loss (paid indemnity net of recoveries, plus case reserves, excluding IBNR and ALAE) rose by about \u00a32.19m between the two valuations.\n\n- **31 Dec 2022:** paid \u00a37,634,485.38 + case reserves \u00a35,247,945.92 = **\u00a312,882,431.30**\n- **31 Dec 2025:** paid \u00a314,308,271.12 (payments \u00a314,751,796.79 less recoveries \u00a3443,525.67) + case reserves \u00a3766,711.02 = **\u00a315,074,982.14**\n\nDevelopment = 15,074,982.14 \u2212 12,882,431.30 = **\u00a32,192,550.84**\n\nClaims are selected by accident date in 2022, and each valuation includes only transactions with a transaction date on or before that valuation date. This is the reported-loss development only; IBNR and ALAE are not included.\n\nANSWER: 2192550.84",
+ "stop_reason": "end_turn",
+ "tool_calls": [
+  {
+   "tool": "run_sql",
+   "input": {
+    "query": "SELECT t.txn_type, t.cost_type, COUNT(*) n, SUM(t.amount) amt, MIN(t.amount) mn, MAX(t.amount) mx\nFROM claim_txn t JOIN claim c USING (claim_id)\nWHERE c.accident_date BETWEEN DATE '2022-01-01' AND DATE '2022-12-31'\nGROUP BY 1,2 ORDER BY 1,2"
+   },
+   "output": "txn_type,cost_type,n,amt,mn,mx\nPAYMENT,ALAE,1010,836833.26,10.72,129243.82\nPAYMENT,INDEMNITY,6030,14751796.79,0.21,724800.47\nRECOVERY,INDEMNITY,215,-443525.67,-11825.31,-64.82\nRESERVE,INDEMNITY,13665,766711.02,-724800.47,795227.90",
+   "error": false
+  },
+  {
+   "tool": "run_sql",
+   "input": {
+    "query": "SELECT DATE '2022-12-31' AS val, SUM(CASE WHEN t.txn_type IN ('PAYMENT','RECOVERY') AND t.cost_type='INDEMNITY' AND t.txn_date<=DATE '2022-12-31' THEN t.amount ELSE 0 END) AS paid_loss,\nSUM(CASE WHEN t.txn_type='RESERVE' AND t.cost_type='INDEMNITY' AND t.txn_date<=DATE '2022-12-31' THEN t.amount ELSE 0 END) AS case_res,\nSUM(CASE WHEN t.txn_type IN ('PAYMENT','RECOVERY') AND t.cost_type='INDEMNITY' AND t.txn_date<=DATE '2022-12-31' THEN t.amount ELSE 0 END)+SUM(CASE WHEN t.txn_type='RESERVE' AND t.cost_type='INDEMNITY' AND t.txn_date<=DATE '2022-12-31' THEN t.amount ELSE 0 END) AS reported_2022\n, SUM(CASE WHEN t.txn_type IN ('PAYMENT','RECOVERY') AND t.cost_type='INDEMNITY' THEN t.amount ELSE 0 END)+SUM(CASE WHEN t.txn_type='RESERVE' AND t.cost_type='INDEMNITY' THEN t.amount ELSE 0 END) AS reported_2025_all\nFROM claim_txn t JOIN claim c USING (claim_id)\nWHERE c.accident_date BETWEEN DATE '2022-01-01' AND DATE '2022-12-31'\nAND t.txn_date <= DATE '2025-12-31'"
+   },
+   "output": "val,paid_loss,case_res,reported_2022,reported_2025_all\n2022-12-31,7634485.38,5247945.92,12882431.30,15074982.14",
+   "error": false
+  }
+ ],
+ "usage": {
+  "input": 1663,
+  "output": 1854,
+  "cache_read": 10626,
+  "cache_write": 0
+ },
+ "effort": "medium",
+ "prompt_version": "v1"
+}

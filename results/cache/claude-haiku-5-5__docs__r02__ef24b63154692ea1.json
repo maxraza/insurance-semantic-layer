@@ -1,0 +1,42 @@
+{
+ "model": "claude-haiku-5-5",
+ "condition": "docs",
+ "qid": "r02",
+ "question": "We track the accident-year reported loss ratio quarter by quarter. What is the full-year figure for accident year 2025?",
+ "final_text": "The accident-year 2025 reported loss ratio, valued at 31 December 2025, is about **0.630**.\n\n- **Reported loss, AY 2025: \u00a317,552,733.** This is paid indemnity (\u00a310,071,969, net of recoveries) plus case reserves (\u00a37,480,764) on claims with accident dates in 2025. ALAE and IBNR are excluded, as the glossary defines.\n- **Earned premium, AY 2025: \u00a327,877,321.** Written premium earned pro rata by day over 1 January to 31 December 2025, using transactions booked by year-end.\n- **Ratio:** 17,552,733 / 27,877,321 = 0.6296.\n\nI did not split this by quarter, since you asked for the full year.\n\nANSWER: 0.630",
+ "stop_reason": "end_turn",
+ "tool_calls": [
+  {
+   "tool": "run_sql",
+   "input": {
+    "query": "SELECT 'claims' t, COUNT(*) n, MIN(accident_date) mn, MAX(accident_date) mx FROM claim UNION ALL SELECT 'txn', COUNT(*), MIN(txn_date), MAX(txn_date) FROM claim_txn UNION ALL SELECT 'prem', COUNT(*), MIN(effective_date), MAX(cover_end_date) FROM premium_txn UNION ALL SELECT 'ibnr', COUNT(*), MIN(valuation_date), MAX(valuation_date) FROM ibnr_valuation;"
+   },
+   "output": "t,n,mn,mx\nclaims,23549,2019-01-21,2025-12-31\ntxn,120247,2019-02-04,2025-12-31\nprem,245710,2019-01-01,2027-01-20\nibnr,109,2019-12-31,2025-12-31",
+   "error": false
+  },
+  {
+   "tool": "run_sql",
+   "input": {
+    "query": "SELECT txn_type, cost_type, COUNT(*), SUM(amount) FROM claim_txn GROUP BY 1,2 ORDER BY 1,2;"
+   },
+   "output": "txn_type,cost_type,count_star(),sum(amount)\nPAYMENT,ALAE,5482,4041773.75\nPAYMENT,INDEMNITY,34398,78097079.75\nRECOVERY,INDEMNITY,1151,-2278660.54\nRESERVE,INDEMNITY,79216,15020532.03",
+   "error": false
+  },
+  {
+   "tool": "run_sql",
+   "input": {
+    "query": "\nWITH ep AS (\n  SELECT SUM(written_premium * GREATEST(0, DATE_DIFF('day', GREATEST(effective_date, DATE '2025-01-01'), LEAST(cover_end_date, DATE '2026-01-01'))) / NULLIF(DATE_DIFF('day', effective_date, cover_end_date),0)) AS earned_prem,\n         COUNT(*) n, SUM(CASE WHEN booked_date > DATE '2025-12-31' THEN 1 ELSE 0 END) future_booked\n  FROM premium_txn WHERE booked_date <= DATE '2025-12-31'\n),\npaid AS (\n  SELECT c.claim_id, SUM(CASE WHEN t.cost_type='INDEMNITY' AND t.txn_type IN ('PAYMENT','RECOVERY') THEN t.amount ELSE 0 END) paid_ind,\n         SUM(CASE WHEN t.txn_type='RESERVE' THEN t.amount ELSE 0 END) case_res\n  FROM claim c JOIN claim_txn t ON t.claim_id=c.claim_id AND t.txn_date <= DATE '2025-12-31'\n  WHERE c.accident_date BETWEEN DATE '2025-01-01' AND DATE '2025-12-31'\n  GROUP BY c.claim_id\n)\nSELECT (SELECT earned_prem FROM ep) earned_prem, (SELECT n FROM ep) n, (SELECT future_booked FROM ep) fb,\n       SUM(paid_ind) paid_ind, SUM(case_res) case_res, SUM(paid_ind+case_res) reported_loss,\n       SUM(paid_ind+case_res)/(SELECT earned_prem FROM ep) lr_reported\nFROM paid;\n"
+   },
+   "output": "earned_prem,n,fb,paid_ind,case_res,reported_loss,lr_reported\n27877320.72,245710,0,10071968.91,7480764.13,17552733.04,0.629642",
+   "error": false
+  }
+ ],
+ "usage": {
+  "input": 3252,
+  "output": 2287,
+  "cache_read": 15939,
+  "cache_write": 0
+ },
+ "effort": "medium",
+ "prompt_version": "v1"
+}

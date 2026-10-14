@@ -1,0 +1,34 @@
+{
+ "model": "claude-sonnet-5-5",
+ "condition": "docs",
+ "qid": "t01",
+ "question": "What was our policy-count renewal retention rate for renewals due in 2025?",
+ "final_text": "The 2025 policy-count renewal retention rate is about 68.9%.\n\n- **Renewals due:** 32,909 renewal invitations had an expiry date in 2025 that had passed by 31 December 2025.\n- **Renewals accepted:** 22,667 of those had a renewed term bound on or before 31 December 2025.\n- **Retention rate:** 22,667 / 32,909 = 0.6888.\n\nANSWER: 0.688778",
+ "stop_reason": "end_turn",
+ "tool_calls": [
+  {
+   "tool": "run_sql",
+   "input": {
+    "query": "select count(*) due, count(t.term_id) acc from renewal_offer o left join policy_term t on t.term_id=o.renewed_term_id and t.bound_date<=DATE '2025-12-31' where o.due_date between DATE '2025-01-01' and DATE '2025-12-31' and o.offer_date<=DATE '2025-12-31'"
+   },
+   "output": "due,acc\n32909,22667",
+   "error": false
+  },
+  {
+   "tool": "run_sql",
+   "input": {
+    "query": "select 22667/32909.0"
+   },
+   "output": "(22667 / 32909.0)\n0.688778",
+   "error": false
+  }
+ ],
+ "usage": {
+  "input": 897,
+  "output": 450,
+  "cache_read": 15939,
+  "cache_write": 0
+ },
+ "effort": "medium",
+ "prompt_version": "v1"
+}

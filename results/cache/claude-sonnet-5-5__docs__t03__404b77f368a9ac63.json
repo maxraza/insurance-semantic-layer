@@ -1,0 +1,26 @@
+{
+ "model": "claude-sonnet-5-5",
+ "condition": "docs",
+ "qid": "t03",
+ "question": "What was the renewal retention rate for customers acquired through price comparison websites, for renewals due in 2024?",
+ "final_text": "The renewal retention rate for price comparison website (PCW) customers, for renewals due in 2024, was about 40.9%. Of 9,847 matured renewal invitations, 4,028 were accepted (4,028 / 9,847 = 0.4090).\n\nThe policy's acquisition channel and the expiring term's channel agree for every renewal, so there is no ambiguity in how \"acquired through PCW\" is defined.\n\nANSWER: 0.409",
+ "stop_reason": "end_turn",
+ "tool_calls": [
+  {
+   "tool": "run_sql",
+   "input": {
+    "query": "select p.channel pc, t.channel tc, count(*) due, count(o.renewed_term_id) acc from renewal_offer o join policy_term t on t.term_id=o.expiring_term_id join policy p on p.policy_id=t.policy_id where o.due_date>=DATE '2024-01-01' and o.due_date<=DATE '2024-12-31' and o.offer_date<=DATE '2025-12-31' group by 1,2"
+   },
+   "output": "pc,tc,due,acc\nBROKER,BROKER,10138,6103\nPCW,PCW,9847,4028\nDIRECT,DIRECT,12002,7280",
+   "error": false
+  }
+ ],
+ "usage": {
+  "input": 514,
+  "output": 434,
+  "cache_read": 10626,
+  "cache_write": 0
+ },
+ "effort": "medium",
+ "prompt_version": "v1"
+}

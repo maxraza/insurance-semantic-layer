@@ -1,0 +1,33 @@
+{
+ "model": "claude-sonnet-5-5",
+ "condition": "semantic",
+ "qid": "a03",
+ "question": "What was our expense ratio for 2024?",
+ "final_text": "Your 2024 expense ratio was **14.2%**. That is expenses divided by earned premium on a calendar-year basis, valued at 31 December 2025.\n\nThe trade basis divides by written premium instead. I didn't calculate that figure.\n\nANSWER: 0.141719",
+ "stop_reason": "end_turn",
+ "tool_calls": [
+  {
+   "tool": "query_metrics",
+   "input": {
+    "metrics": [
+     "expense_ratio"
+    ],
+    "basis": "calendar",
+    "as_of": "2025-12-31",
+    "grain": "year",
+    "period_from": "2024-01-01",
+    "period_to": "2024-12-31"
+   },
+   "output": "period,expense_ratio\n2024,0.141719",
+   "error": false
+  }
+ ],
+ "usage": {
+  "input": 388,
+  "output": 281,
+  "cache_read": 7378,
+  "cache_write": 0
+ },
+ "effort": "medium",
+ "prompt_version": "v1"
+}

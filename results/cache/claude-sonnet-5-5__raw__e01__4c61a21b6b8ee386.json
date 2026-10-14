@@ -1,0 +1,42 @@
+{
+ "model": "claude-sonnet-5-5",
+ "condition": "raw",
+ "qid": "e01",
+ "question": "What was earned premium in calendar year 2024?",
+ "final_text": "Earned premium for calendar year 2024 is about \u00a323.75m.\n\nI spread each premium transaction evenly by day over its cover period (effective date to cover end date) and summed the part falling in 2024. This covers new business, renewals, mid-term adjustments and cancellations. Cancellation refunds are negative and run over the cancelled cover period, so they remove the unexpired premium from the cancellation date onward.\n\nANSWER: 23748557.88",
+ "stop_reason": "end_turn",
+ "tool_calls": [
+  {
+   "tool": "run_sql",
+   "input": {
+    "query": "select txn_type, count(*), sum(written_premium), sum(exposure_units), min(effective_date), max(cover_end_date) from premium_txn group by 1"
+   },
+   "output": "txn_type,count_star(),sum(written_premium),sum(exposure_units),min(effective_date),max(cover_end_date)\nCANCEL,13081,-4423904.86,-13081.000,2019-01-28,2026-12-07\nMTA,22310,466631.74,0.000,2019-02-05,2026-12-07\nNEW,113555,74247233.10,113555.000,2019-01-01,2027-01-14\nRENEWAL,96764,66470703.32,96764.000,2020-01-01,2027-01-20",
+   "error": false
+  },
+  {
+   "tool": "run_sql",
+   "input": {
+    "query": "select * from premium_txn limit 8"
+   },
+   "output": "premium_txn_id,term_id,txn_type,booked_date,effective_date,cover_end_date,written_premium,exposure_units\n1,1,NEW,2019-01-01,2019-01-13,2020-01-13,301.57,1.000\n2,2,NEW,2019-01-01,2019-01-03,2020-01-03,1071.49,1.000\n3,3,NEW,2019-01-01,2019-01-07,2020-01-07,418.20,1.000\n4,3,MTA,2019-03-15,2019-03-13,2020-01-07,-20.62,0.000\n5,4,NEW,2019-01-01,2019-01-11,2020-01-11,337.96,1.000\n6,5,NEW,2019-01-01,2019-01-01,2020-01-01,356.50,1.000\n7,6,NEW,2019-01-01,2019-01-06,2020-01-06,437.02,1.000\n8,7,NEW,2019-01-01,2019-01-03,2020-01-03,346.29,1.000",
+   "error": false
+  },
+  {
+   "tool": "run_sql",
+   "input": {
+    "query": "select sum(written_premium * greatest(0, date_diff('day', greatest(effective_date, date '2024-01-01'), least(cover_end_date, date '2025-01-01'))) / date_diff('day', effective_date, cover_end_date)) from premium_txn where booked_date<=date '2025-12-31' and date_diff('day', effective_date, cover_end_date)>0"
+   },
+   "output": "sum(((written_premium * greatest(0, date_diff('day', greatest(effective_date, CAST('2024-01-01' AS \"DATE\")), least(cover_end_date, CAST('2025-01-01' AS \"DATE\"))))) / date_diff('day', effective_date, cover_end_date)))\n23748557.88",
+   "error": false
+  }
+ ],
+ "usage": {
+  "input": 2241,
+  "output": 695,
+  "cache_read": 6090,
+  "cache_write": 0
+ },
+ "effort": "medium",
+ "prompt_version": "v1"
+}

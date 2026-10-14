@@ -1,0 +1,33 @@
+{
+ "model": "claude-haiku-5-5",
+ "condition": "semantic",
+ "qid": "b04",
+ "question": "What are the paid losses (indemnity, net of recoveries) for accidents that happened in 2022?",
+ "final_text": "Paid indemnity (net of salvage and subrogation) for accidents in 2022, valued at 31 December 2025, is \u00a314,308,271.12. This excludes ALAE.\n\nANSWER: 14308271.12",
+ "stop_reason": "end_turn",
+ "tool_calls": [
+  {
+   "tool": "query_metrics",
+   "input": {
+    "metrics": [
+     "paid_loss"
+    ],
+    "basis": "accident",
+    "as_of": "2025-12-31",
+    "grain": "year",
+    "period_from": "2022-01-01",
+    "period_to": "2022-12-31"
+   },
+   "output": "period,paid_loss\n2022,14308271.12",
+   "error": false
+  }
+ ],
+ "usage": {
+  "input": 424,
+  "output": 260,
+  "cache_read": 7364,
+  "cache_write": 0
+ },
+ "effort": "medium",
+ "prompt_version": "v1"
+}

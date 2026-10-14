@@ -1,0 +1,34 @@
+{
+ "model": "claude-sonnet-5-5",
+ "condition": "raw",
+ "qid": "v02",
+ "question": "As at 30 June 2024, what was the reported loss (paid plus case reserves) for accident year 2023?",
+ "final_text": "As at 30 June 2024, reported loss for accident year 2023 was about \u00a317.09m. I counted only transactions dated on or before 30 June 2024, on claims reported by then.\n\n| Component | Amount (\u00a3) |\n|---|---|\n| Indemnity payments | 11,739,920.92 |\n| ALAE payments | 452,767.35 |\n| Recoveries | \u2212381,915.43 |\n| Case reserves | 5,276,082.50 |\n| **Total** | **17,086,855.34** |\n\nI made two judgement calls:\n- **Case reserves:** I treated the reserve transactions as incremental movements, so their sum is the outstanding case reserve.\n- **Paid:** I included ALAE and netted off recoveries.\n\nANSWER: 17086855.34",
+ "stop_reason": "end_turn",
+ "tool_calls": [
+  {
+   "tool": "run_sql",
+   "input": {
+    "query": "select txn_type,cost_type,count(*),sum(amount),min(txn_date),max(txn_date) from claim_txn group by all order by 1,2"
+   },
+   "output": "txn_type,cost_type,count_star(),sum(amount),min(txn_date),max(txn_date)\nPAYMENT,ALAE,5482,4041773.75,2019-04-02,2025-12-31\nPAYMENT,INDEMNITY,34398,78097079.75,2019-02-22,2025-12-31\nRECOVERY,INDEMNITY,1151,-2278660.54,2019-07-11,2025-12-31\nRESERVE,INDEMNITY,79216,15020532.03,2019-02-04,2025-12-31",
+   "error": false
+  },
+  {
+   "tool": "run_sql",
+   "input": {
+    "query": "select txn_type,cost_type,sum(amount),count(*) from claim_txn t join claim c using(claim_id) where year(c.accident_date)=2023 and txn_date<='2024-06-30' and c.report_date<='2024-06-30' group by all order by 1,2"
+   },
+   "output": "txn_type,cost_type,sum(amount),count_star()\nPAYMENT,ALAE,452767.35,908\nPAYMENT,INDEMNITY,11739920.92,6105\nRECOVERY,INDEMNITY,-381915.43,181\nRESERVE,INDEMNITY,5276082.50,14269",
+   "error": false
+  }
+ ],
+ "usage": {
+  "input": 1321,
+  "output": 758,
+  "cache_read": 6090,
+  "cache_write": 0
+ },
+ "effort": "medium",
+ "prompt_version": "v1"
+}

@@ -1,0 +1,90 @@
+{
+ "model": "claude-haiku-5-5",
+ "condition": "raw",
+ "qid": "r03",
+ "question": "What was the price comparison website channel's accident-year 2024 reported loss ratio?",
+ "final_text": "The PCW accident-year 2024 reported loss ratio is about **0.927**.\n\n- **Earned premium (2024):** \u00a36,910,064. I took each PCW premium transaction's written premium and spread it pro rata over its cover period, keeping only the part falling in calendar 2024. Cancellations and mid-term adjustments reverse earned premium from their effective date.\n- **Reported incurred:** \u00a36,403,770. This is the sum of all claim transactions (payments, case reserve movements, ALAE, and recoveries) up to 31 December 2025, for the 1,336 PCW claims with accident dates in 2024. IBNR is excluded because the question asks for reported, not ultimate, figures.\n- **Ratio:** 6,403,770 / 6,910,064 = 0.927.\n\nI netted subrogation/salvage recoveries against incurred, which is the usual treatment. If recoveries were excluded, the ratio would be about 0.945.\n\nANSWER: 0.927",
+ "stop_reason": "end_turn",
+ "tool_calls": [
+  {
+   "tool": "run_sql",
+   "input": {
+    "query": "SELECT 'channel' k, channel v, COUNT(*) n FROM policy_term GROUP BY channel\nUNION ALL SELECT 'txn_type', txn_type, COUNT(*) FROM premium_txn GROUP BY txn_type\nUNION ALL SELECT 'claim_txn_type', txn_type || '/' || cost_type, COUNT(*) FROM claim_txn GROUP BY txn_type, cost_type\nUNION ALL SELECT 'peril', peril, COUNT(*) FROM claim GROUP BY peril\nUNION ALL SELECT 'quote_channel', channel, COUNT(*) FROM quote GROUP BY channel"
+   },
+   "output": "k,v,n\nchannel,PCW,67272\nchannel,BROKER,64936\nchannel,DIRECT,78111\ntxn_type,CANCEL,13081\ntxn_type,NEW,113555\ntxn_type,RENEWAL,96764\ntxn_type,MTA,22310\nclaim_txn_type,RESERVE/INDEMNITY,79216\nclaim_txn_type,PAYMENT/INDEMNITY,34398\nclaim_txn_type,PAYMENT/ALAE,5482\nclaim_txn_type,RECOVERY/INDEMNITY,1151\nperil,BODILY_INJURY,1691\nperil,WINDSCREEN,5651\nperil,THEFT,872\nperil,THIRD_PARTY_PROPERTY,6280\nperil,OWN_DAMAGE,9055\nquote_channel,DIRECT,178313\nquote_channel,PCW,606581\nquote_channel,BROKER,107402",
+   "error": false
+  },
+  {
+   "tool": "run_sql",
+   "input": {
+    "query": "SELECT * FROM ibnr_valuation ORDER BY valuation_date, accident_year LIMIT 60"
+   },
+   "output": "valuation_date,accident_year,ibnr\n2019-12-31,2019,450298.72\n2020-03-31,2019,356582.03\n2020-03-31,2020,683142.67\n2020-06-30,2019,341514.05\n2020-06-30,2020,824481.35\n2020-09-30,2019,165779.06\n2020-09-30,2020,1891648.46\n2020-12-31,2019,97378.08\n2020-12-31,2020,1911713.85\n2021-03-31,2019,86329.61\n2021-03-31,2020,905461.64\n2021-03-31,2021,920121.97\n2021-06-30,2019,22351.59\n2021-06-30,2020,277377.64\n2021-06-30,2021,1511261.10\n2021-09-30,2019,1543.50\n2021-09-30,2020,194333.49\n2021-09-30,2021,1515044.78\n2021-12-31,2019,0.00\n2021-12-31,2020,22311.98\n2021-12-31,2021,1351498.40\n2022-03-31,2019,0.00\n2022-03-31,2020,59952.40\n2022-03-31,2021,760092.87\n2022-03-31,2022,951355.79\n2022-06-30,2019,0.00\n2022-06-30,2020,0.00\n2022-06-30,2021,0.00\n2022-06-30,2022,815343.77\n2022-09-30,2019,0.00\n2022-09-30,2020,0.00\n2022-09-30,2021,104469.41\n2022-09-30,2022,2029753.62\n2022-12-31,2019,0.00\n2022-12-31,2020,7662.80\n2022-12-31,2021,194613.54\n2022-12-31,2022,2433916.61\n2023-03-31,2019,0.00\n2023-03-31,2020,0.00\n2023-03-31,2021,80286.90\n2023-03-31,2022,1131532.72\n2023-03-31,2023,1564851.71\n2023-06-30,2019,277.51\n2023-06-30,2020,6679.01\n2023-06-30,2021,66339.38\n2023-06-30,2022,1022786.36\n2023-06-30,2023,2231077.31\n2023-09-30,2019,0.00\n2023-09-30,2020,58414.96\n2023-09-30,2021,104788.35\n2023-09-30,2022,724197.53\n2023-09-30,2023,2741200.56\n2023-12-31,2019,0.00\n2023-12-31,2020,0.00\n2023-12-31,2021,12485.20\n2023-12-31,2022,309968.00\n2023-12-31,2023,3068439.64\n2024-03-31,2019,64837.26\n2024-03-31,2020,212592.74\n2024-03-31,2021,179429.31",
+   "error": false
+  },
+  {
+   "tool": "run_sql",
+   "input": {
+    "query": "SELECT ct.txn_type, ct.cost_type, COUNT(*) n, SUM(amount) s, MIN(amount) mn, MAX(amount) mx, MIN(txn_date) d0, MAX(txn_date) d1 FROM claim_txn ct GROUP BY 1,2;\nSELECT * FROM claim_txn WHERE claim_id IN (SELECT claim_id FROM claim_txn LIMIT 3) ORDER BY claim_id, txn_date;\nSELECT txn_type, COUNT(*), SUM(written_premium), SUM(exposure_units), MIN(effective_date), MAX(cover_end_date) FROM premium_txn GROUP BY 1;\nSELECT * FROM premium_txn LIMIT 8;"
+   },
+   "output": "premium_txn_id,term_id,txn_type,booked_date,effective_date,cover_end_date,written_premium,exposure_units\n1,1,NEW,2019-01-01,2019-01-13,2020-01-13,301.57,1.000\n2,2,NEW,2019-01-01,2019-01-03,2020-01-03,1071.49,1.000\n3,3,NEW,2019-01-01,2019-01-07,2020-01-07,418.20,1.000\n4,3,MTA,2019-03-15,2019-03-13,2020-01-07,-20.62,0.000\n5,4,NEW,2019-01-01,2019-01-11,2020-01-11,337.96,1.000\n6,5,NEW,2019-01-01,2019-01-01,2020-01-01,356.50,1.000\n7,6,NEW,2019-01-01,2019-01-06,2020-01-06,437.02,1.000\n8,7,NEW,2019-01-01,2019-01-03,2020-01-03,346.29,1.000",
+   "error": false
+  },
+  {
+   "tool": "run_sql",
+   "input": {
+    "query": "SELECT ct.txn_type, ct.cost_type, COUNT(*) n, SUM(amount) s, MIN(amount) mn, MAX(amount) mx, MIN(txn_date) d0, MAX(txn_date) d1 FROM claim_txn ct GROUP BY 1,2"
+   },
+   "output": "txn_type,cost_type,n,s,mn,mx,d0,d1\nPAYMENT,ALAE,5482,4041773.75,5.38,129243.82,2019-04-02,2025-12-31\nRECOVERY,INDEMNITY,1151,-2278660.54,-24511.92,-26.63,2019-07-11,2025-12-31\nPAYMENT,INDEMNITY,34398,78097079.75,0.10,1214443.66,2019-02-22,2025-12-31\nRESERVE,INDEMNITY,79216,15020532.03,-1214443.66,1529370.74,2019-02-04,2025-12-31",
+   "error": false
+  },
+  {
+   "tool": "run_sql",
+   "input": {
+    "query": "SELECT c.claim_id, c.accident_date, c.report_date, c.closed_date, t.txn_date, t.txn_type, t.cost_type, t.amount FROM claim c JOIN claim_txn t USING(claim_id) WHERE c.claim_id IN (SELECT claim_id FROM claim ORDER BY claim_id LIMIT 4) ORDER BY claim_id, txn_date"
+   },
+   "output": "claim_id,accident_date,report_date,closed_date,txn_date,txn_type,cost_type,amount\n1,2019-11-10,2019-11-13,2020-01-03,2019-11-13,RESERVE,INDEMNITY,1511.36\n1,2019-11-10,2019-11-13,2020-01-03,2019-11-23,PAYMENT,INDEMNITY,40.80\n1,2019-11-10,2019-11-13,2020-01-03,2019-11-23,RESERVE,INDEMNITY,-40.80\n1,2019-11-10,2019-11-13,2020-01-03,2019-11-28,RESERVE,INDEMNITY,-18.26\n1,2019-11-10,2019-11-13,2020-01-03,2019-11-29,PAYMENT,INDEMNITY,1339.91\n1,2019-11-10,2019-11-13,2020-01-03,2019-11-29,RESERVE,INDEMNITY,-1339.91\n1,2019-11-10,2019-11-13,2020-01-03,2020-01-03,PAYMENT,INDEMNITY,355.89\n1,2019-11-10,2019-11-13,2020-01-03,2020-01-03,RESERVE,INDEMNITY,-112.39\n1,2019-11-10,2019-11-13,2020-01-03,2020-01-03,PAYMENT,ALAE,194.55\n2,2019-11-13,2019-11-14,2020-02-15,2019-11-14,RESERVE,INDEMNITY,96.92\n2,2019-11-13,2019-11-14,2020-02-15,2020-02-15,PAYMENT,INDEMNITY,179.10\n2,2019-11-13,2019-11-14,2020-02-15,2020-02-15,RESERVE,INDEMNITY,-96.92\n2,2019-11-13,2019-11-14,2020-02-15,2020-02-15,PAYMENT,ALAE,24.55\n2,2019-11-13,2019-11-14,2020-02-15,2020-04-21,RECOVERY,INDEMNITY,-87.11\n3,2019-07-07,2019-07-13,2019-07-19,2019-07-13,RESERVE,INDEMNITY,274.03\n3,2019-07-07,2019-07-13,2019-07-19,2019-07-19,PAYMENT,INDEMNITY,337.15\n3,2019-07-07,2019-07-13,2019-07-19,2019-07-19,RESERVE,INDEMNITY,-274.03\n4,2019-09-08,2019-09-16,2019-09-22,2019-09-16,RESERVE,INDEMNITY,210.37\n4,2019-09-08,2019-09-16,2019-09-22,2019-09-22,PAYMENT,INDEMNITY,331.19\n4,2019-09-08,2019-09-16,2019-09-22,2019-09-22,RESERVE,INDEMNITY,-210.37",
+   "error": false
+  },
+  {
+   "tool": "run_sql",
+   "input": {
+    "query": "SELECT txn_type, COUNT(*), SUM(written_premium), SUM(exposure_units), MIN(effective_date), MAX(cover_end_date) FROM premium_txn GROUP BY 1"
+   },
+   "output": "txn_type,count_star(),sum(written_premium),sum(exposure_units),min(effective_date),max(cover_end_date)\nRENEWAL,96764,66470703.32,96764.000,2020-01-01,2027-01-20\nMTA,22310,466631.74,0.000,2019-02-05,2026-12-07\nNEW,113555,74247233.10,113555.000,2019-01-01,2027-01-14\nCANCEL,13081,-4423904.86,-13081.000,2019-01-28,2026-12-07",
+   "error": false
+  },
+  {
+   "tool": "run_sql",
+   "input": {
+    "query": "SELECT pt.term_id, pt.inception_date, pt.expiry_date, pt.cancel_date, p.txn_type, p.booked_date, p.effective_date, p.cover_end_date, p.written_premium, p.exposure_units FROM policy_term pt JOIN premium_txn p USING(term_id) WHERE pt.term_id IN (SELECT term_id FROM premium_txn WHERE txn_type='CANCEL' LIMIT 3) OR pt.term_id IN (SELECT term_id FROM premium_txn WHERE txn_type='MTA' LIMIT 2) ORDER BY term_id, booked_date;\nSELECT COUNT(*) FROM policy_term pt JOIN policy p USING(policy_id) WHERE pt.channel<>p.channel;\nSELECT COUNT(*) FROM claim c JOIN policy_term pt USING(term_id) WHERE c.accident_date BETWEEN '2024-01-01' AND '2024-12-31' AND pt.channel='PCW';"
+   },
+   "output": "count_star()\n1336",
+   "error": false
+  },
+  {
+   "tool": "run_sql",
+   "input": {
+    "query": "SELECT pt.term_id, pt.inception_date, pt.expiry_date, pt.cancel_date, p.txn_type, p.booked_date, p.effective_date, p.cover_end_date, p.written_premium, p.exposure_units FROM policy_term pt JOIN premium_txn p USING(term_id) WHERE pt.term_id IN (SELECT term_id FROM premium_txn WHERE txn_type='CANCEL' LIMIT 3) OR pt.term_id IN (SELECT term_id FROM premium_txn WHERE txn_type='MTA' LIMIT 2) ORDER BY term_id, booked_date"
+   },
+   "output": "term_id,inception_date,expiry_date,cancel_date,txn_type,booked_date,effective_date,cover_end_date,written_premium,exposure_units\n3,2019-01-07,2020-01-07,None,NEW,2019-01-01,2019-01-07,2020-01-07,418.20,1.000\n3,2019-01-07,2020-01-07,None,MTA,2019-03-15,2019-03-13,2020-01-07,-20.62,0.000\n7,2019-01-03,2020-01-03,2019-10-01,NEW,2019-01-01,2019-01-03,2020-01-03,346.29,1.000\n7,2019-01-03,2020-01-03,2019-10-01,CANCEL,2019-10-05,2019-10-01,2020-01-03,-89.18,-1.000\n17,2019-01-02,2020-01-02,None,NEW,2019-01-01,2019-01-02,2020-01-02,555.54,1.000\n17,2019-01-02,2020-01-02,None,MTA,2019-10-24,2019-10-24,2020-01-02,-6.39,0.000\n24,2019-01-14,2020-01-14,2019-09-17,NEW,2019-01-01,2019-01-14,2020-01-14,398.49,1.000\n24,2019-01-14,2020-01-14,2019-09-17,CANCEL,2019-09-19,2019-09-17,2020-01-14,-129.92,-1.000\n32,2019-01-15,2020-01-15,2019-05-30,NEW,2019-01-02,2019-01-15,2020-01-15,524.96,1.000\n32,2019-01-15,2020-01-15,2019-05-30,CANCEL,2019-06-01,2019-05-30,2020-01-15,-330.80,-1.000",
+   "error": false
+  },
+  {
+   "tool": "run_sql",
+   "input": {
+    "query": "\nWITH ep AS (\n  SELECT SUM(p.written_premium * GREATEST(0, DATE_DIFF('day', GREATEST(p.effective_date, DATE '2024-01-01'), LEAST(p.cover_end_date, DATE '2025-01-01'))) / DATE_DIFF('day', p.effective_date, p.cover_end_date)) AS earned\n  FROM premium_txn p JOIN policy_term pt USING(term_id)\n  WHERE pt.channel='PCW' AND p.cover_end_date > p.effective_date\n), cl AS (\n  SELECT c.claim_id FROM claim c JOIN policy_term pt USING(term_id)\n  WHERE pt.channel='PCW' AND c.accident_date BETWEEN DATE '2024-01-01' AND DATE '2024-12-31'\n)\nSELECT ep.earned,\n  (SELECT SUM(t.amount) FROM claim_txn t JOIN cl USING(claim_id) WHERE t.txn_date <= DATE '2025-12-31') AS incurred_net_recov,\n  (SELECT SUM(t.amount) FROM claim_txn t JOIN cl USING(claim_id) WHERE t.txn_date <= DATE '2025-12-31' AND t.txn_type<>'RECOVERY') AS incurred_gross_recov,\n  (SELECT COUNT(*) FROM cl) AS n_claims\nFROM ep\n"
+   },
+   "output": "earned,incurred_net_recov,incurred_gross_recov,n_claims\n6910063.79,6403769.78,6526227.18,1336",
+   "error": false
+  }
+ ],
+ "usage": {
+  "input": 29697,
+  "output": 4632,
+  "cache_read": 14210,
+  "cache_write": 0
+ },
+ "effort": "medium",
+ "prompt_version": "v1"
+}

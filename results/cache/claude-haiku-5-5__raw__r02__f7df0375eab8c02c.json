@@ -1,0 +1,82 @@
+{
+ "model": "claude-haiku-5-5",
+ "condition": "raw",
+ "qid": "r02",
+ "question": "We track the accident-year reported loss ratio quarter by quarter. What is the full-year figure for accident year 2025?",
+ "final_text": "The AY2025 reported loss ratio at 31 December 2025 is about 0.639.\n\n- **Numerator:** reported incurred for claims with accident date in 2025, as at 31 Dec 2025. This is all claim transactions (payments, case reserve movements and recoveries, indemnity and ALAE), totalling \u00a317,821,570 across 4,430 claims. IBNR is excluded, since \"reported\" means excluding it.\n- **Denominator:** earned premium for 2025, \u00a327,877,321. I earned each premium transaction pro rata over its own cover period, so NEW, RENEWAL, MTA and CANCEL entries all fall into the right periods.\n- **Ratio:** 17,821,570 / 27,877,321 = 0.6393.\n\nI haven't built the quarter-by-quarter series, so this is the year-end figure only. The data has no reinsurance fields, so the figure is gross as the question asks.\n\nANSWER: 0.639",
+ "stop_reason": "end_turn",
+ "tool_calls": [
+  {
+   "tool": "run_sql",
+   "input": {
+    "query": "SELECT 'claim_txn' t, txn_type, cost_type, COUNT(*) n, SUM(amount) amt FROM claim_txn GROUP BY 1,2,3\nUNION ALL SELECT 'premium_txn', txn_type, '', COUNT(*), SUM(written_premium) FROM premium_txn GROUP BY 1,2,3\nUNION ALL SELECT 'claim_peril', peril, '', COUNT(*), NULL FROM claim GROUP BY 1,2,3\nORDER BY 1,2,3"
+   },
+   "output": "t,txn_type,cost_type,n,amt\nclaim_peril,BODILY_INJURY,,1691,None\nclaim_peril,OWN_DAMAGE,,9055,None\nclaim_peril,THEFT,,872,None\nclaim_peril,THIRD_PARTY_PROPERTY,,6280,None\nclaim_peril,WINDSCREEN,,5651,None\nclaim_txn,PAYMENT,ALAE,5482,4041773.75\nclaim_txn,PAYMENT,INDEMNITY,34398,78097079.75\nclaim_txn,RECOVERY,INDEMNITY,1151,-2278660.54\nclaim_txn,RESERVE,INDEMNITY,79216,15020532.03\npremium_txn,CANCEL,,13081,-4423904.86\npremium_txn,MTA,,22310,466631.74\npremium_txn,NEW,,113555,74247233.10\npremium_txn,RENEWAL,,96764,66470703.32",
+   "error": false
+  },
+  {
+   "tool": "run_sql",
+   "input": {
+    "query": "SELECT * FROM ibnr_valuation ORDER BY valuation_date, accident_year"
+   },
+   "output": "valuation_date,accident_year,ibnr\n2019-12-31,2019,450298.72\n2020-03-31,2019,356582.03\n2020-03-31,2020,683142.67\n2020-06-30,2019,341514.05\n2020-06-30,2020,824481.35\n2020-09-30,2019,165779.06\n2020-09-30,2020,1891648.46\n2020-12-31,2019,97378.08\n2020-12-31,2020,1911713.85\n2021-03-31,2019,86329.61\n2021-03-31,2020,905461.64\n2021-03-31,2021,920121.97\n2021-06-30,2019,22351.59\n2021-06-30,2020,277377.64\n2021-06-30,2021,1511261.10\n2021-09-30,2019,1543.50\n2021-09-30,2020,194333.49\n2021-09-30,2021,1515044.78\n2021-12-31,2019,0.00\n2021-12-31,2020,22311.98\n2021-12-31,2021,1351498.40\n2022-03-31,2019,0.00\n2022-03-31,2020,59952.40\n2022-03-31,2021,760092.87\n2022-03-31,2022,951355.79\n2022-06-30,2019,0.00\n2022-06-30,2020,0.00\n2022-06-30,2021,0.00\n2022-06-30,2022,815343.77\n2022-09-30,2019,0.00\n2022-09-30,2020,0.00\n2022-09-30,2021,104469.41\n2022-09-30,2022,2029753.62\n2022-12-31,2019,0.00\n2022-12-31,2020,7662.80\n2022-12-31,2021,194613.54\n2022-12-31,2022,2433916.61\n2023-03-31,2019,0.00\n2023-03-31,2020,0.00\n2023-03-31,2021,80286.90\n2023-03-31,2022,1131532.72\n2023-03-31,2023,1564851.71\n2023-06-30,2019,277.51\n2023-06-30,2020,6679.01\n2023-06-30,2021,66339.38\n2023-06-30,2022,1022786.36\n2023-06-30,2023,2231077.31\n2023-09-30,2019,0.00\n2023-09-30,2020,58414.96\n2023-09-30,2021,104788.35\n2023-09-30,2022,724197.53\n2023-09-30,2023,2741200.56\n2023-12-31,2019,0.00\n2023-12-31,2020,0.00\n2023-12-31,2021,12485.20\n2023-12-31,2022,309968.00\n2023-12-31,2023,3068439.64\n2024-03-31,2019,64837.26\n2024-03-31,2020,212592.74\n2024-03-31,2021,179429.31\n... 49 more rows",
+   "error": false
+  },
+  {
+   "tool": "run_sql",
+   "input": {
+    "query": "SELECT * FROM premium_txn WHERE term_id IN (SELECT term_id FROM premium_txn LIMIT 3) ORDER BY term_id, booked_date;\nSELECT * FROM claim WHERE claim_id IN (SELECT claim_id FROM claim_txn GROUP BY claim_id HAVING COUNT(*)>=4 LIMIT 2);\nSELECT c.claim_id, t.txn_date, t.txn_type, t.cost_type, t.amount FROM claim_txn t JOIN claim c USING(claim_id) WHERE c.claim_id IN (SELECT claim_id FROM claim_txn GROUP BY claim_id HAVING COUNT(*)>=4 LIMIT 2) ORDER BY 1,2;"
+   },
+   "output": "claim_id,txn_date,txn_type,cost_type,amount\n16,2019-07-16,RESERVE,INDEMNITY,890.94\n16,2019-07-28,PAYMENT,INDEMNITY,556.84\n16,2019-07-28,RESERVE,INDEMNITY,-556.84\n16,2019-09-01,RESERVE,INDEMNITY,-205.66\n16,2019-09-02,PAYMENT,INDEMNITY,119.35\n16,2019-09-02,RESERVE,INDEMNITY,-119.35\n16,2019-09-02,RESERVE,INDEMNITY,-9.09\n23,2019-09-30,RESERVE,INDEMNITY,671.45\n23,2019-10-10,PAYMENT,INDEMNITY,303.40\n23,2019-10-10,RESERVE,INDEMNITY,-303.40\n23,2019-10-21,RESERVE,INDEMNITY,313.85\n23,2019-10-22,PAYMENT,INDEMNITY,590.65\n23,2019-10-22,RESERVE,INDEMNITY,-590.65\n23,2019-11-24,PAYMENT,INDEMNITY,51.53\n23,2019-11-24,RESERVE,INDEMNITY,-51.53\n23,2019-11-24,PAYMENT,ALAE,112.42\n23,2019-11-24,RESERVE,INDEMNITY,-39.72",
+   "error": false
+  },
+  {
+   "tool": "run_sql",
+   "input": {
+    "query": "SELECT * FROM premium_txn ORDER BY term_id, booked_date LIMIT 25"
+   },
+   "output": "premium_txn_id,term_id,txn_type,booked_date,effective_date,cover_end_date,written_premium,exposure_units\n1,1,NEW,2019-01-01,2019-01-13,2020-01-13,301.57,1.000\n2,2,NEW,2019-01-01,2019-01-03,2020-01-03,1071.49,1.000\n3,3,NEW,2019-01-01,2019-01-07,2020-01-07,418.20,1.000\n4,3,MTA,2019-03-15,2019-03-13,2020-01-07,-20.62,0.000\n5,4,NEW,2019-01-01,2019-01-11,2020-01-11,337.96,1.000\n6,5,NEW,2019-01-01,2019-01-01,2020-01-01,356.50,1.000\n7,6,NEW,2019-01-01,2019-01-06,2020-01-06,437.02,1.000\n8,7,NEW,2019-01-01,2019-01-03,2020-01-03,346.29,1.000\n9,7,CANCEL,2019-10-05,2019-10-01,2020-01-03,-89.18,-1.000\n10,8,NEW,2019-01-01,2019-01-05,2020-01-05,560.53,1.000\n11,9,NEW,2019-01-01,2019-01-08,2020-01-08,315.58,1.000\n12,10,NEW,2019-01-01,2019-01-15,2020-01-15,1879.14,1.000\n13,11,NEW,2019-01-01,2019-01-09,2020-01-09,383.50,1.000\n14,12,NEW,2019-01-01,2019-01-01,2020-01-01,619.64,1.000\n15,13,NEW,2019-01-01,2019-01-04,2020-01-04,523.28,1.000\n16,14,NEW,2019-01-01,2019-01-03,2020-01-03,1102.77,1.000\n17,15,NEW,2019-01-01,2019-01-01,2020-01-01,547.55,1.000\n18,16,NEW,2019-01-01,2019-01-05,2020-01-05,393.01,1.000\n19,17,NEW,2019-01-01,2019-01-02,2020-01-02,555.54,1.000\n20,17,MTA,2019-10-24,2019-10-24,2020-01-02,-6.39,0.000\n21,18,NEW,2019-01-01,2019-01-08,2020-01-08,571.58,1.000\n22,19,NEW,2019-01-01,2019-01-15,2020-01-15,726.71,1.000\n23,20,NEW,2019-01-01,2019-01-07,2020-01-07,881.31,1.000\n24,21,NEW,2019-01-01,2019-01-08,2020-01-08,462.24,1.000\n25,22,NEW,2019-01-01,2019-01-04,2020-01-04,332.90,1.000",
+   "error": false
+  },
+  {
+   "tool": "run_sql",
+   "input": {
+    "query": "SELECT txn_type, MIN(effective_date), MAX(effective_date), MIN(cover_end_date), MAX(cover_end_date), MIN(booked_date), MAX(booked_date), AVG(exposure_units), MIN(exposure_units), MAX(exposure_units) FROM premium_txn GROUP BY 1"
+   },
+   "output": "txn_type,min(effective_date),max(effective_date),min(cover_end_date),max(cover_end_date),min(booked_date),max(booked_date),avg(exposure_units),min(exposure_units),max(exposure_units)\nMTA,2019-02-05,2025-12-31,2020-01-01,2026-12-07,2019-02-08,2025-12-31,0,0.000,0.000\nNEW,2019-01-01,2026-01-14,2020-01-01,2027-01-14,2019-01-01,2025-12-31,1,1.000,1.000\nRENEWAL,2020-01-01,2026-01-20,2021-01-01,2027-01-20,2019-12-15,2025-12-31,1,1.000,1.000\nCANCEL,2019-01-28,2025-12-31,2020-01-03,2026-12-07,2019-02-02,2025-12-31,-1,-1.000,-1.000",
+   "error": false
+  },
+  {
+   "tool": "run_sql",
+   "input": {
+    "query": "WITH ep AS (\n  SELECT SUM(written_premium * GREATEST(0, DATE_DIFF('day', GREATEST(effective_date, DATE '2025-01-01'), LEAST(cover_end_date, DATE '2026-01-01')))::DOUBLE / NULLIF(DATE_DIFF('day', effective_date, cover_end_date),0)) AS earned,\n         SUM(CASE WHEN DATE_DIFF('day', effective_date, cover_end_date)=0 THEN 1 ELSE 0 END) AS zero_len\n  FROM premium_txn),\ninc AS (\n  SELECT SUM(t.amount) AS incurred, COUNT(DISTINCT c.claim_id) AS n_claims\n  FROM claim_txn t JOIN claim c USING(claim_id)\n  WHERE YEAR(c.accident_date)=2025)\nSELECT ep.earned, ep.zero_len, inc.incurred, inc.n_claims, inc.incurred/ep.earned AS lr FROM ep, inc\""
+   },
+   "output": "error: Parser Error: unterminated quoted identifier at or near \"\"\"\n\nLINE 9: ..., inc.n_claims, inc.incurred/ep.earned AS lr FROM ep, inc\"\n                                                                    ^",
+   "error": true
+  },
+  {
+   "tool": "run_sql",
+   "input": {
+    "query": "WITH ep AS (\n  SELECT SUM(written_premium * GREATEST(0, DATE_DIFF('day', GREATEST(effective_date, DATE '2025-01-01'), LEAST(cover_end_date, DATE '2026-01-01')))::DOUBLE / NULLIF(DATE_DIFF('day', effective_date, cover_end_date),0)) AS earned,\n         SUM(CASE WHEN DATE_DIFF('day', effective_date, cover_end_date)=0 THEN 1 ELSE 0 END) AS zero_len\n  FROM premium_txn),\ninc AS (\n  SELECT SUM(t.amount) AS incurred, COUNT(DISTINCT c.claim_id) AS n_claims\n  FROM claim_txn t JOIN claim c USING(claim_id)\n  WHERE YEAR(c.accident_date)=2025)\nSELECT ep.earned, ep.zero_len, inc.incurred, inc.n_claims, inc.incurred/ep.earned AS lr FROM ep, inc"
+   },
+   "output": "earned,zero_len,incurred,n_claims,lr\n27877320.72,0,17821569.72,4430,0.639286",
+   "error": false
+  },
+  {
+   "tool": "run_sql",
+   "input": {
+    "query": "SELECT YEAR(effective_date) y, txn_type, SUM(written_premium) w, COUNT(*) n FROM premium_txn GROUP BY 1,2 ORDER BY 1,2"
+   },
+   "output": "y,txn_type,w,n\n2019,CANCEL,-197330.56,505\n2019,MTA,20121.06,879\n2019,NEW,8012525.07,13496\n2020,CANCEL,-403734.36,1236\n2020,MTA,43260.22,2082\n2020,NEW,8716775.78,14659\n2020,RENEWAL,4693136.11,7383\n2021,CANCEL,-522726.05,1700\n2021,MTA,55191.57,3004\n2021,NEW,8924131.82,15227\n2021,RENEWAL,8326384.47,13112\n2022,CANCEL,-672458.19,2220\n2022,MTA,70978.09,3754\n2022,NEW,9735823.32,16177\n2022,RENEWAL,11024687.85,18011\n2023,CANCEL,-767621.93,2461\n2023,MTA,80122.36,4110\n2023,NEW,11341579.28,17028\n2023,RENEWAL,11673955.94,17369\n2024,CANCEL,-854740.43,2351\n2024,MTA,90883.54,4040\n2024,NEW,13322076.83,17939\n2024,RENEWAL,13009691.47,17411\n2025,CANCEL,-1005293.34,2608\n2025,MTA,106074.90,4441\n2025,NEW,13905002.72,18639\n2025,RENEWAL,17137930.54,22667\n2026,NEW,289318.28,390\n2026,RENEWAL,604916.94,811",
+   "error": false
+  }
+ ],
+ "usage": {
+  "input": 31192,
+  "output": 4613,
+  "cache_read": 14210,
+  "cache_write": 0
+ },
+ "effort": "medium",
+ "prompt_version": "v1"
+}

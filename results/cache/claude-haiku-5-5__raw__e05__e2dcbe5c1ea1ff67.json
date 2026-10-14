@@ -1,0 +1,42 @@
+{
+ "model": "claude-haiku-5-5",
+ "condition": "raw",
+ "qid": "e05",
+ "question": "What was the average written premium per vehicle (per written car-year) in 2025?",
+ "final_text": "The average written premium in 2025 was about \u00a3753.28 per written car-year.\n\nI took written premium and exposure from `premium_txn` for transactions booked in 2025, netting off cancellations and mid-term adjustments:\n\n- **Written premium (2025 bookings, net):** \u00a330,274,839.20\n- **Written car-years (2025 bookings, net):** 40,190.52\n\n\u00a330,274,839.20 \u00f7 40,190.52 = \u00a3753.28.\n\nExposure is netted: new and renewal terms each add one car-year, and cancellations remove a fractional car-year. Mid-term adjustments carry premium but no exposure, so they are included in the premium total.\n\nANSWER: 753.28",
+ "stop_reason": "end_turn",
+ "tool_calls": [
+  {
+   "tool": "run_sql",
+   "input": {
+    "query": "SELECT txn_type, COUNT(*) n, SUM(written_premium) wp, SUM(exposure_units) eu, SUM(vehicle_delta) vd, MIN(booked_date) mn, MAX(booked_date) mx FROM premium_txn GROUP BY txn_type ORDER BY txn_type"
+   },
+   "output": "txn_type,n,wp,eu,vd,mn,mx\nCANCEL,13081,-4423904.86,-6630.491786,-13081,2019-02-02,2025-12-31\nMTA,22310,466631.74,0.000000,0,2019-02-08,2025-12-31\nNEW,113555,74247233.10,113555.000000,113555,2019-01-01,2025-12-31\nRENEWAL,96764,66470703.32,96764.000000,96764,2019-12-15,2025-12-31",
+   "error": false
+  },
+  {
+   "tool": "run_sql",
+   "input": {
+    "query": "SELECT txn_type, EXTRACT(year FROM booked_date) y, COUNT(*) n, SUM(written_premium) wp, SUM(exposure_units) eu FROM premium_txn GROUP BY 1,2 ORDER BY 1,2"
+   },
+   "output": "txn_type,y,n,wp,eu\nCANCEL,2019,498,-195372.97,-318.741752\nCANCEL,2020,1232,-402292.71,-647.287898\nCANCEL,2021,1699,-523317.63,-858.853048\nCANCEL,2022,2215,-670773.83,-1104.199987\nCANCEL,2023,2460,-765267.66,-1204.925034\nCANCEL,2024,2352,-855537.18,-1174.006597\nCANCEL,2025,2625,-1011342.88,-1322.477470\nMTA,2019,874,20311.66,0.000000\nMTA,2020,2076,42927.49,0.000000\nMTA,2021,3004,55087.10,0.000000\nMTA,2022,3750,70646.57,0.000000\nMTA,2023,4109,80072.91,0.000000\nMTA,2024,4043,91412.94,0.000000\nMTA,2025,4454,106173.07,0.000000\nNEW,2019,13791,8184970.49,13791.000000\nNEW,2020,14666,8714882.90,14666.000000\nNEW,2021,15283,8962157.88,15283.000000\nNEW,2022,16174,9735673.64,16174.000000\nNEW,2023,17010,11378453.67,17010.000000\nNEW,2024,17978,13355087.73,17978.000000\nNEW,2025,18653,13916006.79,18653.000000\nRENEWAL,2019,114,74028.11,114.000000\nRENEWAL,2020,7611,4828655.11,7611.000000\nRENEWAL,2021,13306,8429419.27,13306.000000\nRENEWAL,2022,18085,11094199.46,18085.000000\nRENEWAL,2023,17279,11668704.17,17279.000000\nRENEWAL,2024,17509,13111694.98,17509.000000\nRENEWAL,2025,22860,17264002.22,22860.000000",
+   "error": false
+  },
+  {
+   "tool": "run_sql",
+   "input": {
+    "query": "SELECT SUM(written_premium) wp, SUM(exposure_units) eu, SUM(written_premium)/SUM(exposure_units) ratio FROM premium_txn WHERE EXTRACT(year FROM booked_date)=2025"
+   },
+   "output": "wp,eu,ratio\n30274839.20,40190.522530,753.28",
+   "error": false
+  }
+ ],
+ "usage": {
+  "input": 3290,
+  "output": 1112,
+  "cache_read": 6159,
+  "cache_write": 0
+ },
+ "effort": "medium",
+ "prompt_version": "v1"
+}

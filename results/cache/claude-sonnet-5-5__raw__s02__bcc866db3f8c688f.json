@@ -1,0 +1,26 @@
+{
+ "model": "claude-sonnet-5-5",
+ "condition": "raw",
+ "qid": "s02",
+ "question": "How many vehicles were in force at the end of the second quarter of 2025?",
+ "final_text": "There were 36,701 vehicles in force at 30 June 2025, the end of Q2.\n\nI counted policy terms with these conditions:\n- The inception date is on or before 30 June 2025.\n- The expiry date is after 30 June 2025.\n- The term is either not cancelled, or was cancelled after 30 June 2025.\n\nEach in-force term belongs to a different policy, so terms and vehicles give the same count. I didn't check whether a term expiring on 30 June itself should count as in force that day. I treated it as not in force.\n\nANSWER: 36701",
+ "stop_reason": "end_turn",
+ "tool_calls": [
+  {
+   "tool": "run_sql",
+   "input": {
+    "query": "select count(*), count(distinct policy_id) from policy_term where inception_date<=DATE '2025-06-30' and expiry_date>DATE '2025-06-30' and (cancel_date is null or cancel_date>DATE '2025-06-30')"
+   },
+   "output": "count_star(),count(DISTINCT policy_id)\n36701,36701",
+   "error": false
+  }
+ ],
+ "usage": {
+  "input": 466,
+  "output": 541,
+  "cache_read": 4060,
+  "cache_write": 0
+ },
+ "effort": "medium",
+ "prompt_version": "v1"
+}

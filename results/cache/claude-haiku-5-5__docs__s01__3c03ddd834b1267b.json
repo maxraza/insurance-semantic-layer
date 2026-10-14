@@ -1,0 +1,34 @@
+{
+ "model": "claude-haiku-5-5",
+ "condition": "docs",
+ "qid": "s01",
+ "question": "How many vehicles were on cover at 31 December 2025?",
+ "final_text": "**39,907 vehicles** were on cover at 31 December 2025.\n\nI counted policy terms where the cover period includes that date: inception on or before 31 Dec 2025, expiry after it, and no mid-term cancellation effective on or before it. Each term maps to one vehicle, and no terms were bound after the valuation date. The count matches the 39,907 distinct policies in the same set.\n\nANSWER: 39907",
+ "stop_reason": "end_turn",
+ "tool_calls": [
+  {
+   "tool": "run_sql",
+   "input": {
+    "query": "SELECT COUNT(*) AS in_force,\n COUNT(*) FILTER (WHERE cancel_date IS NOT NULL AND cancel_date <= DATE '2025-12-31') AS cancelled_by_date,\n COUNT(*) FILTER (WHERE bound_date > DATE '2025-12-31') AS bound_after\nFROM policy_term\nWHERE inception_date <= DATE '2025-12-31' AND expiry_date > DATE '2025-12-31'\n  AND (cancel_date IS NULL OR cancel_date > DATE '2025-12-31')"
+   },
+   "output": "in_force,cancelled_by_date,bound_after\n39907,0,0",
+   "error": false
+  },
+  {
+   "tool": "run_sql",
+   "input": {
+    "query": "SELECT\n (SELECT COUNT(*) FROM policy_term WHERE inception_date <= DATE '2025-12-31' AND expiry_date > DATE '2025-12-31' AND (cancel_date IS NULL OR cancel_date > DATE '2025-12-31') AND term_id IN (SELECT term_id FROM premium_txn WHERE booked_date > DATE '2025-12-31')) AS future_booked_premium_rows,\n (SELECT COUNT(DISTINCT policy_id) FROM policy_term WHERE inception_date <= DATE '2025-12-31' AND expiry_date > DATE '2025-12-31' AND (cancel_date IS NULL OR cancel_date > DATE '2025-12-31')) AS distinct_policies,\n (SELECT COUNT(*) FROM policy_term WHERE cancel_date IS NOT NULL AND cancel_date < expiry_date) AS mid_term_cancels_total"
+   },
+   "output": "future_booked_premium_rows,distinct_policies,mid_term_cancels_total\n0,39907,13094",
+   "error": false
+  }
+ ],
+ "usage": {
+  "input": 1033,
+  "output": 977,
+  "cache_read": 10626,
+  "cache_write": 0
+ },
+ "effort": "medium",
+ "prompt_version": "v1"
+}

@@ -1,0 +1,34 @@
+{
+ "model": "claude-haiku-5-5",
+ "condition": "docs",
+ "qid": "n01",
+ "question": "How many accident-year 2024 claims have had at least one indemnity payment?",
+ "final_text": "**3,725** accident-year 2024 claims have at least one indemnity payment, as at 31 December 2025.\n\nI counted distinct claims with an accident date in 2024 and at least one `PAYMENT` row with `cost_type = INDEMNITY`. Recoveries and ALAE payments were excluded, and all payment rows are dated on or before 31 December 2025. All indemnity payments in the data are positive, so no nil or negative payments affect the count.\n\nANSWER: 3725",
+ "stop_reason": "end_turn",
+ "tool_calls": [
+  {
+   "tool": "run_sql",
+   "input": {
+    "query": "SELECT COUNT(DISTINCT c.claim_id) AS paid_claims_ay2024\nFROM claim c\nJOIN claim_txn t ON t.claim_id = c.claim_id\nWHERE YEAR(c.accident_date) = 2024\n  AND t.txn_type = 'PAYMENT'\n  AND t.cost_type = 'INDEMNITY'\n  AND t.txn_date <= DATE '2025-12-31'"
+   },
+   "output": "paid_claims_ay2024\n3725",
+   "error": false
+  },
+  {
+   "tool": "run_sql",
+   "input": {
+    "query": "SELECT txn_type, cost_type, COUNT(*) AS n, MIN(amount) AS min_amt, MAX(amount) AS max_amt, MIN(txn_date) AS min_d, MAX(txn_date) AS max_d\nFROM claim_txn GROUP BY 1,2 ORDER BY 1,2"
+   },
+   "output": "txn_type,cost_type,n,min_amt,max_amt,min_d,max_d\nPAYMENT,ALAE,5482,5.38,129243.82,2019-04-02,2025-12-31\nPAYMENT,INDEMNITY,34398,0.10,1214443.66,2019-02-22,2025-12-31\nRECOVERY,INDEMNITY,1151,-24511.92,-26.63,2019-07-11,2025-12-31\nRESERVE,INDEMNITY,79216,-1214443.66,1529370.74,2019-02-04,2025-12-31",
+   "error": false
+  }
+ ],
+ "usage": {
+  "input": 1042,
+  "output": 785,
+  "cache_read": 10626,
+  "cache_write": 0
+ },
+ "effort": "medium",
+ "prompt_version": "v1"
+}

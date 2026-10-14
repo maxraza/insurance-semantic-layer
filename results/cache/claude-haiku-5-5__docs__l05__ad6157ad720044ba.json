@@ -1,0 +1,42 @@
+{
+ "model": "claude-haiku-5-5",
+ "condition": "docs",
+ "qid": "l05",
+ "question": "What were outstanding case reserves at 31 December 2025?",
+ "final_text": "Outstanding case reserves at 31 December 2025 were \u00a315,020,532.03.\n\nThis is the sum of all RESERVE movements dated on or before 31 December 2025, across 23,549 claims. No claim has a negative running balance, and no claim closed on or before that date still carries a reserve.\n\nANSWER: 15020532.03",
+ "stop_reason": "end_turn",
+ "tool_calls": [
+  {
+   "tool": "run_sql",
+   "input": {
+    "query": "SELECT SUM(amount) AS case_reserve_2025_12_31, COUNT(DISTINCT claim_id) AS claims_with_reserve_rows, MAX(txn_date) AS max_txn_date FROM claim_txn WHERE txn_type = 'RESERVE' AND txn_date <= DATE '2025-12-31'"
+   },
+   "output": "case_reserve_2025_12_31,claims_with_reserve_rows,max_txn_date\n15020532.03,23549,2025-12-31",
+   "error": false
+  },
+  {
+   "tool": "run_sql",
+   "input": {
+    "query": "SELECT COUNT(*) AS neg_balance_claims, SUM(bal) AS sum_neg FROM (SELECT claim_id, SUM(amount) AS bal FROM claim_txn WHERE txn_type = 'RESERVE' AND txn_date <= DATE '2025-12-31' GROUP BY claim_id HAVING SUM(amount) < 0)"
+   },
+   "output": "neg_balance_claims,sum_neg\n0,None",
+   "error": false
+  },
+  {
+   "tool": "run_sql",
+   "input": {
+    "query": "SELECT SUM(r.bal) AS reserve_on_closed_claims, COUNT(*) AS n FROM (SELECT claim_id, SUM(amount) AS bal FROM claim_txn WHERE txn_type='RESERVE' AND txn_date <= DATE '2025-12-31' GROUP BY claim_id) r JOIN claim c ON c.claim_id = r.claim_id WHERE c.closed_date IS NOT NULL AND c.closed_date <= DATE '2025-12-31' AND r.bal <> 0"
+   },
+   "output": "reserve_on_closed_claims,n\nNone,0",
+   "error": false
+  }
+ ],
+ "usage": {
+  "input": 1855,
+  "output": 897,
+  "cache_read": 15939,
+  "cache_write": 0
+ },
+ "effort": "medium",
+ "prompt_version": "v1"
+}

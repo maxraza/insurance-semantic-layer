@@ -1,0 +1,42 @@
+{
+ "model": "claude-haiku-5-5",
+ "condition": "docs",
+ "qid": "u04",
+ "question": "What will our 2026 accident-year loss ratio be?",
+ "final_text": "I can't give a 2026 accident-year loss ratio from this data. The database runs to 31 December 2025 and holds no 2026 premium, exposure or claims. Forecasting it would need assumptions about rate changes, mix, claims inflation and development that aren't in the data or the glossary.\n\nThe nearest figure I can compute is the 2025 accident-year loss ratio as at 31 December 2025, which is about 0.79:\n\n- Earned premium in calendar 2025 (the glossary's accident-basis pairing): \u00a327,877,321\n- Reported loss for accident-year 2025 (paid indemnity \u00a310,071,969 plus case reserves \u00a37,480,764): \u00a317,552,733\n- IBNR for accident-year 2025: \u00a34,249,085\n- Paid ALAE for accident-year 2025: \u00a3268,837\n- Ratio: (17,552,733 + 4,249,085 + 268,837) / 27,877,321 \u2248 0.792\n\nThis is a reference point, not a forecast. The IBNR is the largest uncertain piece and will still develop. I assumed the RESERVE rows are signed changes in case reserve and that recoveries are stored as negatives.\n\nANSWER: UNANSWERABLE",
+ "stop_reason": "end_turn",
+ "tool_calls": [
+  {
+   "tool": "run_sql",
+   "input": {
+    "query": "SELECT MIN(booked_date), MAX(booked_date), MIN(effective_date), MAX(cover_end_date), COUNT(*) FROM premium_txn;"
+   },
+   "output": "min(booked_date),max(booked_date),min(effective_date),max(cover_end_date),count_star()\n2019-01-01,2025-12-31,2019-01-01,2027-01-20,245710",
+   "error": false
+  },
+  {
+   "tool": "run_sql",
+   "input": {
+    "query": "SELECT accident_year, MAX(valuation_date) AS latest_val, SUM(ibnr) FROM ibnr_valuation WHERE valuation_date = (SELECT MAX(valuation_date) FROM ibnr_valuation) GROUP BY 1 ORDER BY 1;"
+   },
+   "output": "accident_year,latest_val,sum(ibnr)\n2019,2025-12-31,0.00\n2020,2025-12-31,1540.89\n2021,2025-12-31,38210.26\n2022,2025-12-31,163122.73\n2023,2025-12-31,184880.76\n2024,2025-12-31,611435.82\n2025,2025-12-31,4249084.97",
+   "error": false
+  },
+  {
+   "tool": "run_sql",
+   "input": {
+    "query": "\nWITH ep AS (\n  SELECT SUM(CASE WHEN cover_end_date > effective_date THEN written_premium *\n    GREATEST(0, DATE_DIFF('day', GREATEST(effective_date, DATE '2025-01-01'), LEAST(cover_end_date, DATE '2026-01-01')))\n    / DATE_DIFF('day', effective_date, cover_end_date) ELSE 0 END) AS earned_prem\n  FROM premium_txn\n),\ncl AS (\n  SELECT c.claim_id, EXTRACT(year FROM c.accident_date) AS ay FROM claim c WHERE EXTRACT(year FROM c.accident_date) = 2025\n),\nt AS (\n  SELECT t.claim_id, t.txn_type, t.cost_type, t.amount FROM claim_txn t JOIN cl USING (claim_id) WHERE t.txn_date <= DATE '2025-12-31'\n)\nSELECT\n  (SELECT earned_prem FROM ep) AS earned_prem,\n  SUM(CASE WHEN cost_type='INDEMNITY' AND txn_type IN ('PAYMENT','RECOVERY') THEN amount ELSE 0 END) AS paid_indemnity,\n  SUM(CASE WHEN txn_type='RESERVE' THEN amount ELSE 0 END) AS case_reserve,\n  SUM(CASE WHEN cost_type='ALAE' AND txn_type IN ('PAYMENT','RECOVERY') THEN amount ELSE 0 END) AS paid_alae,\n  SUM(CASE WHEN cost_type='INDEMNITY' AND txn_type IN ('PAYMENT','RECOVERY') THEN amount ELSE 0 END) + SUM(CASE WHEN txn_type='RESERVE' THEN amount ELSE 0 END) AS reported_loss_ind\nFROM t;\n"
+   },
+   "output": "earned_prem,paid_indemnity,case_reserve,paid_alae,reported_loss_ind\n27877320.72,10071968.91,7480764.13,268836.68,17552733.04",
+   "error": false
+  }
+ ],
+ "usage": {
+  "input": 3567,
+  "output": 2718,
+  "cache_read": 15939,
+  "cache_write": 0
+ },
+ "effort": "medium",
+ "prompt_version": "v1"
+}

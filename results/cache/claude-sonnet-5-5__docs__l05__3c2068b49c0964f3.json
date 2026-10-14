@@ -1,0 +1,34 @@
+{
+ "model": "claude-sonnet-5-5",
+ "condition": "docs",
+ "qid": "l05",
+ "question": "What were outstanding case reserves at 31 December 2025?",
+ "final_text": "Outstanding case reserves at 31 December 2025 were \u00a315,020,532.03. I got this by summing all reserve movements on claims booked on or before that date. All the reserve rows are indemnity, so there is no ALAE reserve to separate out.\n\nANSWER: 15020532.03",
+ "stop_reason": "end_turn",
+ "tool_calls": [
+  {
+   "tool": "run_sql",
+   "input": {
+    "query": "select sum(amount) from claim_txn where txn_type='RESERVE' and txn_date<=DATE '2025-12-31'"
+   },
+   "output": "sum(amount)\n15020532.03",
+   "error": false
+  },
+  {
+   "tool": "run_sql",
+   "input": {
+    "query": "select cost_type, sum(amount), min(amount) from claim_txn where txn_type='RESERVE' and txn_date<=DATE '2025-12-31' group by 1"
+   },
+   "output": "cost_type,sum(amount),min(amount)\nINDEMNITY,15020532.03,-1214443.66",
+   "error": false
+  }
+ ],
+ "usage": {
+  "input": 696,
+  "output": 340,
+  "cache_read": 15939,
+  "cache_write": 0
+ },
+ "effort": "medium",
+ "prompt_version": "v1"
+}

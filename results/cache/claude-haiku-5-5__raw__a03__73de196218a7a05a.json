@@ -1,0 +1,42 @@
+{
+ "model": "claude-haiku-5-5",
+ "condition": "raw",
+ "qid": "a03",
+ "question": "What was our expense ratio for 2024?",
+ "final_text": "The 2024 expense ratio is about **0.142** (14.2%).\n\n- **Expenses for 2024:** \u00a33,365,613.78, summing the 2024 expense_month rows across all four expense types and both channels. Expenses booked in 2024 instead would give \u00a33,344,200.61, so the basis matters a little.\n- **Earned premium for 2024:** \u00a323,748,557.88. I pro-rated each policy transaction's written premium over its cover period and took the 2024 share. Written premium booked in 2024 is \u00a325.70m, but that is not earned.\n\nCaveats: the earned figure is my own pro-rata calculation, since the database has no earned-premium table. Transactions with zero-length cover periods drop out of it. The data has no reinsurance table, so the ratio is gross, as the brief specifies.\n\nANSWER: 0.1417",
+ "stop_reason": "end_turn",
+ "tool_calls": [
+  {
+   "tool": "run_sql",
+   "input": {
+    "query": "SELECT expense_type, channel, COUNT(*) n, SUM(amount) amt, MIN(expense_month) mn, MAX(expense_month) mx, MIN(booked_date) bmin, MAX(booked_date) bmax FROM expense GROUP BY ALL ORDER BY 1,2"
+   },
+   "output": "expense_type,channel,n,amt,mn,mx,bmin,bmax\nACQUISITION,DIRECT,83,1186189.44,2019-01-01,2025-11-01,2019-02-09,2025-12-11\nACQUISITION,PCW,83,2435220.32,2019-01-01,2025-11-01,2019-02-09,2025-12-11\nADMIN,None,83,10038512.10,2019-01-01,2025-11-01,2019-02-09,2025-12-11\nCOMMISSION,BROKER,83,5299422.18,2019-01-01,2025-11-01,2019-02-09,2025-12-11",
+   "error": false
+  },
+  {
+   "tool": "run_sql",
+   "input": {
+    "query": "SELECT txn_type, COUNT(*) n, SUM(written_premium) wp, SUM(exposure_units) eu, MIN(booked_date) bmin, MAX(booked_date) bmax FROM premium_txn GROUP BY 1 ORDER BY 1"
+   },
+   "output": "txn_type,n,wp,eu,bmin,bmax\nCANCEL,13081,-4423904.86,-6630.491786,2019-02-02,2025-12-31\nMTA,22310,466631.74,0.000000,2019-02-08,2025-12-31\nNEW,113555,74247233.10,113555.000000,2019-01-01,2025-12-31\nRENEWAL,96764,66470703.32,96764.000000,2019-12-15,2025-12-31",
+   "error": false
+  },
+  {
+   "tool": "run_sql",
+   "input": {
+    "query": "SELECT 'exp_by_month' k, SUM(amount) v FROM expense WHERE expense_month BETWEEN '2024-01-01' AND '2024-12-01'\nUNION ALL SELECT 'exp_by_booked', SUM(amount) FROM expense WHERE booked_date BETWEEN '2024-01-01' AND '2024-12-31'\nUNION ALL SELECT 'wp_booked_2024', SUM(written_premium) FROM premium_txn WHERE booked_date BETWEEN '2024-01-01' AND '2024-12-31'\nUNION ALL SELECT 'wp_effective_2024', SUM(written_premium) FROM premium_txn WHERE effective_date BETWEEN '2024-01-01' AND '2024-12-31'\nUNION ALL SELECT 'earned_2024', SUM(written_premium * GREATEST(0, DATE_DIFF('day', GREATEST(effective_date, DATE '2024-01-01'), LEAST(cover_end_date, DATE '2025-01-01'))) / NULLIF(DATE_DIFF('day', effective_date, cover_end_date),0)) FROM premium_txn WHERE effective_date <= '2024-12-31' AND cover_end_date > '2024-01-01'\nUNION ALL SELECT 'exp_2024_rows', COUNT(*) FROM expense WHERE expense_month BETWEEN '2024-01-01' AND '2024-12-01'\nUNION ALL SELECT 'exp_dup_months', COUNT(*) - COUNT(DISTINCT (expense_month, expense_type, channel)) FROM expense"
+   },
+   "output": "k,v\nexp_by_month,3365613.78\nexp_by_booked,3344200.61\nwp_booked_2024,25702658.47\nwp_effective_2024,25567911.41\nearned_2024,23748557.88\nexp_2024_rows,48\nexp_dup_months,0",
+   "error": false
+  }
+ ],
+ "usage": {
+  "input": 2885,
+  "output": 1874,
+  "cache_read": 6159,
+  "cache_write": 0
+ },
+ "effort": "medium",
+ "prompt_version": "v1"
+}

@@ -1,0 +1,34 @@
+{
+ "model": "claude-haiku-5-5",
+ "condition": "docs",
+ "qid": "b05",
+ "question": "How much indemnity did we pay out during calendar year 2025, regardless of when the accidents happened?",
+ "final_text": "Indemnity paid in calendar 2025 was \u00a320,236,714.68 net of recoveries.\n\nThis is the glossary's `paid_loss` definition: indemnity PAYMENT rows plus RECOVERY rows (which are stored as negatives), with transaction dates in 2025 and ALAE excluded. Gross indemnity payments before recoveries were \u00a320,735,785.11, and recoveries were \u00a3499,070.43. If you want the gross figure instead, that is the number to use.\n\nANSWER: 20236714.68",
+ "stop_reason": "end_turn",
+ "tool_calls": [
+  {
+   "tool": "run_sql",
+   "input": {
+    "query": "SELECT txn_type, cost_type, COUNT(*) n, SUM(amount) total, MIN(amount) mn, MAX(amount) mx\nFROM claim_txn\nWHERE txn_date >= DATE '2025-01-01' AND txn_date <= DATE '2025-12-31'\nGROUP BY 1,2 ORDER BY 1,2;"
+   },
+   "output": "txn_type,cost_type,n,total,mn,mx\nPAYMENT,ALAE,1246,1218806.94,8.91,105414.69\nPAYMENT,INDEMNITY,7185,20735785.11,0.10,1214443.66\nRECOVERY,INDEMNITY,248,-499070.43,-15480.79,-83.19\nRESERVE,INDEMNITY,16351,365659.47,-1214443.66,429003.52",
+   "error": false
+  },
+  {
+   "tool": "run_sql",
+   "input": {
+    "query": "SELECT ROUND(SUM(amount),2) AS paid_indemnity_net_2025\nFROM claim_txn\nWHERE cost_type = 'INDEMNITY' AND txn_type IN ('PAYMENT','RECOVERY')\n  AND txn_date >= DATE '2025-01-01' AND txn_date <= DATE '2025-12-31';"
+   },
+   "output": "paid_indemnity_net_2025\n20236714.68",
+   "error": false
+  }
+ ],
+ "usage": {
+  "input": 1764,
+  "output": 882,
+  "cache_read": 15939,
+  "cache_write": 0
+ },
+ "effort": "medium",
+ "prompt_version": "v1"
+}

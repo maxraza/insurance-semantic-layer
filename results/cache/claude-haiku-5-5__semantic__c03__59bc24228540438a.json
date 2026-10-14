@@ -1,0 +1,33 @@
+{
+ "model": "claude-haiku-5-5",
+ "condition": "semantic",
+ "qid": "c03",
+ "question": "What was total gross written premium booked in calendar year 2024?",
+ "final_text": "Total written premium booked in calendar year 2024 was \u00a325,702,658.47 (calendar basis, valued at 31 December 2025, gross of reinsurance).\n\nANSWER: 25702658.47",
+ "stop_reason": "end_turn",
+ "tool_calls": [
+  {
+   "tool": "query_metrics",
+   "input": {
+    "metrics": [
+     "written_premium"
+    ],
+    "basis": "calendar",
+    "as_of": "2025-12-31",
+    "period_from": "2024-01-01",
+    "period_to": "2024-12-31",
+    "grain": "year"
+   },
+   "output": "period,written_premium\n2024,25702658.47",
+   "error": false
+  }
+ ],
+ "usage": {
+  "input": 397,
+  "output": 255,
+  "cache_read": 7364,
+  "cache_write": 0
+ },
+ "effort": "medium",
+ "prompt_version": "v1"
+}

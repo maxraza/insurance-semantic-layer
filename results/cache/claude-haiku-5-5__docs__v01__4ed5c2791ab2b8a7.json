@@ -1,0 +1,42 @@
+{
+ "model": "claude-haiku-5-5",
+ "condition": "docs",
+ "qid": "v01",
+ "question": "What was the accident-year 2023 reported loss ratio as it stood at 31 December 2023?",
+ "final_text": "The accident-year 2023 reported loss ratio as at 31 December 2023 is about **0.696**.\n\n- **Reported loss: \u00a314,841,148.31.** This is indemnity paid net of recoveries (\u00a38,232,270.92) plus case reserves (\u00a36,608,877.39). It covers claims with a 2023 accident date and only transactions dated on or before 31 December 2023. ALAE and IBNR are excluded, as the glossary defines reported loss.\n- **Earned premium: \u00a321,311,826.07.** This is premium from transactions booked on or before 31 December 2023, earned pro rata over calendar 2023. On an accident basis the denominator equals calendar-basis earned premium, per the glossary.\n\nThe ratio is 14,841,148.31 / 21,311,826.07 = 0.696.\n\nANSWER: 0.696",
+ "stop_reason": "end_turn",
+ "tool_calls": [
+  {
+   "tool": "run_sql",
+   "input": {
+    "query": "SELECT 'claims' t, COUNT(*) n, MIN(accident_date) mn, MAX(accident_date) mx, MAX(report_date) mxr FROM claim\nUNION ALL SELECT 'claim_txn', COUNT(*), MIN(txn_date), MAX(txn_date), NULL FROM claim_txn\nUNION ALL SELECT 'premium_txn', COUNT(*), MIN(effective_date), MAX(cover_end_date), MAX(booked_date) FROM premium_txn\nUNION ALL SELECT 'ibnr', COUNT(*), MIN(valuation_date), MAX(valuation_date), NULL FROM ibnr_valuation"
+   },
+   "output": "t,n,mn,mx,mxr\nclaims,23549,2019-01-21,2025-12-31,2025-12-31\nclaim_txn,120247,2019-02-04,2025-12-31,None\npremium_txn,245710,2019-01-01,2027-01-20,2025-12-31\nibnr,109,2019-12-31,2025-12-31,None",
+   "error": false
+  },
+  {
+   "tool": "run_sql",
+   "input": {
+    "query": "SELECT txn_type, cost_type, COUNT(*), SUM(amount), MIN(amount), MAX(amount) FROM claim_txn GROUP BY 1,2 ORDER BY 1,2"
+   },
+   "output": "txn_type,cost_type,count_star(),sum(amount),min(amount),max(amount)\nPAYMENT,ALAE,5482,4041773.75,5.38,129243.82\nPAYMENT,INDEMNITY,34398,78097079.75,0.10,1214443.66\nRECOVERY,INDEMNITY,1151,-2278660.54,-24511.92,-26.63\nRESERVE,INDEMNITY,79216,15020532.03,-1214443.66,1529370.74",
+   "error": false
+  },
+  {
+   "tool": "run_sql",
+   "input": {
+    "query": "WITH ep AS (\nSELECT SUM(written_premium * GREATEST(0, DATE_DIFF('day', GREATEST(effective_date, DATE '2023-01-01'), LEAST(cover_end_date, DATE '2024-01-01'))) / NULLIF(DATE_DIFF('day', effective_date, cover_end_date),0)) earned\nFROM premium_txn WHERE booked_date <= DATE '2023-12-31' AND cover_end_date > effective_date),\nctx AS (\nSELECT c.claim_id, c.accident_date FROM claim c WHERE c.accident_date BETWEEN DATE '2023-01-01' AND DATE '2023-12-31'),\nloss AS (\nSELECT SUM(CASE WHEN t.txn_type IN ('PAYMENT','RECOVERY') AND t.cost_type='INDEMNITY' THEN t.amount ELSE 0 END) paid_ind,\nSUM(CASE WHEN t.txn_type='RESERVE' THEN t.amount ELSE 0 END) case_res\nFROM claim_txn t JOIN ctx ON t.claim_id=ctx.claim_id WHERE t.txn_date <= DATE '2023-12-31')\nSELECT loss.paid_ind, loss.case_res, loss.paid_ind+loss.case_res reported_loss, ep.earned, (loss.paid_ind+loss.case_res)/ep.earned ratio FROM loss, ep"
+   },
+   "output": "paid_ind,case_res,reported_loss,earned,ratio\n8232270.92,6608877.39,14841148.31,21311826.07,0.696381",
+   "error": false
+  }
+ ],
+ "usage": {
+  "input": 3548,
+  "output": 2225,
+  "cache_read": 15939,
+  "cache_write": 0
+ },
+ "effort": "medium",
+ "prompt_version": "v1"
+}

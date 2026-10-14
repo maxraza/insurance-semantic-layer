@@ -1,0 +1,26 @@
+{
+ "model": "claude-sonnet-5-5",
+ "condition": "docs",
+ "qid": "s05",
+ "question": "What were case reserves outstanding on bodily-injury claims at 31 December 2025?",
+ "final_text": "Case reserves outstanding on bodily-injury claims at 31 December 2025 were about \u00a311,574,541.29. That is the running sum of all RESERVE movements on bodily-injury claims booked on or before that date.\n\nI didn't separately exclude closed claims. I assumed their reserves had already been released through reserve movements.\n\nANSWER: 11574541.29",
+ "stop_reason": "end_turn",
+ "tool_calls": [
+  {
+   "tool": "run_sql",
+   "input": {
+    "query": "select sum(t.amount) from claim_txn t join claim c using(claim_id) where c.peril='BODILY_INJURY' and t.txn_type='RESERVE' and t.txn_date<='2025-12-31' and c.report_date<='2025-12-31'"
+   },
+   "output": "sum(t.amount)\n11574541.29",
+   "error": false
+  }
+ ],
+ "usage": {
+  "input": 362,
+  "output": 301,
+  "cache_read": 10626,
+  "cache_write": 0
+ },
+ "effort": "medium",
+ "prompt_version": "v1"
+}

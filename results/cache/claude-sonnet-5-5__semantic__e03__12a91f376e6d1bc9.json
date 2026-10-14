@@ -1,0 +1,33 @@
+{
+ "model": "claude-sonnet-5-5",
+ "condition": "semantic",
+ "qid": "e03",
+ "question": "How many car-years of exposure did we earn in 2025?",
+ "final_text": "We earned 36,813.19 car-years of exposure in 2025. This is the calendar-year earned exposure, valued at 31 December 2025.\n\nANSWER: 36813.19",
+ "stop_reason": "end_turn",
+ "tool_calls": [
+  {
+   "tool": "query_metrics",
+   "input": {
+    "metrics": [
+     "earned_exposure"
+    ],
+    "basis": "calendar",
+    "as_of": "2025-12-31",
+    "grain": "year",
+    "period_from": "2025-01-01",
+    "period_to": "2025-12-31"
+   },
+   "output": "period,earned_exposure\n2025,36813.19",
+   "error": false
+  }
+ ],
+ "usage": {
+  "input": 398,
+  "output": 250,
+  "cache_read": 3689,
+  "cache_write": 3689
+ },
+ "effort": "medium",
+ "prompt_version": "v1"
+}

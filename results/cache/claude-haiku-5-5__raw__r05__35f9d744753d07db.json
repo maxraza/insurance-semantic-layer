@@ -1,0 +1,42 @@
+{
+ "model": "claude-haiku-5-5",
+ "condition": "raw",
+ "qid": "r05",
+ "question": "What is the average paid indemnity per paid bodily-injury claim for accident year 2023 (claims with no payment excluded)?",
+ "final_text": "The average paid indemnity per paid bodily-injury claim for accident year 2023 is \u00a333,958.17.\n\nI took claims with peril BODILY_INJURY and accident date in 2023, summed their PAYMENT transactions with cost type INDEMNITY, and kept only claims with at least one such payment. That gives 248 claims, totalling \u00a38,421,627.32 paid. Recoveries and ALAE are excluded, and there are no duplicate transaction rows or non-positive payments in the set.\n\nANSWER: 33958.17",
+ "stop_reason": "end_turn",
+ "tool_calls": [
+  {
+   "tool": "run_sql",
+   "input": {
+    "query": "SELECT 'peril' AS f, peril AS v, COUNT(*) n FROM claim GROUP BY 2 UNION ALL SELECT 'txn_type', txn_type, COUNT(*) FROM claim_txn GROUP BY 2 UNION ALL SELECT 'cost_type', cost_type, COUNT(*) FROM claim_txn GROUP BY 2"
+   },
+   "output": "f,v,n\nperil,WINDSCREEN,5651\nperil,OWN_DAMAGE,9055\nperil,THEFT,872\nperil,BODILY_INJURY,1691\nperil,THIRD_PARTY_PROPERTY,6280\ntxn_type,RECOVERY,1151\ntxn_type,RESERVE,79216\ntxn_type,PAYMENT,39880\ncost_type,INDEMNITY,114765\ncost_type,ALAE,5482",
+   "error": false
+  },
+  {
+   "tool": "run_sql",
+   "input": {
+    "query": "WITH p AS (\n SELECT c.claim_id, SUM(t.amount) paid, COUNT(*) n, MIN(t.amount) mn\n FROM claim c JOIN claim_txn t ON t.claim_id=c.claim_id\n WHERE c.peril='BODILY_INJURY' AND EXTRACT(year FROM c.accident_date)=2023\n   AND t.txn_type='PAYMENT' AND t.cost_type='INDEMNITY'\n GROUP BY c.claim_id)\nSELECT COUNT(*) claims, SUM(paid) total, AVG(paid) avg_paid, MIN(mn) min_amt, SUM(CASE WHEN paid<=0 THEN 1 ELSE 0 END) nonpos FROM p"
+   },
+   "output": "claims,total,avg_paid,min_amt,nonpos\n248,8421627.32,33958.17,2.78,0",
+   "error": false
+  },
+  {
+   "tool": "run_sql",
+   "input": {
+    "query": "SELECT COUNT(*) dup_groups FROM (SELECT claim_id, txn_date, txn_type, cost_type, amount, COUNT(*) c FROM claim_txn GROUP BY ALL HAVING COUNT(*)>1)"
+   },
+   "output": "dup_groups\n0",
+   "error": false
+  }
+ ],
+ "usage": {
+  "input": 2939,
+  "output": 1125,
+  "cache_read": 8120,
+  "cache_write": 0
+ },
+ "effort": "medium",
+ "prompt_version": "v1"
+}

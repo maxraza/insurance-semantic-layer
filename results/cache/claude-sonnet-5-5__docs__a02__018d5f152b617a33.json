@@ -1,0 +1,26 @@
+{
+ "model": "claude-sonnet-5-5",
+ "condition": "docs",
+ "qid": "a02",
+ "question": "What were incurred losses in 2025?",
+ "final_text": "Incurred losses in 2025 were \u00a320,602,374.15 on the calendar basis. I took \"incurred losses\" to mean reported loss, which is indemnity paid net of recoveries plus case reserves. It excludes IBNR and ALAE. The calendar basis is the change in reported loss from claim transactions dated in 2025, valued at 31 December 2025.\n\nThe question doesn't name a basis, so I chose calendar. On an accident basis, for claims with a 2025 accident date, the figure is lower at \u00a317,552,733.04. If you meant IBNR to be included, the figure would need adding to either of these.\n\nANSWER: 20602374.15",
+ "stop_reason": "end_turn",
+ "tool_calls": [
+  {
+   "tool": "run_sql",
+   "input": {
+    "query": "select sum(case when year(t.txn_date)=2025 then amount end) cal, sum(case when year(c.accident_date)=2025 then amount end) acc from claim_txn t join claim c using(claim_id) where t.cost_type='INDEMNITY' and t.txn_date<='2025-12-31'"
+   },
+   "output": "cal,acc\n20602374.15,17552733.04",
+   "error": false
+  }
+ ],
+ "usage": {
+  "input": 519,
+  "output": 535,
+  "cache_read": 10626,
+  "cache_write": 0
+ },
+ "effort": "medium",
+ "prompt_version": "v1"
+}

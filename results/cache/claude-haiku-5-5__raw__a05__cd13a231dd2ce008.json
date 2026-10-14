@@ -1,0 +1,50 @@
+{
+ "model": "claude-haiku-5-5",
+ "condition": "raw",
+ "qid": "a05",
+ "question": "What was claim frequency in 2023?",
+ "final_text": "Claim frequency for 2023 was about **0.131 claims per earned policy-year** (4,379 claims over 33,488 earned policy-years).\n\n- **Claims:** 4,379 claims with accident dates in 2023. All of them fall within the cover period of their policy term.\n- **Exposure:** Earned exposure is the cover days falling in 2023 divided by each term's length, summed over all terms. Cancelled terms end at their cancel date. This reproduces the exposure units recorded on the cancellation transactions.\n- **Caveat:** This counts claims, not claim transactions, and uses all terms with cover in 2023 regardless of channel or cover type.\n\nANSWER: 0.1308",
+ "stop_reason": "end_turn",
+ "tool_calls": [
+  {
+   "tool": "run_sql",
+   "input": {
+    "query": "SELECT 'claims_2023' AS k, COUNT(*) AS v FROM claim WHERE accident_date BETWEEN '2023-01-01' AND '2023-12-31'\nUNION ALL SELECT 'claims_total', COUNT(*) FROM claim\nUNION ALL SELECT 'txn_types', COUNT(DISTINCT txn_type) FROM premium_txn\nUNION ALL SELECT 'exposure_rows', COUNT(*) FROM premium_txn\nUNION ALL SELECT 'terms', COUNT(*) FROM policy_term;\nSELECT txn_type, COUNT(*), SUM(exposure_units), MIN(effective_date), MAX(effective_date) FROM premium_txn GROUP BY 1;"
+   },
+   "output": "txn_type,count_star(),sum(exposure_units),min(effective_date),max(effective_date)\nMTA,22310,0.000000,2019-02-05,2025-12-31\nRENEWAL,96764,96764.000000,2020-01-01,2026-01-20\nCANCEL,13081,-6630.491786,2019-01-28,2025-12-31\nNEW,113555,113555.000000,2019-01-01,2026-01-14",
+   "error": false
+  },
+  {
+   "tool": "run_sql",
+   "input": {
+    "query": "SELECT COUNT(*) AS claims_2023 FROM claim WHERE accident_date BETWEEN '2023-01-01' AND '2023-12-31';"
+   },
+   "output": "claims_2023\n4379",
+   "error": false
+  },
+  {
+   "tool": "run_sql",
+   "input": {
+    "query": "SELECT p.term_id, p.txn_type, p.booked_date, p.effective_date, p.cover_end_date, p.exposure_units, p.written_premium, p.vehicle_delta, t.inception_date, t.expiry_date, t.cancel_date\nFROM premium_txn p JOIN policy_term t USING(term_id)\nWHERE t.term_id IN (SELECT term_id FROM premium_txn WHERE txn_type='CANCEL' LIMIT 3) OR t.term_id IN (SELECT term_id FROM premium_txn WHERE txn_type='MTA' LIMIT 3)\nORDER BY p.term_id, p.effective_date;"
+   },
+   "output": "term_id,txn_type,booked_date,effective_date,cover_end_date,exposure_units,written_premium,vehicle_delta,inception_date,expiry_date,cancel_date\n3,NEW,2019-01-01,2019-01-07,2020-01-07,1.000000,418.20,1,2019-01-07,2020-01-07,None\n3,MTA,2019-03-15,2019-03-13,2020-01-07,0.000000,-20.62,0,2019-01-07,2020-01-07,None\n7,NEW,2019-01-01,2019-01-03,2020-01-03,1.000000,346.29,1,2019-01-03,2020-01-03,2019-10-01\n7,CANCEL,2019-10-05,2019-10-01,2020-01-03,-0.257534,-89.18,-1,2019-01-03,2020-01-03,2019-10-01\n17,NEW,2019-01-01,2019-01-02,2020-01-02,1.000000,555.54,1,2019-01-02,2020-01-02,None\n17,MTA,2019-10-24,2019-10-24,2020-01-02,0.000000,-6.39,0,2019-01-02,2020-01-02,None\n24,NEW,2019-01-01,2019-01-14,2020-01-14,1.000000,398.49,1,2019-01-14,2020-01-14,2019-09-17\n24,CANCEL,2019-09-19,2019-09-17,2020-01-14,-0.326027,-129.92,-1,2019-01-14,2020-01-14,2019-09-17\n25,NEW,2019-01-01,2019-01-04,2020-01-04,1.000000,591.83,1,2019-01-04,2020-01-04,None\n25,MTA,2019-07-30,2019-07-27,2020-01-04,0.000000,-15.66,0,2019-01-04,2020-01-04,None\n32,NEW,2019-01-02,2019-01-15,2020-01-15,1.000000,524.96,1,2019-01-15,2020-01-15,2019-05-30\n32,CANCEL,2019-06-01,2019-05-30,2020-01-15,-0.630137,-330.80,-1,2019-01-15,2020-01-15,2019-05-30",
+   "error": false
+  },
+  {
+   "tool": "run_sql",
+   "input": {
+    "query": "WITH t AS (\n  SELECT term_id, inception_date AS s, COALESCE(cancel_date, expiry_date) AS e, expiry_date\n  FROM policy_term),\nexpo AS (\n  SELECT SUM(GREATEST(0, DATE_DIFF('day', GREATEST(s, DATE '2023-01-01'), LEAST(e, DATE '2024-01-01'))) * 1.0\n             / DATE_DIFF('day', s, expiry_date)) AS earned_years,\n         COUNT(*) FILTER (WHERE GREATEST(0, DATE_DIFF('day', GREATEST(s, DATE '2023-01-01'), LEAST(e, DATE '2024-01-01')))>0) AS terms_in_2023\n  FROM t),\ncl AS (\n  SELECT COUNT(*) AS n,\n         COUNT(*) FILTER (WHERE c.accident_date NOT BETWEEN t.s AND t.e) AS outside_term\n  FROM claim c JOIN t USING(term_id)\n  WHERE c.accident_date BETWEEN '2023-01-01' AND '2023-12-31')\nSELECT n AS claims_2023, outside_term, earned_years, terms_in_2023, n / earned_years AS freq FROM cl, expo;"
+   },
+   "output": "claims_2023,outside_term,earned_years,terms_in_2023,freq\n4379,0,33487.57,67306,0.130765",
+   "error": false
+  }
+ ],
+ "usage": {
+  "input": 6147,
+  "output": 2615,
+  "cache_read": 6159,
+  "cache_write": 2053
+ },
+ "effort": "medium",
+ "prompt_version": "v1"
+}

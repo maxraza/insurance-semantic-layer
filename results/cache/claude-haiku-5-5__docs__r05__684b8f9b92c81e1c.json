@@ -1,0 +1,26 @@
+{
+ "model": "claude-haiku-5-5",
+ "condition": "docs",
+ "qid": "r05",
+ "question": "What is the average paid indemnity per paid bodily-injury claim for accident year 2023 (claims with no payment excluded)?",
+ "final_text": "For accident year 2023 bodily-injury claims (accident basis, valued at 31 Dec 2025), the average paid indemnity per paid claim is **\u00a333,958.17**.\n\n- **Population:** 338 bodily-injury claims with an accident date in 2023.\n- **Paid claims:** 248 of them have at least one indemnity payment; the other 90 are nil and excluded.\n- **Paid indemnity:** \u00a38,421,627.32, which is payments net of recoveries. No recovery rows affect these claims, so net equals gross payments. ALAE is excluded.\n\nANSWER: 33958.17",
+ "stop_reason": "end_turn",
+ "tool_calls": [
+  {
+   "tool": "run_sql",
+   "input": {
+    "query": "\nWITH bi AS (\n  SELECT claim_id FROM claim\n  WHERE peril = 'BODILY_INJURY' AND accident_date >= DATE '2023-01-01' AND accident_date < DATE '2024-01-01'\n),\npaid AS (\n  SELECT t.claim_id,\n         SUM(CASE WHEN t.txn_type IN ('PAYMENT','RECOVERY') THEN t.amount ELSE 0 END) AS paid_net,\n         SUM(CASE WHEN t.txn_type = 'PAYMENT' THEN t.amount ELSE 0 END) AS pay_gross,\n         MAX(CASE WHEN t.txn_type = 'PAYMENT' THEN 1 ELSE 0 END) AS has_pay\n  FROM claim_txn t JOIN bi USING (claim_id)\n  WHERE t.cost_type = 'INDEMNITY'\n  GROUP BY t.claim_id\n)\nSELECT COUNT(*) AS bi_claims,\n       SUM(has_pay) AS paid_claims_with_payment,\n       SUM(CASE WHEN has_pay=1 THEN paid_net ELSE 0 END) AS paid_net_indemnity,\n       SUM(pay_gross) AS gross_payments,\n       SUM(paid_net) AS net_all,\n       SUM(CASE WHEN has_pay=1 THEN paid_net ELSE 0 END) / NULLIF(SUM(has_pay),0) AS sev_net_over_paid_claims,\n       SUM(paid_net) / NULLIF(SUM(has_pay),0) AS sev_all_net_over_paid_claims,\n       SUM(pay_gross) / NULLIF(SUM(has_pay),0) AS sev_gross\nFROM paid;\n"
+   },
+   "output": "bi_claims,paid_claims_with_payment,paid_net_indemnity,gross_payments,net_all,sev_net_over_paid_claims,sev_all_net_over_paid_claims,sev_gross\n338,248,8421627.32,8421627.32,8421627.32,33958.17,33958.17,33958.17",
+   "error": false
+  }
+ ],
+ "usage": {
+  "input": 1380,
+  "output": 1349,
+  "cache_read": 10626,
+  "cache_write": 0
+ },
+ "effort": "medium",
+ "prompt_version": "v1"
+}

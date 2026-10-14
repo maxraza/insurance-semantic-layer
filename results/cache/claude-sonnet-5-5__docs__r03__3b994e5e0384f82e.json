@@ -1,0 +1,26 @@
+{
+ "model": "claude-sonnet-5-5",
+ "condition": "docs",
+ "qid": "r03",
+ "question": "What was the price comparison website channel's accident-year 2024 reported loss ratio?",
+ "final_text": "The PCW channel's accident-year 2024 reported loss ratio is about 0.900, valued at 31 December 2025.\n\n- **Reported loss:** \u00a36,221,233. This is indemnity payments net of recoveries, plus case reserves, on PCW claims with a 2024 accident date. It uses only transactions dated on or before 31 December 2025 and excludes ALAE and IBNR.\n- **Earned premium:** \u00a36,910,064. This is PCW written premium earned pro rata during 2024, using only premium booked by 31 December 2025.\n- **Channel definition:** I took the channel from the policy term. I didn't check whether using the policy's acquisition channel would give a different result.\n\nANSWER: 0.900",
+ "stop_reason": "end_turn",
+ "tool_calls": [
+  {
+   "tool": "run_sql",
+   "input": {
+    "query": "with ep as (\nselect sum(p.written_premium * greatest(0, (least(p.cover_end_date, date '2025-01-01') - greatest(p.effective_date, date '2024-01-01')))::double / (p.cover_end_date - p.effective_date)) e\nfrom premium_txn p join policy_term t using(term_id)\nwhere t.channel='PCW' and p.booked_date<='2025-12-31'),\nl as (\nselect sum(x.amount) r from claim_txn x join claim c using(claim_id) join policy_term t on t.term_id=c.term_id\nwhere t.channel='PCW' and c.accident_date between '2024-01-01' and '2024-12-31' and x.txn_date<='2025-12-31' and x.cost_type='INDEMNITY')\nselect e, r, r/e from ep, l"
+   },
+   "output": "e,r,(r / e)\n6910063.79,6221233.13,0.900315",
+   "error": false
+  }
+ ],
+ "usage": {
+  "input": 804,
+  "output": 805,
+  "cache_read": 10626,
+  "cache_write": 0
+ },
+ "effort": "medium",
+ "prompt_version": "v1"
+}

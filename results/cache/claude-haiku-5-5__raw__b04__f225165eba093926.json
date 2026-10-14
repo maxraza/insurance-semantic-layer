@@ -1,0 +1,42 @@
+{
+ "model": "claude-haiku-5-5",
+ "condition": "raw",
+ "qid": "b04",
+ "question": "What are the paid losses (indemnity, net of recoveries) for accidents that happened in 2022?",
+ "final_text": "Paid indemnity losses net of recoveries for accidents in 2022 total **\u00a314,308,271.12**.\n\n- Gross indemnity payments: \u00a314,751,796.79 (6,030 transactions across 3,410 claims)\n- Indemnity recoveries: \u2212\u00a3443,525.67 (215 transactions)\n\nI took \"accidents in 2022\" as claims with accident_date in calendar 2022, and \"paid\" as PAYMENT transactions only, excluding RESERVE entries and ALAE (legal and adjusting) costs. Transactions run to 31 December 2025, so the figure is complete as at the valuation date.\n\nANSWER: 14308271.12",
+ "stop_reason": "end_turn",
+ "tool_calls": [
+  {
+   "tool": "run_sql",
+   "input": {
+    "query": "SELECT txn_type, cost_type, COUNT(*) n, SUM(amount) amt, MIN(txn_date), MAX(txn_date) FROM claim_txn GROUP BY 1,2 ORDER BY 1,2"
+   },
+   "output": "txn_type,cost_type,n,amt,min(txn_date),max(txn_date)\nPAYMENT,ALAE,5482,4041773.75,2019-04-02,2025-12-31\nPAYMENT,INDEMNITY,34398,78097079.75,2019-02-22,2025-12-31\nRECOVERY,INDEMNITY,1151,-2278660.54,2019-07-11,2025-12-31\nRESERVE,INDEMNITY,79216,15020532.03,2019-02-04,2025-12-31",
+   "error": false
+  },
+  {
+   "tool": "run_sql",
+   "input": {
+    "query": "SELECT peril, COUNT(*), MIN(accident_date), MAX(accident_date) FROM claim GROUP BY 1"
+   },
+   "output": "peril,count_star(),min(accident_date),max(accident_date)\nWINDSCREEN,5651,2019-02-02,2025-12-31\nOWN_DAMAGE,9055,2019-01-21,2025-12-30\nTHIRD_PARTY_PROPERTY,6280,2019-02-08,2025-12-30\nBODILY_INJURY,1691,2019-02-17,2025-12-14\nTHEFT,872,2019-03-15,2025-12-31",
+   "error": false
+  },
+  {
+   "tool": "run_sql",
+   "input": {
+    "query": "SELECT ct.txn_type, SUM(ct.amount) amt, COUNT(*) n, COUNT(DISTINCT ct.claim_id) claims FROM claim_txn ct JOIN claim c ON c.claim_id=ct.claim_id WHERE c.accident_date BETWEEN DATE '2022-01-01' AND DATE '2022-12-31' AND ct.cost_type='INDEMNITY' AND ct.txn_type IN ('PAYMENT','RECOVERY') GROUP BY 1"
+   },
+   "output": "txn_type,amt,n,claims\nRECOVERY,-443525.67,215,215\nPAYMENT,14751796.79,6030,3410",
+   "error": false
+  }
+ ],
+ "usage": {
+  "input": 2012,
+  "output": 911,
+  "cache_read": 6090,
+  "cache_write": 0
+ },
+ "effort": "medium",
+ "prompt_version": "v1"
+}

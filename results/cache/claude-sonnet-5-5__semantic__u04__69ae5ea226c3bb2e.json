@@ -1,0 +1,17 @@
+{
+ "model": "claude-sonnet-5-5",
+ "condition": "semantic",
+ "qid": "u04",
+ "question": "What will our 2026 accident-year loss ratio be?",
+ "final_text": "The data runs only to 31 December 2025, so I can't give an actual 2026 accident-year loss ratio. No 2026 accidents, claims or earned premium exist yet. Any figure I gave would be a forecast, and I'm not allowed to estimate. The semantic layer only reports facts known as at the valuation date. It has no projection or planning basis.\n\nI can give you the 2025 accident-year ultimate loss ratio as a reference point. Tell me if you want it.\n\nANSWER: UNANSWERABLE",
+ "stop_reason": "end_turn",
+ "tool_calls": [],
+ "usage": {
+  "input": 94,
+  "output": 171,
+  "cache_read": 3682,
+  "cache_write": 0
+ },
+ "effort": "medium",
+ "prompt_version": "v1"
+}

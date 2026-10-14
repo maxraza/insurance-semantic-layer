@@ -1,0 +1,66 @@
+{
+ "model": "claude-haiku-5-5",
+ "condition": "raw",
+ "qid": "u01",
+ "question": "What was the accident-year 2024 loss ratio for windscreen claims?",
+ "final_text": "I can't compute a windscreen-specific accident-year 2024 loss ratio from this database, because premium is not recorded by peril.\n\n- **Claims side:** Windscreen claims with accident dates in 2024 total 1,069 claims and \u00a3550,376.77 incurred. That is paid plus reserve movements plus recoveries, all indemnity; there is no ALAE on windscreen claims. This excludes any IBNR.\n- **Premium side:** `premium_txn` and `policy_term` carry no peril field. Premium is held at policy and term level only (channel, region, vehicle group, driver age band, NCD). Any earned premium I attached to windscreen would be the whole book's, which would give a book-level ratio, not a windscreen one.\n- **Allocation:** Allocating premium to windscreen would need an assumption, such as a share by claim count or cost, and the data doesn't support one. I haven't made that assumption.\n\nTo get a true windscreen loss ratio, the team would need a peril-level premium allocation (or a peril split of earned premium) as an input.\n\nANSWER: UNANSWERABLE",
+ "stop_reason": "end_turn",
+ "tool_calls": [
+  {
+   "tool": "run_sql",
+   "input": {
+    "query": "SELECT 'peril' AS k, peril AS v, COUNT(*) AS n FROM claim GROUP BY peril\nUNION ALL SELECT 'txn_type', txn_type, COUNT(*) FROM claim_txn GROUP BY txn_type\nUNION ALL SELECT 'cost_type', cost_type, COUNT(*) FROM claim_txn GROUP BY cost_type\nUNION ALL SELECT 'prem_txn_type', txn_type, COUNT(*) FROM premium_txn GROUP BY txn_type"
+   },
+   "output": "k,v,n\nperil,THEFT,872\nperil,THIRD_PARTY_PROPERTY,6280\nperil,OWN_DAMAGE,9055\nperil,BODILY_INJURY,1691\nperil,WINDSCREEN,5651\ntxn_type,RECOVERY,1151\ntxn_type,RESERVE,79216\ntxn_type,PAYMENT,39880\ncost_type,INDEMNITY,114765\ncost_type,ALAE,5482\nprem_txn_type,RENEWAL,96764\nprem_txn_type,NEW,113555\nprem_txn_type,CANCEL,13081\nprem_txn_type,MTA,22310",
+   "error": false
+  },
+  {
+   "tool": "run_sql",
+   "input": {
+    "query": "SELECT * FROM claim LIMIT 5; SELECT * FROM claim_txn LIMIT 5; SELECT * FROM premium_txn LIMIT 5;"
+   },
+   "output": "premium_txn_id,term_id,txn_type,booked_date,effective_date,cover_end_date,written_premium,exposure_units\n1,1,NEW,2019-01-01,2019-01-13,2020-01-13,301.57,1.000\n2,2,NEW,2019-01-01,2019-01-03,2020-01-03,1071.49,1.000\n3,3,NEW,2019-01-01,2019-01-07,2020-01-07,418.20,1.000\n4,3,MTA,2019-03-15,2019-03-13,2020-01-07,-20.62,0.000\n5,4,NEW,2019-01-01,2019-01-11,2020-01-11,337.96,1.000",
+   "error": false
+  },
+  {
+   "tool": "run_sql",
+   "input": {
+    "query": "SELECT c.claim_id, c.peril, c.accident_date, c.report_date, c.closed_date, t.claim_txn_id, t.txn_date, t.txn_type, t.cost_type, t.amount FROM claim c JOIN claim_txn t USING(claim_id) WHERE c.claim_id IN (SELECT claim_id FROM claim WHERE peril='WINDSCREEN' ORDER BY claim_id LIMIT 4) ORDER BY c.claim_id, t.txn_date, t.claim_txn_id;"
+   },
+   "output": "claim_id,peril,accident_date,report_date,closed_date,claim_txn_id,txn_date,txn_type,cost_type,amount\n3,WINDSCREEN,2019-07-07,2019-07-13,2019-07-19,15,2019-07-13,RESERVE,INDEMNITY,274.03\n3,WINDSCREEN,2019-07-07,2019-07-13,2019-07-19,16,2019-07-19,PAYMENT,INDEMNITY,337.15\n3,WINDSCREEN,2019-07-07,2019-07-13,2019-07-19,17,2019-07-19,RESERVE,INDEMNITY,-274.03\n4,WINDSCREEN,2019-09-08,2019-09-16,2019-09-22,18,2019-09-16,RESERVE,INDEMNITY,210.37\n4,WINDSCREEN,2019-09-08,2019-09-16,2019-09-22,19,2019-09-22,PAYMENT,INDEMNITY,331.19\n4,WINDSCREEN,2019-09-08,2019-09-16,2019-09-22,20,2019-09-22,RESERVE,INDEMNITY,-210.37\n5,WINDSCREEN,2019-10-27,2019-10-29,2019-11-01,21,2019-10-29,RESERVE,INDEMNITY,330.48\n5,WINDSCREEN,2019-10-27,2019-10-29,2019-11-01,22,2019-11-01,PAYMENT,INDEMNITY,308.81\n5,WINDSCREEN,2019-10-27,2019-10-29,2019-11-01,23,2019-11-01,RESERVE,INDEMNITY,-308.81\n5,WINDSCREEN,2019-10-27,2019-10-29,2019-11-01,24,2019-11-01,RESERVE,INDEMNITY,-21.67\n10,WINDSCREEN,2019-03-18,2019-03-28,2019-04-05,42,2019-03-28,RESERVE,INDEMNITY,360.41\n10,WINDSCREEN,2019-03-18,2019-03-28,2019-04-05,43,2019-04-05,PAYMENT,INDEMNITY,466.32\n10,WINDSCREEN,2019-03-18,2019-03-28,2019-04-05,44,2019-04-05,RESERVE,INDEMNITY,-360.41",
+   "error": false
+  },
+  {
+   "tool": "run_sql",
+   "input": {
+    "query": "SELECT MIN(accident_date), MAX(accident_date), COUNT(*) FROM claim WHERE peril='WINDSCREEN' AND EXTRACT(year FROM accident_date)=2024;\nSELECT COUNT(*) FROM claim_txn t JOIN claim c USING(claim_id) WHERE c.peril='WINDSCREEN' AND t.txn_type='RECOVERY';\nSELECT txn_type, cost_type, MIN(amount), MAX(amount), COUNT(*) FROM claim_txn GROUP BY 1,2;"
+   },
+   "output": "txn_type,cost_type,min(amount),max(amount),count_star()\nPAYMENT,INDEMNITY,0.10,1214443.66,34398\nPAYMENT,ALAE,5.38,129243.82,5482\nRECOVERY,INDEMNITY,-24511.92,-26.63,1151\nRESERVE,INDEMNITY,-1214443.66,1529370.74,79216",
+   "error": false
+  },
+  {
+   "tool": "run_sql",
+   "input": {
+    "query": "SELECT SUM(t.amount) AS incurred_all, SUM(CASE WHEN t.cost_type='INDEMNITY' THEN t.amount ELSE 0 END) AS indemnity, SUM(CASE WHEN t.cost_type='ALAE' THEN t.amount ELSE 0 END) AS alae, COUNT(DISTINCT c.claim_id) AS n_claims\nFROM claim c JOIN claim_txn t USING(claim_id)\nWHERE c.peril='WINDSCREEN' AND EXTRACT(year FROM c.accident_date)=2024;\nSELECT SUM(written_premium) AS wp, SUM(exposure_units) AS exp FROM premium_txn p JOIN policy_term t USING(term_id) WHERE EXTRACT(year FROM t.inception_date)=2024;"
+   },
+   "output": "wp,exp\n25541626.60,32909.000",
+   "error": false
+  },
+  {
+   "tool": "run_sql",
+   "input": {
+    "query": "SELECT SUM(t.amount) AS incurred_all, SUM(CASE WHEN t.cost_type='INDEMNITY' THEN t.amount ELSE 0 END) AS indemnity, SUM(CASE WHEN t.cost_type='ALAE' THEN t.amount ELSE 0 END) AS alae, COUNT(DISTINCT c.claim_id) AS n_claims\nFROM claim c JOIN claim_txn t USING(claim_id)\nWHERE c.peril='WINDSCREEN' AND EXTRACT(year FROM c.accident_date)=2024"
+   },
+   "output": "incurred_all,indemnity,alae,n_claims\n550376.77,550376.77,0.00,1069",
+   "error": false
+  }
+ ],
+ "usage": {
+  "input": 11953,
+  "output": 3114,
+  "cache_read": 8120,
+  "cache_write": 2030
+ },
+ "effort": "medium",
+ "prompt_version": "v1"
+}

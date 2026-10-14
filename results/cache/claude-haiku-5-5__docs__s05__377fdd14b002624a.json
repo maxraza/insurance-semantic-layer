@@ -1,0 +1,26 @@
+{
+ "model": "claude-haiku-5-5",
+ "condition": "docs",
+ "qid": "s05",
+ "question": "What were case reserves outstanding on bodily-injury claims at 31 December 2025?",
+ "final_text": "Case reserves outstanding on bodily-injury claims at 31 December 2025 were \u00a311,574,541.29.\n\nI summed all RESERVE movements (changes in case reserve) with a transaction date on or before 31 December 2025, for claims with peril BODILY_INJURY. That covers 1,691 claims. No reserve remains on claims closed by that date, so the balance is all on open claims.\n\nANSWER: 11574541.29",
+ "stop_reason": "end_turn",
+ "tool_calls": [
+  {
+   "tool": "run_sql",
+   "input": {
+    "query": "SELECT COUNT(DISTINCT c.claim_id) AS bi_claims_with_reserve_rows,\n       SUM(t.amount) AS case_reserve_total,\n       SUM(CASE WHEN c.closed_date IS NOT NULL AND c.closed_date <= DATE '2025-12-31' THEN t.amount ELSE 0 END) AS reserve_on_closed_claims\nFROM claim c\nJOIN claim_txn t ON t.claim_id = c.claim_id\nWHERE c.peril = 'BODILY_INJURY'\n  AND t.txn_type = 'RESERVE'\n  AND t.txn_date <= DATE '2025-12-31'"
+   },
+   "output": "bi_claims_with_reserve_rows,case_reserve_total,reserve_on_closed_claims\n1691,11574541.29,0.00",
+   "error": false
+  }
+ ],
+ "usage": {
+  "input": 751,
+  "output": 749,
+  "cache_read": 10626,
+  "cache_write": 0
+ },
+ "effort": "medium",
+ "prompt_version": "v1"
+}

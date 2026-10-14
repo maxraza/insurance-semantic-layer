@@ -1,0 +1,50 @@
+{
+ "model": "claude-haiku-5-5",
+ "condition": "docs",
+ "qid": "a02",
+ "question": "What were incurred losses in 2025?",
+ "final_text": "Calendar-year 2025 incurred losses were **\u00a321,288,367.50**, built from the glossary definitions:\n\n- **Reported loss movement (2025):** \u00a320,602,374.15. This is indemnity payments net of recoveries (\u00a320,236,714.68) plus the change in case reserves (\u00a3365,659.47). The case reserve balance rose from \u00a314,654,872.56 to \u00a315,020,532.03.\n- **IBNR movement (2025):** \u00a3685,993.35. This is the total IBNR at 31 Dec 2025 (\u00a35,248,275.43) less the total at 31 Dec 2024 (\u00a34,562,282.08).\n\nExcluded: ALAE. The glossary defines reported loss and IBNR as excluding it, so if you want losses including ALAE, that needs a separate paid ALAE figure, which I have not pulled.\n\nANSWER: 21288367.50",
+ "stop_reason": "end_turn",
+ "tool_calls": [
+  {
+   "tool": "run_sql",
+   "input": {
+    "query": "SELECT 'paid_ind_2025' k, SUM(CASE WHEN txn_type IN ('PAYMENT','RECOVERY') AND cost_type='INDEMNITY' THEN amount ELSE 0 END) v FROM claim_txn WHERE txn_date BETWEEN '2025-01-01' AND '2025-12-31'\nUNION ALL\nSELECT 'reserve_chg_ind_2025', SUM(CASE WHEN txn_type='RESERVE' AND cost_type='INDEMNITY' THEN amount ELSE 0 END) FROM claim_txn WHERE txn_date BETWEEN '2025-01-01' AND '2025-12-31'\nUNION ALL\nSELECT 'reserve_cum_ind_2025_end', SUM(CASE WHEN txn_type='RESERVE' AND cost_type='INDEMNITY' THEN amount ELSE 0 END) FROM claim_txn WHERE txn_date <= '2025-12-31'\nUNION ALL\nSELECT 'reserve_cum_ind_2024_end', SUM(CASE WHEN txn_type='RESERVE' AND cost_type='INDEMNITY' THEN amount ELSE 0 END) FROM claim_txn WHERE txn_date <= '2024-12-31'\nUNION ALL\nSELECT 'ibnr_val_dates_2024_2025_count', COUNT(DISTINCT valuation_date) FROM ibnr_valuation WHERE valuation_date BETWEEN '2024-12-01' AND '2025-12-31'\nUNION ALL\nSELECT 'max_txn_date', MAX(txn_date) FROM claim_txn\nUNION ALL\nSELECT 'txn_types_count', COUNT(*) FROM claim_txn WHERE txn_date > '2025-12-31'\""
+   },
+   "output": "error: Parser Error: unterminated quoted identifier at or near \"\"\"\n\nLINE 13: ...', COUNT(*) FROM claim_txn WHERE txn_date > '2025-12-31'\"\n                                                                    ^",
+   "error": true
+  },
+  {
+   "tool": "run_sql",
+   "input": {
+    "query": "SELECT valuation_date, COUNT(*) n, SUM(ibnr) total FROM ibnr_valuation GROUP BY valuation_date ORDER BY valuation_date"
+   },
+   "output": "valuation_date,n,total\n2019-12-31,1,450298.72\n2020-03-31,2,1039724.70\n2020-06-30,2,1165995.40\n2020-09-30,2,2057427.52\n2020-12-31,2,2009091.93\n2021-03-31,3,1911913.22\n2021-06-30,3,1810990.33\n2021-09-30,3,1710921.77\n2021-12-31,3,1373810.38\n2022-03-31,4,1771401.06\n2022-06-30,4,815343.77\n2022-09-30,4,2134223.03\n2022-12-31,4,2636192.95\n2023-03-31,5,2776671.33\n2023-06-30,5,3327159.57\n2023-09-30,5,3628601.40\n2023-12-31,5,3390892.84\n2024-03-31,6,4378157.33\n2024-06-30,6,3521252.44\n2024-09-30,6,4508810.27\n2024-12-31,6,4562282.08\n2025-03-31,7,4694735.94\n2025-06-30,7,4866244.04\n2025-09-30,7,5143571.09\n2025-12-31,7,5248275.43",
+   "error": false
+  },
+  {
+   "tool": "run_sql",
+   "input": {
+    "query": "SELECT 'paid_ind_2025' k, SUM(CASE WHEN txn_type IN ('PAYMENT','RECOVERY') AND cost_type='INDEMNITY' THEN amount ELSE 0 END) v FROM claim_txn WHERE txn_date BETWEEN '2025-01-01' AND '2025-12-31'\nUNION ALL\nSELECT 'reserve_chg_ind_2025', SUM(CASE WHEN txn_type='RESERVE' AND cost_type='INDEMNITY' THEN amount ELSE 0 END) FROM claim_txn WHERE txn_date BETWEEN '2025-01-01' AND '2025-12-31'\nUNION ALL\nSELECT 'reserve_cum_ind_2025_end', SUM(CASE WHEN txn_type='RESERVE' AND cost_type='INDEMNITY' THEN amount ELSE 0 END) FROM claim_txn WHERE txn_date <= '2025-12-31'\nUNION ALL\nSELECT 'reserve_cum_ind_2024_end', SUM(CASE WHEN txn_type='RESERVE' AND cost_type='INDEMNITY' THEN amount ELSE 0 END) FROM claim_txn WHERE txn_date <= '2024-12-31'\nUNION ALL\nSELECT 'max_txn_date', CAST(MAX(txn_date) AS DOUBLE) FROM claim_txn\nUNION ALL\nSELECT 'txn_after_2025', COUNT(*) FROM claim_txn WHERE txn_date > '2025-12-31'\nUNION ALL\nSELECT 'paid_ind_to_2024', SUM(CASE WHEN txn_type IN ('PAYMENT','RECOVERY') AND cost_type='INDEMNITY' THEN amount ELSE 0 END) FROM claim_txn WHERE txn_date <= '2024-12-31'\""
+   },
+   "output": "error: Parser Error: unterminated quoted identifier at or near \"\"\"\n\nLINE 13: ... ELSE 0 END) FROM claim_txn WHERE txn_date <= '2024-12-31'\"\n                                                                      ^",
+   "error": true
+  },
+  {
+   "tool": "run_sql",
+   "input": {
+    "query": "SELECT 'paid_ind_2025' k, SUM(CASE WHEN txn_type IN ('PAYMENT','RECOVERY') AND cost_type='INDEMNITY' THEN amount ELSE 0 END) v FROM claim_txn WHERE txn_date BETWEEN '2025-01-01' AND '2025-12-31'\nUNION ALL\nSELECT 'reserve_chg_ind_2025', SUM(CASE WHEN txn_type='RESERVE' AND cost_type='INDEMNITY' THEN amount ELSE 0 END) FROM claim_txn WHERE txn_date BETWEEN '2025-01-01' AND '2025-12-31'\nUNION ALL\nSELECT 'reserve_cum_ind_2025_end', SUM(CASE WHEN txn_type='RESERVE' AND cost_type='INDEMNITY' THEN amount ELSE 0 END) FROM claim_txn WHERE txn_date <= '2025-12-31'\nUNION ALL\nSELECT 'reserve_cum_ind_2024_end', SUM(CASE WHEN txn_type='RESERVE' AND cost_type='INDEMNITY' THEN amount ELSE 0 END) FROM claim_txn WHERE txn_date <= '2024-12-31'\nUNION ALL\nSELECT 'txn_after_2025', COUNT(*) FROM claim_txn WHERE txn_date > '2025-12-31'\nUNION ALL\nSELECT 'paid_ind_to_2024', SUM(CASE WHEN txn_type IN ('PAYMENT','RECOVERY') AND cost_type='INDEMNITY' THEN amount ELSE 0 END) FROM claim_txn WHERE txn_date <= '2024-12-31'"
+   },
+   "output": "k,v\npaid_ind_2025,20236714.68\nreserve_chg_ind_2025,365659.47\nreserve_cum_ind_2025_end,15020532.03\nreserve_cum_ind_2024_end,14654872.56\ntxn_after_2025,0.00\npaid_ind_to_2024,55581704.53",
+   "error": false
+  }
+ ],
+ "usage": {
+  "input": 8339,
+  "output": 3392,
+  "cache_read": 21252,
+  "cache_write": 0
+ },
+ "effort": "medium",
+ "prompt_version": "v1"
+}

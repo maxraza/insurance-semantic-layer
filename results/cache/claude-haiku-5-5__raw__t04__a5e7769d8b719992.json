@@ -1,0 +1,42 @@
+{
+ "model": "claude-haiku-5-5",
+ "condition": "raw",
+ "qid": "t04",
+ "question": "What was the renewal retention rate for renewals due in 2023?",
+ "final_text": "The renewal retention rate for renewals due in 2023 is about 0.546.\n\nI counted every renewal offer with a due date in 2023 (31,806 offers, all distinct) and divided the 17,369 that have a renewed term attached by that total. Every renewed term links back to the same policy and starts on the offer's due date, so the matched renewals look consistent.\n\nANSWER: 0.546",
+ "stop_reason": "end_turn",
+ "tool_calls": [
+  {
+   "tool": "run_sql",
+   "input": {
+    "query": "SELECT COUNT(*) AS offers, COUNT(renewed_term_id) AS renewed, COUNT(DISTINCT offer_id) AS distinct_offers, MIN(due_date), MAX(due_date), SUM(CASE WHEN renewed_term_id IS NOT NULL AND renewed_term_id NOT IN (SELECT term_id FROM policy_term) THEN 1 ELSE 0 END) AS orphan_renewals FROM renewal_offer WHERE due_date >= '2023-01-01' AND due_date < '2024-01-01'"
+   },
+   "output": "offers,renewed,distinct_offers,min(due_date),max(due_date),orphan_renewals\n31806,17369,31806,2023-01-01,2023-12-31,0",
+   "error": false
+  },
+  {
+   "tool": "run_sql",
+   "input": {
+    "query": "SELECT o.expiring_term_id, COUNT(*) c FROM renewal_offer o WHERE due_date >= '2023-01-01' AND due_date < '2024-01-01' GROUP BY 1 HAVING COUNT(*)>1 LIMIT 5"
+   },
+   "output": "expiring_term_id,c\n(no rows)",
+   "error": false
+  },
+  {
+   "tool": "run_sql",
+   "input": {
+    "query": "SELECT COUNT(*) AS renewed_offers, SUM(CASE WHEN t.term_id IS NULL THEN 1 ELSE 0 END) AS missing_term, SUM(CASE WHEN t.inception_date = o.due_date THEN 1 ELSE 0 END) AS incep_matches_due, SUM(CASE WHEN t.policy_id = e.policy_id THEN 1 ELSE 0 END) AS same_policy FROM renewal_offer o JOIN policy_term e ON e.term_id=o.expiring_term_id LEFT JOIN policy_term t ON t.term_id=o.renewed_term_id WHERE o.due_date >= '2023-01-01' AND o.due_date < '2024-01-01' AND o.renewed_term_id IS NOT NULL"
+   },
+   "output": "renewed_offers,missing_term,incep_matches_due,same_policy\n17369,0,17369,17369",
+   "error": false
+  }
+ ],
+ "usage": {
+  "input": 1983,
+  "output": 1289,
+  "cache_read": 6090,
+  "cache_write": 0
+ },
+ "effort": "medium",
+ "prompt_version": "v1"
+}

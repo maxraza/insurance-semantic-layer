@@ -1,0 +1,26 @@
+{
+ "model": "claude-sonnet-5-5",
+ "condition": "docs",
+ "qid": "b01",
+ "question": "What is the accident-year 2023 loss ratio on a reported basis (paid plus case reserves, excluding IBNR and ALAE), valued at 31 December 2025?",
+ "final_text": "The accident-year 2023 reported loss ratio, valued at 31 December 2025, is about 0.912.\n\n- **Reported loss:** \u00a319,438,808. This is indemnity payments net of recoveries, plus case reserves, on claims with a 2023 accident date. I only counted transactions dated on or before 31 December 2025, and I excluded ALAE and IBNR.\n- **Earned premium:** \u00a321,311,739. This is premium booked by 31 December 2025, earned pro rata by day over 2023. On an accident basis the denominator is the premium earned in the same period.\n- **Ratio:** 19,438,808 \u00f7 21,311,739 = 0.912.\n\nANSWER: 0.912",
+ "stop_reason": "end_turn",
+ "tool_calls": [
+  {
+   "tool": "run_sql",
+   "input": {
+    "query": "with l as (select sum(t.amount) x from claim_txn t join claim c using(claim_id) where c.accident_date between '2023-01-01' and '2023-12-31' and t.txn_date<='2025-12-31' and t.cost_type='INDEMNITY'),\np as (select sum(written_premium * greatest(0, least(cover_end_date,date '2024-01-01') - greatest(effective_date,date '2023-01-01'))::double / (cover_end_date-effective_date)) e from premium_txn where booked_date<='2025-12-31' and effective_date<'2024-01-01' and cover_end_date>'2023-01-01')\nselect x,e,x/e from l,p"
+   },
+   "output": "x,e,(x / e)\n19438808.25,21311739.45,0.912117",
+   "error": false
+  }
+ ],
+ "usage": {
+  "input": 686,
+  "output": 667,
+  "cache_read": 10626,
+  "cache_write": 0
+ },
+ "effort": "medium",
+ "prompt_version": "v1"
+}

@@ -1,0 +1,48 @@
+{
+ "model": "claude-haiku-5-5",
+ "condition": "semantic",
+ "qid": "s02",
+ "question": "How many vehicles were in force at the end of the second quarter of 2025?",
+ "final_text": "At the end of Q2 2025 (30 June 2025), 36,722 vehicles were on cover. The figure is the same whether valued at 30 June or at 31 December 2025.\n\nANSWER: 36722",
+ "stop_reason": "end_turn",
+ "tool_calls": [
+  {
+   "tool": "query_metrics",
+   "input": {
+    "metrics": [
+     "in_force_count"
+    ],
+    "basis": "calendar",
+    "as_of": "2025-12-31",
+    "grain": "quarter",
+    "period_from": "2025-04-01",
+    "period_to": "2025-06-30"
+   },
+   "output": "period,in_force_count\n2025-Q2,36722.00",
+   "error": false
+  },
+  {
+   "tool": "query_metrics",
+   "input": {
+    "metrics": [
+     "in_force_count"
+    ],
+    "basis": "calendar",
+    "as_of": "2025-06-30",
+    "grain": "quarter",
+    "period_from": "2025-04-01",
+    "period_to": "2025-06-30"
+   },
+   "output": "period,in_force_count\n2025-Q2,36722.00",
+   "error": false
+  }
+ ],
+ "usage": {
+  "input": 972,
+  "output": 746,
+  "cache_read": 7364,
+  "cache_write": 0
+ },
+ "effort": "medium",
+ "prompt_version": "v1"
+}

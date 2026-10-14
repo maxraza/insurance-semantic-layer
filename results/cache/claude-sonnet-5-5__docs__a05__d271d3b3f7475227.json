@@ -1,0 +1,26 @@
+{
+ "model": "claude-sonnet-5-5",
+ "condition": "docs",
+ "qid": "a05",
+ "question": "What was claim frequency in 2023?",
+ "final_text": "Claim frequency in 2023 was about 0.131 reported claims per earned car-year. I used the accident basis, which is the standard pairing for frequency.\n\n- **Claims:** 4,379 claims with a 2023 accident date, counting all claims reported by 31 December 2025, including nil claims.\n- **Earned exposure:** 33,487.6 car-years earned in 2023. Each premium transaction's exposure is earned pro rata over its cover period.\n- **Ratio:** 4,379 \u00f7 33,487.6 = 0.1308.\n\nOn a calendar basis, using claims reported during 2023 (4,346), the figure would be 0.1298. That is very close.\n\nANSWER: 0.1308",
+ "stop_reason": "end_turn",
+ "tool_calls": [
+  {
+   "tool": "run_sql",
+   "input": {
+    "query": "with e as (select sum(exposure_units * greatest(0, least(cover_end_date, date '2024-01-01') - greatest(effective_date, date '2023-01-01'))::double / (cover_end_date - effective_date)) x from premium_txn where booked_date<=date '2025-12-31'),\na as (select count(*) n from claim where accident_date between date '2023-01-01' and date '2023-12-31' and report_date<=date '2025-12-31'),\nc as (select count(*) n from claim where report_date between date '2023-01-01' and date '2023-12-31')\nselect x, a.n, c.n, a.n/x, c.n/x from e,a,c"
+   },
+   "output": "x,n,n,(a.n / x),(c.n / x)\n33487.57,4379,4346,0.130765,0.129779",
+   "error": false
+  }
+ ],
+ "usage": {
+  "input": 650,
+  "output": 663,
+  "cache_read": 10824,
+  "cache_write": 0
+ },
+ "effort": "medium",
+ "prompt_version": "v1"
+}

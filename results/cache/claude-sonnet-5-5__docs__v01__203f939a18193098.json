@@ -1,0 +1,26 @@
+{
+ "model": "claude-sonnet-5-5",
+ "condition": "docs",
+ "qid": "v01",
+ "question": "What was the accident-year 2023 reported loss ratio as it stood at 31 December 2023?",
+ "final_text": "The accident-year 2023 reported loss ratio, as at 31 December 2023, is **0.696**.\n\n- **Reported loss:** \u00a314,841,148. This is indemnity payments net of recoveries, plus case reserves. It covers claims with a 2023 accident date, using only claim transactions dated on or before 31 December 2023. ALAE and IBNR are excluded.\n- **Earned premium:** \u00a321,311,826. This is premium booked by 31 December 2023, earned pro rata by day over 2023.\n- **Basis:** on an accident basis the premium denominator is the premium earned in the same period.\n\nANSWER: 0.696",
+ "stop_reason": "end_turn",
+ "tool_calls": [
+  {
+   "tool": "run_sql",
+   "input": {
+    "query": "with ep as (\nselect sum(written_premium * greatest(0, least(date_diff('day',effective_date,cover_end_date), date_diff('day',effective_date,date '2024-01-01')) - greatest(0, date_diff('day',effective_date,date '2023-01-01'))) / date_diff('day',effective_date,cover_end_date)) ep\nfrom premium_txn where booked_date<=date '2023-12-31' and cover_end_date>date '2023-01-01' and effective_date<date '2024-01-01'),\nrl as (select sum(t.amount) rl from claim_txn t join claim c using(claim_id)\nwhere c.accident_date between date '2023-01-01' and date '2023-12-31' and t.txn_date<=date '2023-12-31' and t.cost_type='INDEMNITY')\nselect ep,rl,rl/ep from ep,rl"
+   },
+   "output": "ep,rl,(rl / ep)\n21311826.07,14841148.31,0.696381",
+   "error": false
+  }
+ ],
+ "usage": {
+  "input": 775,
+  "output": 737,
+  "cache_read": 10626,
+  "cache_write": 0
+ },
+ "effort": "medium",
+ "prompt_version": "v1"
+}

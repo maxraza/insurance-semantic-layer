@@ -1,0 +1,66 @@
+{
+ "model": "claude-haiku-5-5",
+ "condition": "raw",
+ "qid": "b06",
+ "question": "What is the accident-year 2024 claim frequency, in reported claims per earned car-year?",
+ "final_text": "The accident-year 2024 claim frequency is about 0.133 reported claims per earned car-year.\n\n- **Claims:** 4,396 claims have an accident date in 2024, all with a unique claim ID. I counted all of them, including the 270 still open.\n- **Earned car-years:** I took each policy term's cover days falling in calendar 2024, cut short at any cancellation date, and divided by the term length. That gives 33,017 earned car-years across 68,368 terms. Each term counts as one car, since every NEW transaction has a vehicle delta of 1.\n- **Check:** For a sample cancelled term, the pro-rata earned fraction matches the exposure booked on its CANCEL transaction.\n\nCaveat: 13 terms carry a cancel date but have no CANCEL transaction. I used their cancel dates as given, which affects the denominator only marginally.\n\nANSWER: 0.133",
+ "stop_reason": "end_turn",
+ "tool_calls": [
+  {
+   "tool": "run_sql",
+   "input": {
+    "query": "SELECT txn_type, COUNT(*) n, SUM(exposure_units) exp_units, MIN(effective_date), MAX(cover_end_date), SUM(vehicle_delta) FROM premium_txn GROUP BY txn_type;"
+   },
+   "output": "txn_type,n,exp_units,min(effective_date),max(cover_end_date),sum(vehicle_delta)\nMTA,22310,0.000000,2019-02-05,2026-12-07,0\nNEW,113555,113555.000000,2019-01-01,2027-01-14,113555\nCANCEL,13081,-6630.491786,2019-01-28,2026-12-07,-13081\nRENEWAL,96764,96764.000000,2020-01-01,2027-01-20,96764",
+   "error": false
+  },
+  {
+   "tool": "run_sql",
+   "input": {
+    "query": "SELECT COUNT(*) n, COUNT(DISTINCT claim_id) ids, MIN(accident_date), MAX(accident_date), SUM(CASE WHEN closed_date IS NULL THEN 1 ELSE 0 END) open_n FROM claim WHERE accident_date >= '2024-01-01' AND accident_date < '2025-01-01';"
+   },
+   "output": "n,ids,min(accident_date),max(accident_date),open_n\n4396,4396,2024-01-01,2024-12-31,270",
+   "error": false
+  },
+  {
+   "tool": "run_sql",
+   "input": {
+    "query": "SELECT * FROM premium_txn LIMIT 15;"
+   },
+   "output": "premium_txn_id,term_id,txn_type,booked_date,effective_date,cover_end_date,written_premium,exposure_units,vehicle_delta\n1,1,NEW,2019-01-01,2019-01-13,2020-01-13,301.57,1.000000,1\n2,2,NEW,2019-01-01,2019-01-03,2020-01-03,1071.49,1.000000,1\n3,3,NEW,2019-01-01,2019-01-07,2020-01-07,418.20,1.000000,1\n4,3,MTA,2019-03-15,2019-03-13,2020-01-07,-20.62,0.000000,0\n5,4,NEW,2019-01-01,2019-01-11,2020-01-11,337.96,1.000000,1\n6,5,NEW,2019-01-01,2019-01-01,2020-01-01,356.50,1.000000,1\n7,6,NEW,2019-01-01,2019-01-06,2020-01-06,437.02,1.000000,1\n8,7,NEW,2019-01-01,2019-01-03,2020-01-03,346.29,1.000000,1\n9,7,CANCEL,2019-10-05,2019-10-01,2020-01-03,-89.18,-0.257534,-1\n10,8,NEW,2019-01-01,2019-01-05,2020-01-05,560.53,1.000000,1\n11,9,NEW,2019-01-01,2019-01-08,2020-01-08,315.58,1.000000,1\n12,10,NEW,2019-01-01,2019-01-15,2020-01-15,1879.14,1.000000,1\n13,11,NEW,2019-01-01,2019-01-09,2020-01-09,383.50,1.000000,1\n14,12,NEW,2019-01-01,2019-01-01,2020-01-01,619.64,1.000000,1\n15,13,NEW,2019-01-01,2019-01-04,2020-01-04,523.28,1.000000,1",
+   "error": false
+  },
+  {
+   "tool": "run_sql",
+   "input": {
+    "query": "SELECT COUNT(*) terms, SUM(CASE WHEN cancel_date IS NOT NULL THEN 1 ELSE 0 END) cancelled, SUM(CASE WHEN cancel_date IS NOT NULL AND cancel_date<inception_date THEN 1 ELSE 0 END) cancel_before_incep, MIN(inception_date), MAX(expiry_date), COUNT(DISTINCT term_id) FROM policy_term;"
+   },
+   "output": "terms,cancelled,cancel_before_incep,min(inception_date),max(expiry_date),count(DISTINCT term_id)\n210319,13094,0,2019-01-01,2027-01-20,210319",
+   "error": false
+  },
+  {
+   "tool": "run_sql",
+   "input": {
+    "query": "WITH t AS (\n SELECT pt.term_id, pt.inception_date inc, pt.expiry_date exp, pt.cancel_date can,\n  (SELECT COUNT(*) FROM premium_txn p WHERE p.term_id=pt.term_id AND p.txn_type='CANCEL') ncan,\n  (SELECT SUM(exposure_units) FROM premium_txn p WHERE p.term_id=pt.term_id AND p.txn_type IN ('NEW','RENEWAL','CANCEL')) expu,\n  (SELECT MAX(cover_end_date) FROM premium_txn p WHERE p.term_id=pt.term_id) ce\n FROM policy_term pt)\nSELECT ncan, COUNT(*), SUM(CASE WHEN can IS NOT NULL THEN 1 ELSE 0 END) has_can_date, AVG(expu) FROM t GROUP BY ncan;"
+   },
+   "output": "ncan,count_star(),has_can_date,avg(expu)\n1,13081,13081,0.49312\n0,197238,13,1",
+   "error": false
+  },
+  {
+   "tool": "run_sql",
+   "input": {
+    "query": "WITH e AS (\n SELECT term_id, GREATEST(0, (LEAST(COALESCE(cancel_date, expiry_date), expiry_date, DATE '2025-01-01') - GREATEST(inception_date, DATE '2024-01-01'))) AS days_2024,\n   (expiry_date - inception_date) AS term_days\n FROM policy_term WHERE inception_date < DATE '2025-01-01' AND COALESCE(cancel_date, expiry_date) > DATE '2024-01-01')\nSELECT SUM(CAST(days_2024 AS DOUBLE)/term_days) AS earned_car_years, COUNT(*) terms,\n (SELECT COUNT(*) FROM claim WHERE accident_date >= '2024-01-01' AND accident_date < '2025-01-01') AS claims,\n (SELECT COUNT(*) FROM claim WHERE accident_date >= '2024-01-01' AND accident_date < '2025-01-01')/SUM(CAST(days_2024 AS DOUBLE)/term_days) AS freq\nFROM e;"
+   },
+   "output": "earned_car_years,terms,claims,freq\n33017.02,68368,4396,0.133143",
+   "error": false
+  }
+ ],
+ "usage": {
+  "input": 7831,
+  "output": 2629,
+  "cache_read": 6159,
+  "cache_write": 2053
+ },
+ "effort": "medium",
+ "prompt_version": "v1"
+}

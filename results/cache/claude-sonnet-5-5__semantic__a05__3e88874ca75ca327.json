@@ -1,0 +1,33 @@
+{
+ "model": "claude-sonnet-5-5",
+ "condition": "semantic",
+ "qid": "a05",
+ "question": "What was claim frequency in 2023?",
+ "final_text": "Claim frequency for 2023 was about 0.131 reported claims per earned car-year. This is on an accident-year basis, valued at 31 December 2025. Claims are assigned by accident date and divided by car-years earned in 2023. The figure includes claims that were later closed without payment.\n\nANSWER: 0.130765",
+ "stop_reason": "end_turn",
+ "tool_calls": [
+  {
+   "tool": "query_metrics",
+   "input": {
+    "metrics": [
+     "claim_frequency"
+    ],
+    "basis": "accident",
+    "as_of": "2025-12-31",
+    "grain": "year",
+    "period_from": "2023-01-01",
+    "period_to": "2023-12-31"
+   },
+   "output": "period,claim_frequency\n2023,0.130765",
+   "error": false
+  }
+ ],
+ "usage": {
+  "input": 443,
+  "output": 352,
+  "cache_read": 7378,
+  "cache_write": 0
+ },
+ "effort": "medium",
+ "prompt_version": "v1"
+}

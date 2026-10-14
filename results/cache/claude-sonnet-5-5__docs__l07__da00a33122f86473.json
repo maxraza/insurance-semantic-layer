@@ -1,0 +1,26 @@
+{
+ "model": "claude-sonnet-5-5",
+ "condition": "docs",
+ "qid": "l07",
+ "question": "What was the calendar-year 2024 combined ratio (reported loss, change in IBNR, paid ALAE and expenses, over earned premium)?",
+ "final_text": "The 2024 calendar-year combined ratio is about **1.072**. That means 2024 claims and expenses came to roughly 107p for every \u00a31 of premium earned.\n\n| Component (calendar 2024) | Amount (\u00a3) |\n|---|---|\n| Reported loss (indemnity paid net of recoveries, plus the change in case reserves) | 20,037,477 |\n| Change in IBNR (31 Dec 2024 total less 31 Dec 2023 total) | 1,171,389 |\n| Paid ALAE | 894,254 |\n| Expenses (months incurred in 2024) | 3,365,614 |\n| **Numerator** | **25,468,734** |\n| Earned premium (each premium transaction earned daily over its cover period, 2024 portion) | 23,748,558 |\n\nThe ratio is 25,468,734 \u00f7 23,748,558 = 1.0724.\n\nANSWER: 1.0724",
+ "stop_reason": "end_turn",
+ "tool_calls": [
+  {
+   "tool": "run_sql",
+   "input": {
+    "query": "select\n(select sum(amount) from claim_txn where cost_type='INDEMNITY' and txn_date between '2024-01-01' and '2024-12-31') rl,\n(select sum(amount) from claim_txn where cost_type='ALAE' and txn_type in('PAYMENT','RECOVERY') and txn_date between '2024-01-01' and '2024-12-31') alae,\n(select sum(case when valuation_date='2024-12-31' then ibnr else -ibnr end) from ibnr_valuation where valuation_date in('2024-12-31','2023-12-31')) ibnr,\n(select sum(amount) from expense where expense_month between '2024-01-01' and '2024-12-01' and booked_date<='2025-12-31') exp,\n(select sum(written_premium*greatest(0,date_diff('day',greatest(effective_date,date '2024-01-01'),least(cover_end_date,date '2025-01-01')))/date_diff('day',effective_date,cover_end_date)) from premium_txn where booked_date<='2025-12-31') ep"
+   },
+   "output": "rl,alae,ibnr,exp,ep\n20037477.44,894253.51,1171389.24,3365613.78,23748557.88",
+   "error": false
+  }
+ ],
+ "usage": {
+  "input": 1079,
+  "output": 1184,
+  "cache_read": 10824,
+  "cache_write": 0
+ },
+ "effort": "medium",
+ "prompt_version": "v1"
+}

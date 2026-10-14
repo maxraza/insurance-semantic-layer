@@ -1,0 +1,33 @@
+{
+ "model": "claude-haiku-5-5",
+ "condition": "semantic",
+ "qid": "v03",
+ "question": "At the 31 December 2024 valuation, how much IBNR was booked for accident year 2024?",
+ "final_text": "At the 31 December 2024 valuation, the IBNR booked for accident year 2024 was \u00a33,882,380.39.\n\nI queried the IBNR metric on an accident basis, as at 2024-12-31, for the 2024 period. IBNR is booked bulk by accident year, so this is the accident-year figure rather than a calendar-period change.\n\nANSWER: 3882380.39",
+ "stop_reason": "end_turn",
+ "tool_calls": [
+  {
+   "tool": "query_metrics",
+   "input": {
+    "metrics": [
+     "ibnr"
+    ],
+    "basis": "accident",
+    "as_of": "2024-12-31",
+    "grain": "year",
+    "period_from": "2024-01-01",
+    "period_to": "2024-12-31"
+   },
+   "output": "period,ibnr\n2024,3882380.39",
+   "error": false
+  }
+ ],
+ "usage": {
+  "input": 504,
+  "output": 484,
+  "cache_read": 7364,
+  "cache_write": 0
+ },
+ "effort": "medium",
+ "prompt_version": "v1"
+}

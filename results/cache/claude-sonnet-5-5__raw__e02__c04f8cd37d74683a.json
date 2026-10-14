@@ -1,0 +1,34 @@
+{
+ "model": "claude-sonnet-5-5",
+ "condition": "raw",
+ "qid": "e02",
+ "question": "How much premium was unearned at 31 December 2024?",
+ "final_text": "Unearned premium at 31 December 2024 was about \u00a313.52m.\n\nI took all premium transactions booked on or before 31 December 2024. That covers new business, renewals, mid-term adjustments and cancellations. I earned each one evenly by day over its cover period, from effective date to cover end date. I treated 31 December as fully earned, so the unearned part is the share of days from 1 January 2025 to cover end. Cancellations are negative, so they take out the unearned premium they cancel.\n\nIf you counted 31 December as unearned instead, the figure would be about \u00a313.59m.\n\nANSWER: 13515392.14",
+ "stop_reason": "end_turn",
+ "tool_calls": [
+  {
+   "tool": "run_sql",
+   "input": {
+    "query": "select txn_type, count(*), sum(written_premium), sum(exposure_units), min(booked_date), max(booked_date), min(effective_date), max(cover_end_date), sum(case when effective_date>=cover_end_date then 1 else 0 end) bad from premium_txn group by 1"
+   },
+   "output": "txn_type,count_star(),sum(written_premium),sum(exposure_units),min(booked_date),max(booked_date),min(effective_date),max(cover_end_date),bad\nCANCEL,13081,-4423904.86,-13081.000,2019-02-02,2025-12-31,2019-01-28,2026-12-07,0\nRENEWAL,96764,66470703.32,96764.000,2019-12-15,2025-12-31,2020-01-01,2027-01-20,0\nNEW,113555,74247233.10,113555.000,2019-01-01,2025-12-31,2019-01-01,2027-01-14,0\nMTA,22310,466631.74,0.000,2019-02-08,2025-12-31,2019-02-05,2026-12-07,0",
+   "error": false
+  },
+  {
+   "tool": "run_sql",
+   "input": {
+    "query": "select sum(written_premium*greatest(0,least(1,datediff('day',date '2025-01-01',cover_end_date)*1.0/datediff('day',effective_date,cover_end_date)))) u,\nsum(written_premium*greatest(0,least(1,datediff('day',date '2024-12-31',cover_end_date)*1.0/datediff('day',effective_date,cover_end_date)))) u2\nfrom premium_txn where booked_date<=date '2024-12-31'"
+   },
+   "output": "u,u2\n13515392.14,13585360.18",
+   "error": false
+  }
+ ],
+ "usage": {
+  "input": 1751,
+  "output": 921,
+  "cache_read": 6090,
+  "cache_write": 0
+ },
+ "effort": "medium",
+ "prompt_version": "v1"
+}

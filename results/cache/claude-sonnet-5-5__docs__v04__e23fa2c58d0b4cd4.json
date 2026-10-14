@@ -1,0 +1,26 @@
+{
+ "model": "claude-sonnet-5-5",
+ "condition": "docs",
+ "qid": "v04",
+ "question": "By how much did accident-year 2022 reported loss (paid plus case) develop between the 31 December 2022 and 31 December 2025 valuations?",
+ "final_text": "Accident-year 2022 reported loss (indemnity paid net of recoveries, plus case reserves, excluding ALAE and IBNR) developed by about \u00a32.19m between the two valuations.\n\nI counted only claims with an accident date in 2022 and a report date on or before the valuation date. I included only indemnity transactions dated on or before that valuation date.\n\n| Valuation date | AY2022 reported loss |\n|---|---|\n| 31 Dec 2022 | \u00a312,882,431.30 |\n| 31 Dec 2025 | \u00a315,074,982.14 |\n| Development | \u00a32,192,550.84 |\n\nANSWER: 2192550.84",
+ "stop_reason": "end_turn",
+ "tool_calls": [
+  {
+   "tool": "run_sql",
+   "input": {
+    "query": "select v.d, sum(t.amount) from (select date '2022-12-31' d union all select date '2025-12-31') v join claim c on c.accident_date between date '2022-01-01' and date '2022-12-31' join claim_txn t on t.claim_id=c.claim_id and t.txn_date<=v.d and t.cost_type='INDEMNITY' and c.report_date<=v.d group by v.d"
+   },
+   "output": "d,sum(t.amount)\n2022-12-31,12882431.30\n2025-12-31,15074982.14",
+   "error": false
+  }
+ ],
+ "usage": {
+  "input": 471,
+  "output": 460,
+  "cache_read": 10626,
+  "cache_write": 0
+ },
+ "effort": "medium",
+ "prompt_version": "v1"
+}

@@ -1,0 +1,33 @@
+{
+ "model": "claude-sonnet-5-5",
+ "condition": "semantic",
+ "qid": "b05",
+ "question": "How much indemnity did we pay out during calendar year 2025, regardless of when the accidents happened?",
+ "final_text": "We paid \u00a320,236,714.68 in indemnity during calendar year 2025. This is paid loss on a calendar basis, valued at 31 December 2025. It is net of recoveries (salvage and subrogation) and excludes ALAE. It covers all accident dates.\n\nANSWER: 20236714.68",
+ "stop_reason": "end_turn",
+ "tool_calls": [
+  {
+   "tool": "query_metrics",
+   "input": {
+    "metrics": [
+     "paid_loss"
+    ],
+    "basis": "calendar",
+    "as_of": "2025-12-31",
+    "grain": "year",
+    "period_from": "2025-01-01",
+    "period_to": "2025-12-31"
+   },
+   "output": "period,paid_loss\n2025,20236714.68",
+   "error": false
+  }
+ ],
+ "usage": {
+  "input": 425,
+  "output": 290,
+  "cache_read": 7364,
+  "cache_write": 0
+ },
+ "effort": "medium",
+ "prompt_version": "v1"
+}

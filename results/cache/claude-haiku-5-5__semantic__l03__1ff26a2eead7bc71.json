@@ -1,0 +1,34 @@
+{
+ "model": "claude-haiku-5-5",
+ "condition": "semantic",
+ "qid": "l03",
+ "question": "What is the accident-year 2023 loss and ALAE ratio, including IBNR?",
+ "final_text": "The accident-year 2023 loss and ALAE ratio, including IBNR, is **0.968** as at 31 December 2025.\n\nThis is (reported loss + IBNR + paid ALAE) divided by earned premium on an accident basis. Earned premium for accident year 2023 is \u00a321,311,739.45.\n\nANSWER: 0.968255",
+ "stop_reason": "end_turn",
+ "tool_calls": [
+  {
+   "tool": "query_metrics",
+   "input": {
+    "metrics": [
+     "loss_alae_ratio_ultimate",
+     "earned_premium"
+    ],
+    "basis": "accident",
+    "as_of": "2025-12-31",
+    "grain": "year",
+    "period_from": "2023-01-01",
+    "period_to": "2023-12-31"
+   },
+   "output": "period,loss_alae_ratio_ultimate,earned_premium\n2023,0.968255,21311739.45",
+   "error": false
+  }
+ ],
+ "usage": {
+  "input": 601,
+  "output": 493,
+  "cache_read": 7364,
+  "cache_write": 0
+ },
+ "effort": "medium",
+ "prompt_version": "v1"
+}

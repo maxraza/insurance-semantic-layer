@@ -1,0 +1,26 @@
+{
+ "model": "claude-sonnet-5-5",
+ "condition": "docs",
+ "qid": "a04",
+ "question": "How many claims did we have in 2024?",
+ "final_text": "We had 4,396 claims with an accident date in 2024, counting all claims reported by 31 December 2025. This includes claims later closed without payment.\n\n\"Claims in 2024\" could be read two ways. If you count by report date instead, the figure is 4,398. I used the accident-date reading because it is the usual way to assign claims to a year.\n\nANSWER: 4396",
+ "stop_reason": "end_turn",
+ "tool_calls": [
+  {
+   "tool": "run_sql",
+   "input": {
+    "query": "select (select count(*) from claim where year(accident_date)=2024 and report_date<='2025-12-31') acc, (select count(*) from claim where year(report_date)=2024) rep"
+   },
+   "output": "acc,rep\n4396,4398",
+   "error": false
+  }
+ ],
+ "usage": {
+  "input": 348,
+  "output": 275,
+  "cache_read": 10626,
+  "cache_write": 0
+ },
+ "effort": "medium",
+ "prompt_version": "v1"
+}

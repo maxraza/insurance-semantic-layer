@@ -1,0 +1,33 @@
+{
+ "model": "claude-sonnet-5-5",
+ "condition": "semantic",
+ "qid": "l01",
+ "question": "What is the accident-year 2024 ultimate loss ratio (reported loss plus booked IBNR, excluding ALAE) at 31 December 2025?",
+ "final_text": "The accident-year 2024 ultimate loss ratio at 31 December 2025 is 0.8185. That is reported loss (paid plus case reserves) plus booked IBNR, divided by premium earned in 2024. It excludes ALAE.\n\nANSWER: 0.818528",
+ "stop_reason": "end_turn",
+ "tool_calls": [
+  {
+   "tool": "query_metrics",
+   "input": {
+    "metrics": [
+     "loss_ratio_ultimate"
+    ],
+    "basis": "accident",
+    "as_of": "2025-12-31",
+    "grain": "year",
+    "period_from": "2024-01-01",
+    "period_to": "2024-12-31"
+   },
+   "output": "period,loss_ratio_ultimate\n2024,0.818528",
+   "error": false
+  }
+ ],
+ "usage": {
+  "input": 473,
+  "output": 287,
+  "cache_read": 7364,
+  "cache_write": 0
+ },
+ "effort": "medium",
+ "prompt_version": "v1"
+}

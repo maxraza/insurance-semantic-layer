@@ -1,0 +1,34 @@
+{
+ "model": "claude-haiku-5-5",
+ "condition": "raw",
+ "qid": "c07",
+ "question": "How much written premium did the broker channel book in 2023?",
+ "final_text": "The broker channel booked **\u00a37,279,940.35** of written premium in 2023, net of cancellations.\n\nThis sums every `premium_txn` row for BROKER-channel terms with `booked_date` in 2023. That is new business (\u00a33,398,798.53), renewals (\u00a34,100,246.97) and mid-term adjustments (\u00a325,836.76), less cancellations (\u2212\u00a3244,941.91). Figures are on a booked-date basis, not earned.\n\nANSWER: 7279940.35",
+ "stop_reason": "end_turn",
+ "tool_calls": [
+  {
+   "tool": "run_sql",
+   "input": {
+    "query": "SELECT t.channel, p.txn_type, COUNT(*) n, SUM(p.written_premium) wp, MIN(p.booked_date), MAX(p.booked_date) FROM premium_txn p JOIN policy_term t ON p.term_id=t.term_id WHERE YEAR(p.booked_date)=2023 GROUP BY 1,2 ORDER BY 1,2"
+   },
+   "output": "channel,txn_type,n,wp,min(p.booked_date),max(p.booked_date)\nBROKER,CANCEL,778,-244941.91,2023-01-02,2023-12-31\nBROKER,MTA,1273,25836.76,2023-01-01,2023-12-31\nBROKER,NEW,4883,3398798.53,2023-01-01,2023-12-31\nBROKER,RENEWAL,6027,4100246.97,2023-01-01,2023-12-31\nDIRECT,CANCEL,899,-277523.79,2023-01-01,2023-12-31\nDIRECT,MTA,1569,29936.31,2023-01-01,2023-12-31\nDIRECT,NEW,5791,4015779.28,2023-01-01,2023-12-31\nDIRECT,RENEWAL,7042,4782159.91,2023-01-01,2023-12-31\nPCW,CANCEL,783,-242801.96,2023-01-02,2023-12-31\nPCW,MTA,1267,24299.84,2023-01-01,2023-12-31\nPCW,NEW,6336,3963875.86,2023-01-01,2023-12-31\nPCW,RENEWAL,4210,2786297.29,2023-01-01,2023-12-31",
+   "error": false
+  },
+  {
+   "tool": "run_sql",
+   "input": {
+    "query": "SELECT SUM(p.written_premium) AS wp_net, SUM(CASE WHEN p.written_premium>0 THEN p.written_premium ELSE 0 END) AS wp_gross_positive FROM premium_txn p JOIN policy_term t ON p.term_id=t.term_id WHERE t.channel='BROKER' AND p.booked_date BETWEEN '2023-01-01' AND '2023-12-31'"
+   },
+   "output": "wp_net,wp_gross_positive\n7279940.35,7540486.51",
+   "error": false
+  }
+ ],
+ "usage": {
+  "input": 2157,
+  "output": 995,
+  "cache_read": 6090,
+  "cache_write": 0
+ },
+ "effort": "medium",
+ "prompt_version": "v1"
+}

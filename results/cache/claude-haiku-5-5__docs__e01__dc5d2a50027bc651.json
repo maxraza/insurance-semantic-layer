@@ -1,0 +1,26 @@
+{
+ "model": "claude-haiku-5-5",
+ "condition": "docs",
+ "qid": "e01",
+ "question": "What was earned premium in calendar year 2024?",
+ "final_text": "Earned premium for calendar year 2024 is **\u00a323,748,557.88**, gross of reinsurance.\n\nI took each premium transaction's written premium and spread it daily over its cover period `[effective_date, cover_end_date)`, counting only the days that fall in 2024. Cancellation rows, with negative premium, reverse the earned amount over their remaining cover. All 245,710 rows have a valid cover period, and none is booked after 31 December 2025, so the figure is complete as at the valuation date.\n\nANSWER: 23748557.88",
+ "stop_reason": "end_turn",
+ "tool_calls": [
+  {
+   "tool": "run_sql",
+   "input": {
+    "query": "\nSELECT\n  COUNT(*) AS n_rows,\n  SUM(CASE WHEN cover_end_date <= effective_date THEN 1 ELSE 0 END) AS zero_len,\n  SUM(CASE WHEN booked_date > DATE '2025-12-31' THEN 1 ELSE 0 END) AS booked_after_val,\n  SUM(CASE WHEN effective_date > cover_end_date THEN 1 ELSE 0 END) AS bad_order,\n  ROUND(SUM(\n    CASE WHEN cover_end_date > effective_date THEN\n      written_premium * GREATEST(0, DATE_DIFF('day', GREATEST(effective_date, DATE '2024-01-01'), LEAST(cover_end_date, DATE '2025-01-01'))) * 1.0\n      / DATE_DIFF('day', effective_date, cover_end_date)\n    ELSE 0 END), 2) AS earned_2024_pro_rata,\n  SUM(CASE WHEN txn_type='CANCEL' THEN 1 ELSE 0 END) AS cancel_rows\nFROM premium_txn;\n"
+   },
+   "output": "n_rows,zero_len,booked_after_val,bad_order,earned_2024_pro_rata,cancel_rows\n245710,0,0,0,23748557.88,13081",
+   "error": false
+  }
+ ],
+ "usage": {
+  "input": 1182,
+  "output": 1376,
+  "cache_read": 10626,
+  "cache_write": 0
+ },
+ "effort": "medium",
+ "prompt_version": "v1"
+}

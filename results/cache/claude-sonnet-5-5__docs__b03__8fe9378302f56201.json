@@ -1,0 +1,26 @@
+{
+ "model": "claude-sonnet-5-5",
+ "condition": "docs",
+ "qid": "b03",
+ "question": "What is the policy-year (underwriting-year) 2023 reported loss ratio as at 31 December 2025?",
+ "final_text": "The policy-year 2023 reported loss ratio as at 31 December 2025 is about 0.853.\n\n- **Basis:** I used every policy term that incepted in 2023. Claims and premium both follow the term's inception date.\n- **Reported loss:** \u00a319,011,665. This is indemnity payments net of recoveries plus case reserve movements, on claim transactions dated on or before 31 December 2025. ALAE is excluded and IBNR is not added.\n- **Earned premium:** \u00a322,291,250. This is premium booked by 31 December 2025, earned pro rata over each transaction's cover period and capped at that date.\n- **Ratio:** 19,011,665 / 22,291,250 = 0.8529.\n\nANSWER: 0.853",
+ "stop_reason": "end_turn",
+ "tool_calls": [
+  {
+   "tool": "run_sql",
+   "input": {
+    "query": "with t as (select term_id from policy_term where inception_date between '2023-01-01' and '2023-12-31'),\nep as (select sum(p.written_premium * greatest(0, least(date_diff('day',p.effective_date,least(p.cover_end_date,date '2026-01-01')),date_diff('day',p.effective_date,p.cover_end_date)))*1.0/nullif(date_diff('day',p.effective_date,p.cover_end_date),0)) e from premium_txn p join t using(term_id) where p.booked_date<='2025-12-31'),\nl as (select sum(x.amount) r from claim_txn x join claim c using(claim_id) join t on t.term_id=c.term_id where x.txn_date<='2025-12-31' and x.cost_type='INDEMNITY')\nselect e,r,r/e from ep,l"
+   },
+   "output": "e,r,(r / e)\n22291250.32,19011665.01,0.852876",
+   "error": false
+  }
+ ],
+ "usage": {
+  "input": 800,
+  "output": 823,
+  "cache_read": 10626,
+  "cache_write": 0
+ },
+ "effort": "medium",
+ "prompt_version": "v1"
+}

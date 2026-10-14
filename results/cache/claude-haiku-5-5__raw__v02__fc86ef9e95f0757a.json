@@ -1,0 +1,66 @@
+{
+ "model": "claude-haiku-5-5",
+ "condition": "raw",
+ "qid": "v02",
+ "question": "As at 30 June 2024, what was the reported loss (paid plus case reserves) for accident year 2023?",
+ "final_text": "As at 30 June 2024, the reported loss for accident year 2023 was **\u00a317,086,855.34**, across 4,351 claims.\n\n- **Paid (net of recoveries):** \u00a311,810,772.84, from PAYMENT (indemnity and ALAE) and RECOVERY transactions dated on or before 30 June 2024.\n- **Case reserves:** \u00a35,276,082.50. RESERVE rows are movements that net to the outstanding balance, so I summed them to the cutoff.\n- **Scope:** accident year 2023 is taken as accident_date in 2023. Of the 4,379 AY2023 claims, 28 were reported after the cutoff and so contribute nothing at that date.\n\nANSWER: 17086855.34",
+ "stop_reason": "end_turn",
+ "tool_calls": [
+  {
+   "tool": "run_sql",
+   "input": {
+    "query": "SELECT txn_type, cost_type, COUNT(*) n, SUM(amount) amt, MIN(txn_date), MAX(txn_date) FROM claim_txn GROUP BY 1,2 ORDER BY 1,2"
+   },
+   "output": "txn_type,cost_type,n,amt,min(txn_date),max(txn_date)\nPAYMENT,ALAE,5482,4041773.75,2019-04-02,2025-12-31\nPAYMENT,INDEMNITY,34398,78097079.75,2019-02-22,2025-12-31\nRECOVERY,INDEMNITY,1151,-2278660.54,2019-07-11,2025-12-31\nRESERVE,INDEMNITY,79216,15020532.03,2019-02-04,2025-12-31",
+   "error": false
+  },
+  {
+   "tool": "run_sql",
+   "input": {
+    "query": "SELECT c.peril, COUNT(*) FROM claim c GROUP BY 1; SELECT MIN(accident_date), MAX(accident_date), MIN(report_date), MAX(report_date) FROM claim;"
+   },
+   "output": "min(accident_date),max(accident_date),min(report_date),max(report_date)\n2019-01-21,2025-12-31,2019-02-04,2025-12-31",
+   "error": false
+  },
+  {
+   "tool": "run_sql",
+   "input": {
+    "query": "SELECT c.claim_id, c.accident_date, c.report_date, c.closed_date, t.txn_date, t.txn_type, t.cost_type, t.amount FROM claim c JOIN claim_txn t USING(claim_id) WHERE c.claim_id IN (SELECT claim_id FROM claim_txn WHERE txn_type='RESERVE' GROUP BY 1 HAVING COUNT(*)>=3 LIMIT 3) ORDER BY 1,5"
+   },
+   "output": "claim_id,accident_date,report_date,closed_date,txn_date,txn_type,cost_type,amount\n1,2019-11-10,2019-11-13,2020-01-03,2019-11-13,RESERVE,INDEMNITY,1511.36\n1,2019-11-10,2019-11-13,2020-01-03,2019-11-23,PAYMENT,INDEMNITY,40.80\n1,2019-11-10,2019-11-13,2020-01-03,2019-11-23,RESERVE,INDEMNITY,-40.80\n1,2019-11-10,2019-11-13,2020-01-03,2019-11-28,RESERVE,INDEMNITY,-18.26\n1,2019-11-10,2019-11-13,2020-01-03,2019-11-29,PAYMENT,INDEMNITY,1339.91\n1,2019-11-10,2019-11-13,2020-01-03,2019-11-29,RESERVE,INDEMNITY,-1339.91\n1,2019-11-10,2019-11-13,2020-01-03,2020-01-03,PAYMENT,INDEMNITY,355.89\n1,2019-11-10,2019-11-13,2020-01-03,2020-01-03,RESERVE,INDEMNITY,-112.39\n1,2019-11-10,2019-11-13,2020-01-03,2020-01-03,PAYMENT,ALAE,194.55\n17,2019-10-06,2019-10-15,2020-03-17,2019-10-15,RESERVE,INDEMNITY,4937.16\n17,2019-10-06,2019-10-15,2020-03-17,2020-03-17,PAYMENT,INDEMNITY,3899.55\n17,2019-10-06,2019-10-15,2020-03-17,2020-03-17,RESERVE,INDEMNITY,-3899.55\n17,2019-10-06,2019-10-15,2020-03-17,2020-03-17,RESERVE,INDEMNITY,-1037.61\n27,2019-04-29,2019-05-10,2019-06-30,2019-05-10,RESERVE,INDEMNITY,882.96\n27,2019-04-29,2019-05-10,2019-06-30,2019-06-04,PAYMENT,INDEMNITY,458.60\n27,2019-04-29,2019-05-10,2019-06-30,2019-06-04,RESERVE,INDEMNITY,-458.60\n27,2019-04-29,2019-05-10,2019-06-30,2019-06-19,RESERVE,INDEMNITY,106.64\n27,2019-04-29,2019-05-10,2019-06-30,2019-06-20,PAYMENT,INDEMNITY,138.30\n27,2019-04-29,2019-05-10,2019-06-30,2019-06-20,RESERVE,INDEMNITY,-138.30\n27,2019-04-29,2019-05-10,2019-06-30,2019-06-30,PAYMENT,INDEMNITY,393.91\n27,2019-04-29,2019-05-10,2019-06-30,2019-06-30,RESERVE,INDEMNITY,-392.70\n27,2019-04-29,2019-05-10,2019-06-30,2019-06-30,PAYMENT,ALAE,141.25\n27,2019-04-29,2019-05-10,2019-06-30,2019-09-08,RECOVERY,INDEMNITY,-597.62",
+   "error": false
+  },
+  {
+   "tool": "run_sql",
+   "input": {
+    "query": "SELECT COUNT(*) FROM claim WHERE EXTRACT(year FROM accident_date)=2023; SELECT COUNT(*) FROM claim_txn t JOIN claim c USING(claim_id) WHERE t.txn_date>'2024-06-30' AND c.accident_date < '2024-01-01'; SELECT COUNT(*) FROM claim_txn WHERE txn_date > '2025-12-31'"
+   },
+   "output": "count_star()\n0",
+   "error": false
+  },
+  {
+   "tool": "run_sql",
+   "input": {
+    "query": "SELECT SUM(CASE WHEN t.txn_type IN ('PAYMENT','RECOVERY') THEN t.amount ELSE 0 END) AS paid_net, SUM(CASE WHEN t.txn_type='RESERVE' THEN t.amount ELSE 0 END) AS case_reserve, SUM(t.amount) AS reported_loss, COUNT(DISTINCT c.claim_id) AS claims FROM claim c JOIN claim_txn t USING (claim_id) WHERE EXTRACT(year FROM c.accident_date)=2023 AND t.txn_date <= DATE '2024-06-30'"
+   },
+   "output": "paid_net,case_reserve,reported_loss,claims\n11810772.84,5276082.50,17086855.34,4351",
+   "error": false
+  },
+  {
+   "tool": "run_sql",
+   "input": {
+    "query": "SELECT COUNT(*) AS txns_after_cutoff FROM claim c JOIN claim_txn t USING (claim_id) WHERE EXTRACT(year FROM c.accident_date)=2023 AND t.txn_date > DATE '2024-06-30'; SELECT COUNT(*) AS ay2023_claims, SUM(CASE WHEN report_date>'2024-06-30' THEN 1 ELSE 0 END) AS reported_after_cutoff FROM claim WHERE EXTRACT(year FROM accident_date)=2023"
+   },
+   "output": "ay2023_claims,reported_after_cutoff\n4379,28",
+   "error": false
+  }
+ ],
+ "usage": {
+  "input": 7007,
+  "output": 2338,
+  "cache_read": 8120,
+  "cache_write": 0
+ },
+ "effort": "medium",
+ "prompt_version": "v1"
+}

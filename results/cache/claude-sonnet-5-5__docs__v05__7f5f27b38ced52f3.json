@@ -1,0 +1,26 @@
+{
+ "model": "claude-sonnet-5-5",
+ "condition": "docs",
+ "qid": "v05",
+ "question": "As at 30 September 2025, how many claims were open?",
+ "final_text": "As at 30 September 2025, 1,542 claims were open. That counts claims reported on or before that date that either had no closed date or were closed after it.\n\nIf I had used today's status instead, only 855 claims have no closed date. That figure would understate the position at 30 September, because it drops claims that were still open then and have closed since.\n\nANSWER: 1542",
+ "stop_reason": "end_turn",
+ "tool_calls": [
+  {
+   "tool": "run_sql",
+   "input": {
+    "query": "select count(*) filter (where closed_date is null or closed_date>'2025-09-30') open_asof, count(*) filter (where closed_date is null) null_closed from claim where report_date<='2025-09-30'"
+   },
+   "output": "open_asof,null_closed\n1542,855",
+   "error": false
+  }
+ ],
+ "usage": {
+  "input": 383,
+  "output": 290,
+  "cache_read": 10626,
+  "cache_write": 0
+ },
+ "effort": "medium",
+ "prompt_version": "v1"
+}

@@ -1,0 +1,79 @@
+{
+ "model": "claude-haiku-5-5",
+ "condition": "semantic",
+ "qid": "u01",
+ "question": "What was the accident-year 2024 loss ratio for windscreen claims?",
+ "final_text": "I can't answer this from the data available.\n\nThe loss ratio is a loss divided by earned premium, and neither part can be split by peril:\n\n- `loss_ratio_reported`, `loss_ratio_paid` and `loss_ratio_ultimate` only allow splits by business type, channel, driver age band, region and vehicle group. Splitting by peril returns an error.\n- `earned_premium` also cannot be split by peril, so there is no windscreen-specific denominator. Filtering on peril for the accident-year 2024 ratio returned the same error.\n\nWindscreen losses can be seen through `reported_loss` and `severity_reported` (both split by peril), but dividing them by total earned premium would mix windscreen losses with all other perils and would not be a windscreen loss ratio.\n\nANSWER: UNANSWERABLE",
+ "stop_reason": "end_turn",
+ "tool_calls": [
+  {
+   "tool": "query_metrics",
+   "input": {
+    "metrics": [
+     "loss_ratio_reported",
+     "loss_ratio_paid"
+    ],
+    "basis": "accident",
+    "as_of": "2025-12-31",
+    "grain": "year",
+    "group_by": [
+     "peril"
+    ],
+    "filters": {
+     "peril": "WINDSCREEN"
+    },
+    "period_from": "2024-01-01",
+    "period_to": "2024-12-31"
+   },
+   "output": "error: 'loss_ratio_reported' can't be split by 'peril' (not available on every measure it uses). Allowed: business_type, channel, driver_age_band, region, vehicle_group",
+   "error": true
+  },
+  {
+   "tool": "query_metrics",
+   "input": {
+    "metrics": [
+     "loss_ratio_reported",
+     "reported_loss",
+     "earned_premium"
+    ],
+    "basis": "accident",
+    "as_of": "2025-12-31",
+    "grain": "year",
+    "filters": {
+     "peril": "WINDSCREEN"
+    },
+    "period_from": "2024-01-01",
+    "period_to": "2024-12-31"
+   },
+   "output": "error: 'loss_ratio_reported' can't be split by 'peril' (not available on every measure it uses). Allowed: business_type, channel, driver_age_band, region, vehicle_group",
+   "error": true
+  },
+  {
+   "tool": "query_metrics",
+   "input": {
+    "metrics": [
+     "reported_loss",
+     "earned_premium"
+    ],
+    "basis": "accident",
+    "as_of": "2025-12-31",
+    "grain": "year",
+    "group_by": [
+     "peril"
+    ],
+    "period_from": "2024-01-01",
+    "period_to": "2024-12-31"
+   },
+   "output": "error: 'earned_premium' can't be split by 'peril' (not available on every measure it uses). Allowed: business_type, channel, driver_age_band, region, vehicle_group",
+   "error": true
+  }
+ ],
+ "usage": {
+  "input": 3548,
+  "output": 1506,
+  "cache_read": 14728,
+  "cache_write": 0
+ },
+ "effort": "medium",
+ "prompt_version": "v1"
+}

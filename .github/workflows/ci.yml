@@ -1,0 +1,49 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v6
+      - run: uv sync
+      - run: uv run ruff check src scripts tests
+      - run: uv run pytest -q
+
+  paper:
+    runs-on: ubuntu-latest
+    needs: test
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v6
+      - run: uv sync
+      - name: Rebuild the book and the paper assets (from cached model responses)
+        run: |
+          uv run isl generate
+          uv run isl bench --models claude-haiku-5-5,claude-sonnet-5-5
+          uv run python scripts/paper_assets.py
+          git diff --exit-code results/scores.jsonl
+      - name: Compile with pdfLaTeX (the engine arXiv uses)
+        uses: xu-cheng/latex-action@v3
+        with:
+          working_directory: paper
+          root_file: main.tex
+          args: -pdf -file-line-error -halt-on-error -interaction=nonstopmode -outdir=build
+      - name: Bundle for arXiv and compile the bundle without the .bib, as arXiv does
+        run: uv run python scripts/arxiv_bundle.py
+      - uses: xu-cheng/latex-action@v3
+        with:
+          working_directory: dist/arxiv
+          root_file: main.tex
+          args: -pdf -file-line-error -halt-on-error -interaction=nonstopmode
+      - uses: actions/upload-artifact@v4
+        with:
+          name: paper
+          path: |
+            paper/build/main.pdf
+            dist/arxiv.tar.gz

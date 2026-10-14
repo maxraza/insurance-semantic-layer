@@ -1,0 +1,58 @@
+{
+ "model": "claude-sonnet-5-5",
+ "condition": "raw",
+ "qid": "l03",
+ "question": "What is the accident-year 2023 loss and ALAE ratio, including IBNR?",
+ "final_text": "The accident-year 2023 loss and ALAE ratio including IBNR is about 0.968.\n\nLoss and ALAE here means net incurred loss and ALAE plus IBNR, divided by earned premium. All figures are for accident year 2023 as at 31 December 2025.\n\n- **Paid indemnity:** \u00a318,265,620.\n- **Paid ALAE:** \u00a31,011,507.\n- **Recoveries:** \u2013\u00a3492,593.\n- **Case reserves:** \u00a31,665,781. I took these as the sum of the reserve transactions, on the assumption that they record movements in the outstanding reserve.\n- **Net incurred loss and ALAE:** \u00a320,450,315.\n- **IBNR:** \u00a3184,881, from the 31 December 2025 valuation.\n- **Incurred including IBNR:** \u00a320,635,196.\n- **Earned premium:** \u00a321,311,739. I earned each premium transaction pro rata by day over its cover period and took the part falling in 2023.\n\n\u00a320,635,196 \u00f7 \u00a321,311,739 = 0.968\n\nANSWER: 0.968",
+ "stop_reason": "end_turn",
+ "tool_calls": [
+  {
+   "tool": "run_sql",
+   "input": {
+    "query": "select txn_type,cost_type,count(*),sum(amount),min(txn_date),max(txn_date) from claim_txn group by all order by all"
+   },
+   "output": "txn_type,cost_type,count_star(),sum(amount),min(txn_date),max(txn_date)\nPAYMENT,ALAE,5482,4041773.75,2019-04-02,2025-12-31\nPAYMENT,INDEMNITY,34398,78097079.75,2019-02-22,2025-12-31\nRECOVERY,INDEMNITY,1151,-2278660.54,2019-07-11,2025-12-31\nRESERVE,INDEMNITY,79216,15020532.03,2019-02-04,2025-12-31",
+   "error": false
+  },
+  {
+   "tool": "run_sql",
+   "input": {
+    "query": "select * from ibnr_valuation where accident_year=2023 order by valuation_date desc limit 10"
+   },
+   "output": "valuation_date,accident_year,ibnr\n2025-12-31,2023,184880.76\n2025-09-30,2023,213529.95\n2025-06-30,2023,221581.16\n2025-03-31,2023,268790.96\n2024-12-31,2023,506230.09\n2024-09-30,2023,836928.50\n2024-06-30,2023,918299.78\n2024-03-31,2023,1898002.88\n2023-12-31,2023,3068439.64\n2023-09-30,2023,2741200.56",
+   "error": false
+  },
+  {
+   "tool": "run_sql",
+   "input": {
+    "query": "select txn_type,count(*),sum(written_premium),sum(exposure_units),min(effective_date),max(cover_end_date) from premium_txn group by all"
+   },
+   "output": "txn_type,count_star(),sum(written_premium),sum(exposure_units),min(effective_date),max(cover_end_date)\nMTA,22310,466631.74,0.000,2019-02-05,2026-12-07\nRENEWAL,96764,66470703.32,96764.000,2020-01-01,2027-01-20\nCANCEL,13081,-4423904.86,-13081.000,2019-01-28,2026-12-07\nNEW,113555,74247233.10,113555.000,2019-01-01,2027-01-14",
+   "error": false
+  },
+  {
+   "tool": "run_sql",
+   "input": {
+    "query": "with c as (select claim_id from claim where year(accident_date)=2023),\nl as (select cost_type,txn_type,sum(amount) a from claim_txn t join c using(claim_id) group by all),\nep as (select sum(written_premium * greatest(0, date_diff('day', greatest(effective_date,date '2023-01-01'), least(cover_end_date,date '2024-01-01')))::double / date_diff('day',effective_date,cover_end_date)) e from premium_txn where cover_end_date>effective_date)\nselect (select list((cost_type,txn_type,a)) from l), e, (select sum(a) from l) tot from ep"
+   },
+   "output": "(SELECT list(main.\"row\"(cost_type, txn_type, a)) FROM l),e,tot\n[('INDEMNITY', 'PAYMENT', Decimal('18265620.16')), ('ALAE', 'PAYMENT', Decimal('1011506.65')), ('INDEMNITY', 'RECOVERY', Decimal('-492593.24')), ('INDEMNITY', 'RESERVE', Decimal('1665781.33'))],21311739.45,20450314.90",
+   "error": false
+  },
+  {
+   "tool": "run_sql",
+   "input": {
+    "query": "select count(*) from premium_txn where cover_end_date<=effective_date"
+   },
+   "output": "count_star()\n0",
+   "error": false
+  }
+ ],
+ "usage": {
+  "input": 3010,
+  "output": 1360,
+  "cache_read": 6090,
+  "cache_write": 0
+ },
+ "effort": "medium",
+ "prompt_version": "v1"
+}

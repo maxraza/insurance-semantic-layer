@@ -1,0 +1,50 @@
+{
+ "model": "claude-haiku-5-5",
+ "condition": "raw",
+ "qid": "r04",
+ "question": "What is the average reported cost per reported claim for own-damage claims in accident year 2024?",
+ "final_text": "**Answer: \u00a33,054.96 average incurred cost per own-damage claim for accident year 2024.**\n\n- **Scope:** 1,676 claims with peril `OWN_DAMAGE` and accident date in 2024. Every one has transactions, and there are no duplicate claim IDs or orphan transactions.\n- **Cost measure:** the sum of all `claim_txn` amounts per claim (payments, reserve movements, ALAE and recoveries). Reserve movements net to the outstanding balance, so this gives paid plus outstanding, net of recoveries.\n- **Total:** \u00a35,120,112.18 across the 1,676 claims, so \u00a35,120,112.18 / 1,676 = \u00a33,054.96.\n- **Recoveries:** these are negative and total \u2212\u00a3318,633.33. If you want the cost before recoveries, the average would be about \u00a33,245.19. I used the net figure as \"reported cost\".\n\nANSWER: 3054.96",
+ "stop_reason": "end_turn",
+ "tool_calls": [
+  {
+   "tool": "run_sql",
+   "input": {
+    "query": "SELECT 'peril' AS f, peril AS v, COUNT(*) AS n FROM claim GROUP BY peril\nUNION ALL SELECT 'txn_type', txn_type, COUNT(*) FROM claim_txn GROUP BY txn_type\nUNION ALL SELECT 'cost_type', cost_type, COUNT(*) FROM claim_txn GROUP BY cost_type"
+   },
+   "output": "f,v,n\nperil,BODILY_INJURY,1691\nperil,OWN_DAMAGE,9055\nperil,WINDSCREEN,5651\nperil,THEFT,872\nperil,THIRD_PARTY_PROPERTY,6280\ntxn_type,RESERVE,79216\ntxn_type,RECOVERY,1151\ntxn_type,PAYMENT,39880\ncost_type,INDEMNITY,114765\ncost_type,ALAE,5482",
+   "error": false
+  },
+  {
+   "tool": "run_sql",
+   "input": {
+    "query": "SELECT * FROM claim LIMIT 5; SELECT * FROM claim_txn LIMIT 10;"
+   },
+   "output": "claim_txn_id,claim_id,txn_date,txn_type,cost_type,amount\n1,1,2019-11-13,RESERVE,INDEMNITY,1511.36\n2,1,2019-11-23,PAYMENT,INDEMNITY,40.80\n3,1,2019-11-23,RESERVE,INDEMNITY,-40.80\n4,1,2019-11-28,RESERVE,INDEMNITY,-18.26\n5,1,2019-11-29,PAYMENT,INDEMNITY,1339.91\n6,1,2019-11-29,RESERVE,INDEMNITY,-1339.91\n7,1,2020-01-03,PAYMENT,INDEMNITY,355.89\n8,1,2020-01-03,RESERVE,INDEMNITY,-112.39\n9,1,2020-01-03,PAYMENT,ALAE,194.55\n10,2,2019-11-14,RESERVE,INDEMNITY,96.92",
+   "error": false
+  },
+  {
+   "tool": "run_sql",
+   "input": {
+    "query": "WITH c AS (\n  SELECT claim_id, accident_date FROM claim WHERE peril='OWN_DAMAGE' AND EXTRACT(year FROM accident_date)=2024\n),\nt AS (SELECT claim_id, SUM(amount) AS incurred, SUM(CASE WHEN txn_type='RECOVERY' THEN amount ELSE 0 END) AS rec FROM claim_txn GROUP BY claim_id)\nSELECT COUNT(*) AS n_claims, COUNT(t.claim_id) AS n_with_txn, SUM(t.incurred) AS total_incurred, SUM(t.incurred)/COUNT(*) AS avg_incurred,\n SUM(rec) AS total_recoveries,\n (SELECT COUNT(*) FROM claim_txn WHERE claim_id NOT IN (SELECT claim_id FROM claim)) AS orphan_txns,\n (SELECT COUNT(*) - COUNT(DISTINCT claim_id) FROM claim) AS dup_claims\nFROM c LEFT JOIN t USING (claim_id)\""
+   },
+   "output": "error: Parser Error: unterminated quoted identifier at or near \"\"\"\n\nLINE 9: FROM c LEFT JOIN t USING (claim_id)\"\n                                           ^",
+   "error": true
+  },
+  {
+   "tool": "run_sql",
+   "input": {
+    "query": "WITH c AS (\n  SELECT claim_id, accident_date FROM claim WHERE peril='OWN_DAMAGE' AND EXTRACT(year FROM accident_date)=2024\n),\nt AS (SELECT claim_id, SUM(amount) AS incurred, SUM(CASE WHEN txn_type='RECOVERY' THEN amount ELSE 0 END) AS rec FROM claim_txn GROUP BY claim_id)\nSELECT COUNT(*) AS n_claims, COUNT(t.claim_id) AS n_with_txn, SUM(t.incurred) AS total_incurred, SUM(t.incurred)/COUNT(*) AS avg_incurred,\n SUM(rec) AS total_recoveries,\n (SELECT COUNT(*) FROM claim_txn WHERE claim_id NOT IN (SELECT claim_id FROM claim)) AS orphan_txns,\n (SELECT COUNT(*) - COUNT(DISTINCT claim_id) FROM claim) AS dup_claims\nFROM c LEFT JOIN t USING (claim_id)"
+   },
+   "output": "n_claims,n_with_txn,total_incurred,avg_incurred,total_recoveries,orphan_txns,dup_claims\n1676,1676,5120112.18,3054.96,-318633.33,0,0",
+   "error": false
+  }
+ ],
+ "usage": {
+  "input": 5228,
+  "output": 2731,
+  "cache_read": 8120,
+  "cache_write": 0
+ },
+ "effort": "medium",
+ "prompt_version": "v1"
+}

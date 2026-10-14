@@ -1,0 +1,36 @@
+{
+ "model": "claude-haiku-5-5",
+ "condition": "semantic",
+ "qid": "l01",
+ "question": "What is the accident-year 2024 ultimate loss ratio (reported loss plus booked IBNR, excluding ALAE) at 31 December 2025?",
+ "final_text": "The accident-year 2024 ultimate loss ratio at 31 December 2025 is about 0.819.\n\nReported loss was \u00a318,827,415 and booked IBNR was \u00a3611,436, giving \u00a319,438,851 against earned premium of \u00a323,748,558. The tool's ratio matches this calculation.\n\nANSWER: 0.818528",
+ "stop_reason": "end_turn",
+ "tool_calls": [
+  {
+   "tool": "query_metrics",
+   "input": {
+    "metrics": [
+     "loss_ratio_ultimate",
+     "earned_premium",
+     "reported_loss",
+     "ibnr"
+    ],
+    "basis": "accident",
+    "as_of": "2025-12-31",
+    "grain": "year",
+    "period_from": "2024-01-01",
+    "period_to": "2024-12-31"
+   },
+   "output": "period,loss_ratio_ultimate,earned_premium,reported_loss,ibnr\n2024,0.818528,23748557.88,18827414.86,611435.82",
+   "error": false
+  }
+ ],
+ "usage": {
+  "input": 596,
+  "output": 441,
+  "cache_read": 7364,
+  "cache_write": 0
+ },
+ "effort": "medium",
+ "prompt_version": "v1"
+}

@@ -1,0 +1,42 @@
+{
+ "model": "claude-haiku-5-5",
+ "condition": "docs",
+ "qid": "n02",
+ "question": "What is the average reported cost per reported windscreen claim in accident year 2024, counting nil claims?",
+ "final_text": "The average reported cost per windscreen claim for accident year 2024, valued at 31 December 2025, is \u00a3514.85.\n\n- **Claims:** 1,069 windscreen claims with accident dates in 2024, all reported by the valuation date. Nil claims are included in the count, as requested.\n- **Reported loss:** \u00a3550,376.77, being indemnity payments net of recoveries (\u00a3550,376.77 paid) plus case reserves (\u00a30, since every claim is closed with no outstanding reserve). ALAE and IBNR are excluded, per the glossary definition of reported loss.\n- **Ratio:** \u00a3550,376.77 / 1,069 = \u00a3514.85.\n\nANSWER: 514.85",
+ "stop_reason": "end_turn",
+ "tool_calls": [
+  {
+   "tool": "run_sql",
+   "input": {
+    "query": "SELECT ct.txn_type, ct.cost_type, COUNT(*) n, SUM(ct.amount) amt, MIN(ct.txn_date), MAX(ct.txn_date) FROM claim_txn ct GROUP BY 1,2 ORDER BY 1,2;"
+   },
+   "output": "txn_type,cost_type,n,amt,min(ct.txn_date),max(ct.txn_date)\nPAYMENT,ALAE,5482,4041773.75,2019-04-02,2025-12-31\nPAYMENT,INDEMNITY,34398,78097079.75,2019-02-22,2025-12-31\nRECOVERY,INDEMNITY,1151,-2278660.54,2019-07-11,2025-12-31\nRESERVE,INDEMNITY,79216,15020532.03,2019-02-04,2025-12-31",
+   "error": false
+  },
+  {
+   "tool": "run_sql",
+   "input": {
+    "query": "SELECT COUNT(*) n, COUNT(DISTINCT claim_id) c, MIN(accident_date), MAX(accident_date), MAX(report_date), SUM(CASE WHEN closed_date IS NOT NULL THEN 1 ELSE 0 END) closed FROM claim WHERE peril='WINDSCREEN' AND YEAR(accident_date)=2024;"
+   },
+   "output": "n,c,min(accident_date),max(accident_date),max(report_date),closed\n1069,1069,2024-01-01,2024-12-31,2025-01-04,1069",
+   "error": false
+  },
+  {
+   "tool": "run_sql",
+   "input": {
+    "query": "WITH c AS (SELECT claim_id FROM claim WHERE peril='WINDSCREEN' AND YEAR(accident_date)=2024 AND report_date<=DATE '2025-12-31'),\nt AS (SELECT ct.claim_id, SUM(CASE WHEN txn_type IN ('PAYMENT','RECOVERY') AND cost_type='INDEMNITY' THEN amount ELSE 0 END) paid_ind, SUM(CASE WHEN txn_type='RESERVE' AND cost_type='INDEMNITY' THEN amount ELSE 0 END) res FROM claim_txn ct JOIN c USING(claim_id) WHERE ct.txn_date<=DATE '2025-12-31' GROUP BY 1)\nSELECT (SELECT COUNT(*) FROM c) n_claims, SUM(paid_ind) paid, SUM(res) reserve, SUM(paid_ind+res) reported_loss, (SELECT COUNT(*) FROM c) / 1 AS cnt, SUM(paid_ind+res)/(SELECT COUNT(*) FROM c) avg_per_claim, SUM(CASE WHEN res<>0 THEN 1 ELSE 0 END) claims_with_nonzero_reserve FROM t;"
+   },
+   "output": "n_claims,paid,reserve,reported_loss,cnt,avg_per_claim,claims_with_nonzero_reserve\n1069,550376.77,0.00,550376.77,1069.00,514.85,0",
+   "error": false
+  }
+ ],
+ "usage": {
+  "input": 2869,
+  "output": 1567,
+  "cache_read": 15939,
+  "cache_write": 0
+ },
+ "effort": "medium",
+ "prompt_version": "v1"
+}

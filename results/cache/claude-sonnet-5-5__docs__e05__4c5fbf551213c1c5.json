@@ -1,0 +1,26 @@
+{
+ "model": "claude-sonnet-5-5",
+ "condition": "docs",
+ "qid": "e05",
+ "question": "What was the average written premium per vehicle (per written car-year) in 2025?",
+ "final_text": "Average written premium in 2025 was about \u00a3753.28 per car-year. I used the calendar basis, so I included every premium transaction booked between 1 January and 31 December 2025.\n\n- Written premium was \u00a330,274,839.20.\n- Written exposure was 40,190.52 car-years.\n\nDividing premium by exposure gives \u00a3753.28. The premium total includes mid-term adjustments and cancellation returns, and the exposure total nets off the unexpired fraction of cancelled terms.\n\nANSWER: 753.28",
+ "stop_reason": "end_turn",
+ "tool_calls": [
+  {
+   "tool": "run_sql",
+   "input": {
+    "query": "select sum(written_premium), sum(exposure_units), sum(written_premium)/sum(exposure_units) from premium_txn where booked_date between '2025-01-01' and '2025-12-31'"
+   },
+   "output": "sum(written_premium),sum(exposure_units),(sum(written_premium) / sum(exposure_units))\n30274839.20,40190.522530,753.28",
+   "error": false
+  }
+ ],
+ "usage": {
+  "input": 393,
+  "output": 305,
+  "cache_read": 10824,
+  "cache_write": 0
+ },
+ "effort": "medium",
+ "prompt_version": "v1"
+}

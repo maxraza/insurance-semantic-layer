@@ -1,0 +1,53 @@
+\begin{figure}[t]\centering\includegraphics[width=\linewidth]{figures/answers.pdf}
+\caption{Every defensible answer to ``what was the 2024 loss ratio?'' on the synthetic book, valued at 31
+December 2025, as computed by the semantic layer. Ultimate figures include booked IBNR; the policy-year basis
+has no booked IBNR, so no policy-year ultimate exists.}\label{fig:answers}\end{figure}
+
+\begin{figure}[t]\centering\includegraphics[width=\linewidth]{figures/development.pdf}
+\caption{The same accident year read at successive quarter-end valuation dates. Reported loss ratios rise as
+late claims are reported and reserves develop; adding booked IBNR anticipates much of that development.}
+\label{fig:development}\end{figure}
+
+\begin{table}[t]\centering\small
+\caption{ISL-Bench results. Accuracy over all questions with a 95\% bootstrap interval over questions; accuracy on the answerable, unambiguous core; ambiguous questions answered with a defensible value (and, in brackets, how many answers named a basis or definition); unanswerable questions declined; wrong answers (in brackets, how many quoted the governed figure in their explanation); API cost.}\label{tab:main}
+\resizebox{\linewidth}{!}{\begin{tabular}{llrrrrrr}\toprule
+Model & Condition & All & Core & Ambiguous (disclosed) & Unanswerable & Wrong (quoted) & Cost \\ \midrule
+Haiku 5.5 & raw & 77\% [66\%, 87\%] & 73\% & 7/7 (7) & 4/4 & 14 (7) & \$0.13 \\
+Haiku 5.5 & docs & 98\% [95\%, 100\%] & 98\% & 7/7 (7) & 4/4 & 1 (1) & \$0.07 \\
+Haiku 5.5 & semantic & 100\% [100\%, 100\%] & 100\% & 7/7 (7) & 4/4 & 0 (0) & \$0.02 \\
+Sonnet 5.5 & raw & 84\% [74\%, 94\%] & 82\% & 7/7 (7) & 3/4 & 10 (3) & \$0.88 \\
+Sonnet 5.5 & docs & 98\% [95\%, 100\%] & 100\% & 7/7 (7) & 3/4 & 1 (0) & \$0.58 \\
+Sonnet 5.5 & semantic & 100\% [100\%, 100\%] & 100\% & 7/7 (7) & 4/4 & 0 (0) & \$0.39 \\
+\bottomrule\end{tabular}}\end{table}
+
+\begin{table}[t]\centering\small
+\caption{Correct answers by question category (number of questions in brackets).}\label{tab:categories}
+\resizebox{\linewidth}{!}{\begin{tabular}{lrrrrrr}\toprule
+Category & Haiku raw & Haiku doc & Haiku sem & Sonnet raw & Sonnet doc & Sonnet sem \\ \midrule
+Control (7) & 7/7 & 7/7 & 7/7 & 7/7 & 7/7 & 7/7 \\
+Earning (6) & 5/6 & 5/6 & 6/6 & 6/6 & 6/6 & 6/6 \\
+Time basis (8) & 3/8 & 8/8 & 8/8 & 5/8 & 8/8 & 8/8 \\
+Valuation (5) & 2/5 & 5/5 & 5/5 & 2/5 & 5/5 & 5/5 \\
+Loss definition (7) & 5/7 & 7/7 & 7/7 & 7/7 & 7/7 & 7/7 \\
+Aggregation (7) & 4/7 & 7/7 & 7/7 & 4/7 & 7/7 & 7/7 \\
+Snapshot (5) & 5/5 & 5/5 & 5/5 & 5/5 & 5/5 & 5/5 \\
+Counting (2) & 2/2 & 2/2 & 2/2 & 2/2 & 2/2 & 2/2 \\
+Retention (4) & 4/4 & 4/4 & 4/4 & 4/4 & 4/4 & 4/4 \\
+Ambiguous (7) & 7/7 & 7/7 & 7/7 & 7/7 & 7/7 & 7/7 \\
+Unanswerable (4) & 4/4 & 4/4 & 4/4 & 3/4 & 3/4 & 4/4 \\
+\midrule Mean tool calls & 4.5 & 2.2 & 1.1 & 2.8 & 1.1 & 1.0 \\
+\bottomrule\end{tabular}}\end{table}
+
+\begin{table}[t]\centering\small
+\caption{Every incorrect answer, classified from the model's own explanation. The first three classes are house conventions that cannot be discovered from raw tables.}\label{tab:errors}
+\resizebox{\linewidth}{!}{\begin{tabular}{lrrrrrr}\toprule
+Error class & Haiku raw & Haiku doc & Haiku sem & Sonnet raw & Sonnet doc & Sonnet sem \\ \midrule
+ALAE included in losses & 9 & 0 & 0 & 7 & 0 & 0 \\
+Recoveries not netted & 2 & 0 & 0 & 2 & 0 & 0 \\
+Day-count convention & 2 & 1 & 0 & 0 & 0 & 0 \\
+Wrong cohort definition & 1 & 0 & 0 & 0 & 0 & 0 \\
+Answered a different question & 0 & 0 & 0 & 0 & 1 & 0 \\
+Estimated instead of declining & 0 & 0 & 0 & 1 & 0 & 0 \\
+\bottomrule\end{tabular}}\end{table}
+
+\input{results_text.tex}

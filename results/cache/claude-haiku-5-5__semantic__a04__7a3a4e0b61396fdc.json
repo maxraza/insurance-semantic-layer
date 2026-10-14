@@ -1,0 +1,48 @@
+{
+ "model": "claude-haiku-5-5",
+ "condition": "semantic",
+ "qid": "a04",
+ "question": "How many claims did we have in 2024?",
+ "final_text": "We recorded **4,398 reported claims** in 2024 (calendar-year basis, valued at 31 December 2025). On an accident-year basis, claims that occurred in 2024 total 4,396. The gap is small and comes from the choice of basis. I've used the calendar figure because it counts claims reported during 2024. Paid claim counts would be lower, since they exclude nil claims.\n\nANSWER: 4398",
+ "stop_reason": "end_turn",
+ "tool_calls": [
+  {
+   "tool": "query_metrics",
+   "input": {
+    "metrics": [
+     "reported_claim_count"
+    ],
+    "basis": "calendar",
+    "as_of": "2025-12-31",
+    "grain": "year",
+    "period_from": "2024-01-01",
+    "period_to": "2024-12-31"
+   },
+   "output": "period,reported_claim_count\n2024,4398.00",
+   "error": false
+  },
+  {
+   "tool": "query_metrics",
+   "input": {
+    "metrics": [
+     "reported_claim_count"
+    ],
+    "basis": "accident",
+    "as_of": "2025-12-31",
+    "grain": "year",
+    "period_from": "2024-01-01",
+    "period_to": "2024-12-31"
+   },
+   "output": "period,reported_claim_count\n2024,4396.00",
+   "error": false
+  }
+ ],
+ "usage": {
+  "input": 773,
+  "output": 720,
+  "cache_read": 7364,
+  "cache_write": 0
+ },
+ "effort": "medium",
+ "prompt_version": "v1"
+}

@@ -1,0 +1,66 @@
+{
+ "model": "claude-haiku-5-5",
+ "condition": "raw",
+ "qid": "l01",
+ "question": "What is the accident-year 2024 ultimate loss ratio (reported loss plus booked IBNR, excluding ALAE) at 31 December 2025?",
+ "final_text": "**Accident-year 2024 ultimate loss ratio at 31 Dec 2025: 0.819** (about 81.9%)\n\nBuild-up (GBP):\n- **Reported indemnity loss:** 18,827,414.86. This is all INDEMNITY transactions (payments + outstanding reserve movements + recoveries) on claims with accident dates in 2024. Recoveries of -507,663.93 are netted in.\n- **Booked IBNR at 31 Dec 2025 (AY 2024):** 611,435.82.\n- **Ultimate loss:** 19,438,850.68.\n- **Earned premium, calendar 2024:** 23,744,583.42. I pro-rated each premium transaction (new, renewal, mid-term adjustment and cancellation) daily over its cover period.\n- **Ratio:** 19,438,850.68 / 23,744,583.42 = 0.8187.\n\nALAE (652,731.35) is excluded as requested. Including it would give roughly 0.846.\n\nANSWER: 0.819",
+ "stop_reason": "end_turn",
+ "tool_calls": [
+  {
+   "tool": "run_sql",
+   "input": {
+    "query": "SELECT 'claim_txn' src, txn_type, cost_type, count(*) n, sum(amount) amt FROM claim_txn GROUP BY 1,2,3\nUNION ALL SELECT 'premium_txn', txn_type, '', count(*), sum(written_premium) FROM premium_txn GROUP BY 1,2,3\nUNION ALL SELECT 'ibnr', cast(valuation_date as varchar), cast(accident_year as varchar), count(*), sum(ibnr) FROM ibnr_valuation GROUP BY 1,2,3\nORDER BY 1,2,3"
+   },
+   "output": "src,txn_type,cost_type,n,amt\nclaim_txn,PAYMENT,ALAE,5482,4041773.75\nclaim_txn,PAYMENT,INDEMNITY,34398,78097079.75\nclaim_txn,RECOVERY,INDEMNITY,1151,-2278660.54\nclaim_txn,RESERVE,INDEMNITY,79216,15020532.03\nibnr,2019-12-31,2019,1,450298.72\nibnr,2020-03-31,2019,1,356582.03\nibnr,2020-03-31,2020,1,683142.67\nibnr,2020-06-30,2019,1,341514.05\nibnr,2020-06-30,2020,1,824481.35\nibnr,2020-09-30,2019,1,165779.06\nibnr,2020-09-30,2020,1,1891648.46\nibnr,2020-12-31,2019,1,97378.08\nibnr,2020-12-31,2020,1,1911713.85\nibnr,2021-03-31,2019,1,86329.61\nibnr,2021-03-31,2020,1,905461.64\nibnr,2021-03-31,2021,1,920121.97\nibnr,2021-06-30,2019,1,22351.59\nibnr,2021-06-30,2020,1,277377.64\nibnr,2021-06-30,2021,1,1511261.10\nibnr,2021-09-30,2019,1,1543.50\nibnr,2021-09-30,2020,1,194333.49\nibnr,2021-09-30,2021,1,1515044.78\nibnr,2021-12-31,2019,1,0.00\nibnr,2021-12-31,2020,1,22311.98\nibnr,2021-12-31,2021,1,1351498.40\nibnr,2022-03-31,2019,1,0.00\nibnr,2022-03-31,2020,1,59952.40\nibnr,2022-03-31,2021,1,760092.87\nibnr,2022-03-31,2022,1,951355.79\nibnr,2022-06-30,2019,1,0.00\nibnr,2022-06-30,2020,1,0.00\nibnr,2022-06-30,2021,1,0.00\nibnr,2022-06-30,2022,1,815343.77\nibnr,2022-09-30,2019,1,0.00\nibnr,2022-09-30,2020,1,0.00\nibnr,2022-09-30,2021,1,104469.41\nibnr,2022-09-30,2022,1,2029753.62\nibnr,2022-12-31,2019,1,0.00\nibnr,2022-12-31,2020,1,7662.80\nibnr,2022-12-31,2021,1,194613.54\nibnr,2022-12-31,2022,1,2433916.61\nibnr,2023-03-31,2019,1,0.00\nibnr,2023-03-31,2020,1,0.00\nibnr,2023-03-31,2021,1,80286.90\nibnr,2023-03-31,2022,1,1131532.72\nibnr,2023-03-31,2023,1,1564851.71\nibnr,2023-06-30,2019,1,277.51\nibnr,2023-06-30,2020,1,6679.01\nibnr,2023-06-30,2021,1,66339.38\nibnr,2023-06-30,2022,1,1022786.36\nibnr,2023-06-30,2023,1,2231077.31\nibnr,2023-09-30,2019,1,0.00\nibnr,2023-09-30,2020,1,58414.96\nibnr,2023-09-30,2021,1,104788.35\nibnr,2023-09-30,2022,1,724197.53\nibnr,2023-09-30,2023,1,2741200.56\nibnr,2023-12-31,2019,1,0.00\nibnr,2023-12-31,2020,1,0.00\nibnr,2023-12-31,2021,1,12485.20\nibnr,2023-12-31,2022,1,309968.00\n... 57 more rows",
+   "error": false
+  },
+  {
+   "tool": "run_sql",
+   "input": {
+    "query": "SELECT * FROM ibnr_valuation WHERE accident_year=2024 ORDER BY valuation_date"
+   },
+   "output": "valuation_date,accident_year,ibnr\n2024-03-31,2024,1564164.64\n2024-06-30,2024,2440226.21\n2024-09-30,2024,3427063.37\n2024-12-31,2024,3882380.39\n2025-03-31,2024,2352791.90\n2025-06-30,2024,1576668.45\n2025-09-30,2024,1008199.39\n2025-12-31,2024,611435.82",
+   "error": false
+  },
+  {
+   "tool": "run_sql",
+   "input": {
+    "query": "SELECT txn_type, count(*) n, sum(written_premium) wp, sum(exposure_units) eu, min(effective_date), max(effective_date), min(booked_date), max(booked_date) FROM premium_txn GROUP BY 1 ORDER BY 1"
+   },
+   "output": "txn_type,n,wp,eu,min(effective_date),max(effective_date),min(booked_date),max(booked_date)\nCANCEL,13081,-4423904.86,-13081.000,2019-01-28,2025-12-31,2019-02-02,2025-12-31\nMTA,22310,466631.74,0.000,2019-02-05,2025-12-31,2019-02-08,2025-12-31\nNEW,113555,74247233.10,113555.000,2019-01-01,2026-01-14,2019-01-01,2025-12-31\nRENEWAL,96764,66470703.32,96764.000,2020-01-01,2026-01-20,2019-12-15,2025-12-31",
+   "error": false
+  },
+  {
+   "tool": "run_sql",
+   "input": {
+    "query": "SELECT c.claim_id, c.peril, c.accident_date, c.report_date, c.closed_date, t.txn_type, t.cost_type, t.txn_date, t.amount FROM claim c LEFT JOIN claim_txn t USING(claim_id) WHERE c.claim_id IN (SELECT claim_id FROM claim WHERE accident_date BETWEEN '2024-01-01' AND '2024-01-31' LIMIT 3) ORDER BY 1,t.txn_date"
+   },
+   "output": "claim_id,peril,accident_date,report_date,closed_date,txn_type,cost_type,txn_date,amount\n7862,OWN_DAMAGE,2024-01-17,2024-01-31,2024-02-26,RESERVE,INDEMNITY,2024-01-31,3540.74\n7862,OWN_DAMAGE,2024-01-17,2024-01-31,2024-02-26,RESERVE,INDEMNITY,2024-02-26,-3540.74\n7866,OWN_DAMAGE,2024-01-08,2024-01-08,2024-05-11,RESERVE,INDEMNITY,2024-01-08,1410.30\n7866,OWN_DAMAGE,2024-01-08,2024-01-08,2024-05-11,PAYMENT,INDEMNITY,2024-02-03,293.07\n7866,OWN_DAMAGE,2024-01-08,2024-01-08,2024-05-11,RESERVE,INDEMNITY,2024-02-03,-293.07\n7866,OWN_DAMAGE,2024-01-08,2024-01-08,2024-05-11,RESERVE,INDEMNITY,2024-03-08,219.21\n7866,OWN_DAMAGE,2024-01-08,2024-01-08,2024-05-11,PAYMENT,INDEMNITY,2024-03-09,66.77\n7866,OWN_DAMAGE,2024-01-08,2024-01-08,2024-05-11,RESERVE,INDEMNITY,2024-03-09,-66.77\n7866,OWN_DAMAGE,2024-01-08,2024-01-08,2024-05-11,PAYMENT,INDEMNITY,2024-05-11,1228.51\n7866,OWN_DAMAGE,2024-01-08,2024-01-08,2024-05-11,RESERVE,INDEMNITY,2024-05-11,-1228.51\n7866,OWN_DAMAGE,2024-01-08,2024-01-08,2024-05-11,RESERVE,INDEMNITY,2024-05-11,-41.16\n7884,WINDSCREEN,2024-01-16,2024-01-20,2024-02-07,RESERVE,INDEMNITY,2024-01-20,520.74\n7884,WINDSCREEN,2024-01-16,2024-01-20,2024-02-07,PAYMENT,INDEMNITY,2024-02-07,514.55\n7884,WINDSCREEN,2024-01-16,2024-01-20,2024-02-07,RESERVE,INDEMNITY,2024-02-07,-514.55\n7884,WINDSCREEN,2024-01-16,2024-01-20,2024-02-07,RESERVE,INDEMNITY,2024-02-07,-6.19",
+   "error": false
+  },
+  {
+   "tool": "run_sql",
+   "input": {
+    "query": "WITH ep AS (\nSELECT SUM(written_premium * GREATEST(0, (LEAST(cover_end_date, DATE '2024-12-31') - GREATEST(effective_date, DATE '2024-01-01'))::INTEGER + 1) / ((cover_end_date - effective_date)::INTEGER + 1)) AS earned_2024,\nCOUNT(*) n, SUM(CASE WHEN cover_end_date < effective_date THEN 1 ELSE 0 END) bad\nFROM premium_txn),\ncl AS (\nSELECT SUM(CASE WHEN t.cost_type='INDEMNITY' THEN t.amount ELSE 0 END) indem_incurred,\nSUM(CASE WHEN t.cost_type='ALAE' THEN t.amount ELSE 0 END) alae,\nSUM(CASE WHEN t.txn_type='RECOVERY' THEN t.amount ELSE 0 END) rec\nFROM claim c JOIN claim_txn t USING(claim_id) WHERE year(c.accident_date)=2024)\nSELECT ep.*, cl.*, (SELECT ibnr FROM ibnr_valuation WHERE valuation_date='2025-12-31' AND accident_year=2024) ibnr FROM ep, cl"
+   },
+   "output": "earned_2024,n,bad,indem_incurred,alae,rec,ibnr\n23744583.42,245710,0,18827414.86,652731.35,-507663.93,611435.82",
+   "error": false
+  },
+  {
+   "tool": "run_sql",
+   "input": {
+    "query": "SELECT p.txn_type, p.term_id, p.effective_date, p.cover_end_date, p.written_premium, p.exposure_units, t.inception_date, t.expiry_date, t.cancel_date FROM premium_txn p JOIN policy_term t USING(term_id) WHERE p.term_id IN (SELECT term_id FROM premium_txn WHERE txn_type='CANCEL' LIMIT 2) ORDER BY p.term_id, p.booked_date"
+   },
+   "output": "txn_type,term_id,effective_date,cover_end_date,written_premium,exposure_units,inception_date,expiry_date,cancel_date\nNEW,7,2019-01-03,2020-01-03,346.29,1.000,2019-01-03,2020-01-03,2019-10-01\nCANCEL,7,2019-10-01,2020-01-03,-89.18,-1.000,2019-01-03,2020-01-03,2019-10-01\nNEW,24,2019-01-14,2020-01-14,398.49,1.000,2019-01-14,2020-01-14,2019-09-17\nCANCEL,24,2019-09-17,2020-01-14,-129.92,-1.000,2019-01-14,2020-01-14,2019-09-17",
+   "error": false
+  }
+ ],
+ "usage": {
+  "input": 17227,
+  "output": 3340,
+  "cache_read": 10150,
+  "cache_write": 0
+ },
+ "effort": "medium",
+ "prompt_version": "v1"
+}

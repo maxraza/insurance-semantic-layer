@@ -1,0 +1,26 @@
+{
+ "model": "claude-haiku-5-5",
+ "condition": "docs",
+ "qid": "t04",
+ "question": "What was the renewal retention rate for renewals due in 2023?",
+ "final_text": "The renewal retention rate for renewals due in 2023 is **0.546** (17,369 accepted out of 31,806 matured invitations).\n\nI counted invitations with a due date in 2023 that had matured by 31 December 2025. An invitation counts as accepted when its renewed term was bound by that date. No accepted renewals were bound after the valuation date, and no offers were issued after it, so nothing needed excluding. The remaining 14,437 invitations lapsed.\n\nANSWER: 0.546",
+ "stop_reason": "end_turn",
+ "tool_calls": [
+  {
+   "tool": "run_sql",
+   "input": {
+    "query": "\nSELECT\n  COUNT(*) AS renewals_due,\n  COUNT(*) FILTER (WHERE ro.renewed_term_id IS NOT NULL AND t.bound_date <= DATE '2025-12-31') AS renewals_accepted,\n  COUNT(*) FILTER (WHERE ro.renewed_term_id IS NOT NULL AND t.bound_date > DATE '2025-12-31') AS accepted_after_asof,\n  COUNT(*) FILTER (WHERE ro.renewed_term_id IS NULL) AS lapsed_or_pending,\n  COUNT(*) FILTER (WHERE ro.offer_date > DATE '2025-12-31') AS offers_after_asof\nFROM renewal_offer ro\nLEFT JOIN policy_term t ON t.term_id = ro.renewed_term_id\nWHERE ro.due_date >= DATE '2023-01-01' AND ro.due_date <= DATE '2023-12-31'\n  AND ro.due_date <= DATE '2025-12-31'\n"
+   },
+   "output": "renewals_due,renewals_accepted,accepted_after_asof,lapsed_or_pending,offers_after_asof\n31806,17369,0,14437,0",
+   "error": false
+  }
+ ],
+ "usage": {
+  "input": 903,
+  "output": 934,
+  "cache_read": 10626,
+  "cache_write": 0
+ },
+ "effort": "medium",
+ "prompt_version": "v1"
+}

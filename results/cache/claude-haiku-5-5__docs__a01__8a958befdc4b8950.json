@@ -1,0 +1,58 @@
+{
+ "model": "claude-haiku-5-5",
+ "condition": "docs",
+ "qid": "a01",
+ "question": "What was our loss ratio in 2024?",
+ "final_text": "The 2024 loss ratio is **0.893** on the glossary's `loss_ratio_ultimate` definition: (reported loss + IBNR) / earned premium, calendar basis, valued at 31 Dec 2025.\n\n- **Earned premium (2024):** \u00a323,748,558, pro-rated daily over each transaction's cover period.\n- **Reported loss (2024):** \u00a320,037,477. This is the calendar-basis movement in paid indemnity plus case reserves during 2024.\n- **IBNR (2024):** \u00a31,171,389. This is the change in total IBNR between 31 Dec 2023 and 31 Dec 2024.\n\nFor reference, adding paid ALAE of \u00a3894,254 gives a loss and ALAE ratio of 0.931. I used the calendar basis because the glossary's headline ratios are defined on it. If you wanted an accident-year or policy-year view, the numbers would differ and I'd need to rerun them on that basis.\n\nANSWER: 0.893",
+ "stop_reason": "end_turn",
+ "tool_calls": [
+  {
+   "tool": "run_sql",
+   "input": {
+    "query": "SELECT 'premium_txn' t, MIN(booked_date) mn, MAX(booked_date) mx, COUNT(*) n FROM premium_txn UNION ALL SELECT 'claim_txn', MIN(txn_date), MAX(txn_date), COUNT(*) FROM claim_txn UNION ALL SELECT 'claim', MIN(report_date), MAX(report_date), COUNT(*) FROM claim UNION ALL SELECT 'ibnr', MIN(valuation_date), MAX(valuation_date), COUNT(*) FROM ibnr_valuation;"
+   },
+   "output": "t,mn,mx,n\npremium_txn,2019-01-01,2025-12-31,245710\nclaim_txn,2019-02-04,2025-12-31,120247\nclaim,2019-02-04,2025-12-31,23549\nibnr,2019-12-31,2025-12-31,109",
+   "error": false
+  },
+  {
+   "tool": "run_sql",
+   "input": {
+    "query": "SELECT valuation_date, SUM(ibnr) total_ibnr, COUNT(*) ays FROM ibnr_valuation GROUP BY 1 ORDER BY 1;"
+   },
+   "output": "valuation_date,total_ibnr,ays\n2019-12-31,450298.72,1\n2020-03-31,1039724.70,2\n2020-06-30,1165995.40,2\n2020-09-30,2057427.52,2\n2020-12-31,2009091.93,2\n2021-03-31,1911913.22,3\n2021-06-30,1810990.33,3\n2021-09-30,1710921.77,3\n2021-12-31,1373810.38,3\n2022-03-31,1771401.06,4\n2022-06-30,815343.77,4\n2022-09-30,2134223.03,4\n2022-12-31,2636192.95,4\n2023-03-31,2776671.33,5\n2023-06-30,3327159.57,5\n2023-09-30,3628601.40,5\n2023-12-31,3390892.84,5\n2024-03-31,4378157.33,6\n2024-06-30,3521252.44,6\n2024-09-30,4508810.27,6\n2024-12-31,4562282.08,6\n2025-03-31,4694735.94,7\n2025-06-30,4866244.04,7\n2025-09-30,5143571.09,7\n2025-12-31,5248275.43,7",
+   "error": false
+  },
+  {
+   "tool": "run_sql",
+   "input": {
+    "query": "SELECT txn_type, cost_type, COUNT(*) n, MIN(amount) mn, MAX(amount) mx, SUM(amount) s FROM claim_txn GROUP BY 1,2 ORDER BY 1,2;"
+   },
+   "output": "txn_type,cost_type,n,mn,mx,s\nPAYMENT,ALAE,5482,5.38,129243.82,4041773.75\nPAYMENT,INDEMNITY,34398,0.10,1214443.66,78097079.75\nRECOVERY,INDEMNITY,1151,-24511.92,-26.63,-2278660.54\nRESERVE,INDEMNITY,79216,-1214443.66,1529370.74,15020532.03",
+   "error": false
+  },
+  {
+   "tool": "run_sql",
+   "input": {
+    "query": "SELECT txn_type, COUNT(*) n, SUM(written_premium) wp, SUM(exposure_units) eu, MIN(effective_date), MAX(cover_end_date) FROM premium_txn GROUP BY 1 ORDER BY 1;"
+   },
+   "output": "txn_type,n,wp,eu,min(effective_date),max(cover_end_date)\nCANCEL,13081,-4423904.86,-13081.000,2019-01-28,2026-12-07\nMTA,22310,466631.74,0.000,2019-02-05,2026-12-07\nNEW,113555,74247233.10,113555.000,2019-01-01,2027-01-14\nRENEWAL,96764,66470703.32,96764.000,2020-01-01,2027-01-20",
+   "error": false
+  },
+  {
+   "tool": "run_sql",
+   "input": {
+    "query": "WITH ep AS (\nSELECT SUM(written_premium * GREATEST(0, DATE_DIFF('day', GREATEST(effective_date, DATE '2024-01-01'), LEAST(cover_end_date, DATE '2025-01-01'))) / DATE_DIFF('day', effective_date, cover_end_date)) earned_premium\nFROM premium_txn WHERE cover_end_date > effective_date AND booked_date <= DATE '2025-12-31'),\nrl AS (\nSELECT SUM(CASE WHEN cost_type='INDEMNITY' THEN amount ELSE 0 END) reported_loss_move,\n       SUM(CASE WHEN cost_type='ALAE' THEN amount ELSE 0 END) alae_paid_2024\nFROM claim_txn WHERE txn_date >= DATE '2024-01-01' AND txn_date < DATE '2025-01-01' AND txn_type IN ('PAYMENT','RECOVERY','RESERVE')),\nib AS (SELECT 4562282.08 - 3390892.84 ibnr_move)\nSELECT ep.earned_premium, rl.reported_loss_move, ib.ibnr_move, rl.alae_paid_2024,\n (rl.reported_loss_move + ib.ibnr_move)/ep.earned_premium AS loss_ratio_ultimate,\n (rl.reported_loss_move + ib.ibnr_move + rl.alae_paid_2024)/ep.earned_premium AS loss_alae_ratio_ultimate\nFROM ep, rl, ib;"
+   },
+   "output": "earned_premium,reported_loss_move,ibnr_move,alae_paid_2024,loss_ratio_ultimate,loss_alae_ratio_ultimate\n23748557.88,20037477.44,1171389.24,894253.51,0.893059,0.930714",
+   "error": false
+  }
+ ],
+ "usage": {
+  "input": 7921,
+  "output": 3118,
+  "cache_read": 21252,
+  "cache_write": 0
+ },
+ "effort": "medium",
+ "prompt_version": "v1"
+}

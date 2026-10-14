@@ -1,0 +1,34 @@
+{
+ "model": "claude-sonnet-5-5",
+ "condition": "raw",
+ "qid": "t01",
+ "question": "What was our policy-count renewal retention rate for renewals due in 2025?",
+ "final_text": "Renewal retention for offers due in 2025 was 22,667 renewed out of 32,909 offers, which is 0.6888 (about 68.9%).\n\nEach offer is for a different expiring policy term, so this is a policy-count rate. None of the expiring terms had been cancelled, so no cancelled terms needed to be excluded. I did not check that the renewed term IDs point to real terms.\n\nANSWER: 0.6888",
+ "stop_reason": "end_turn",
+ "tool_calls": [
+  {
+   "tool": "run_sql",
+   "input": {
+    "query": "select count(*), count(renewed_term_id), min(due_date), max(due_date), count(distinct expiring_term_id) from renewal_offer where due_date between '2025-01-01' and '2025-12-31'"
+   },
+   "output": "count_star(),count(renewed_term_id),min(due_date),max(due_date),count(DISTINCT expiring_term_id)\n32909,22667,2025-01-01,2025-12-31,32909",
+   "error": false
+  },
+  {
+   "tool": "run_sql",
+   "input": {
+    "query": "select count(*) from renewal_offer r join policy_term t on t.term_id=r.expiring_term_id where r.due_date between '2025-01-01' and '2025-12-31' and t.cancel_date is not null"
+   },
+   "output": "count_star()\n0",
+   "error": false
+  }
+ ],
+ "usage": {
+  "input": 560,
+  "output": 469,
+  "cache_read": 4060,
+  "cache_write": 0
+ },
+ "effort": "medium",
+ "prompt_version": "v1"
+}

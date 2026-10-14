@@ -1,0 +1,42 @@
+{
+ "model": "claude-sonnet-5-5",
+ "condition": "raw",
+ "qid": "r05",
+ "question": "What is the average paid indemnity per paid bodily-injury claim for accident year 2023 (claims with no payment excluded)?",
+ "final_text": "For accident year 2023, 248 bodily-injury claims have an indemnity payment. They have paid \u00a38,421,627.32 in total, which averages \u00a333,958.17 per claim.\n\n- **Included:** only indemnity payments (payment transactions with cost type INDEMNITY).\n- **Excluded:** ALAE payments, reserves and recoveries. The figure is gross of recoveries.\n- **No-payment claims:** claims with no indemnity payment are left out, as you asked.\n\nANSWER: 33958.17",
+ "stop_reason": "end_turn",
+ "tool_calls": [
+  {
+   "tool": "run_sql",
+   "input": {
+    "query": "select txn_type, cost_type, count(*), sum(amount) from claim_txn group by all;\nselect peril, count(*) from claim group by all;"
+   },
+   "output": "peril,count_star()\nBODILY_INJURY,1691\nOWN_DAMAGE,9055\nTHIRD_PARTY_PROPERTY,6280\nWINDSCREEN,5651\nTHEFT,872",
+   "error": false
+  },
+  {
+   "tool": "run_sql",
+   "input": {
+    "query": "select txn_type, cost_type, count(*), sum(amount), min(amount), max(amount) from claim_txn group by all"
+   },
+   "output": "txn_type,cost_type,count_star(),sum(amount),min(amount),max(amount)\nPAYMENT,ALAE,5482,4041773.75,5.38,129243.82\nRECOVERY,INDEMNITY,1151,-2278660.54,-24511.92,-26.63\nRESERVE,INDEMNITY,79216,15020532.03,-1214443.66,1529370.74\nPAYMENT,INDEMNITY,34398,78097079.75,0.10,1214443.66",
+   "error": false
+  },
+  {
+   "tool": "run_sql",
+   "input": {
+    "query": "select count(*), avg(p), sum(p) from (select c.claim_id, sum(t.amount) p from claim c join claim_txn t using(claim_id) where c.peril='BODILY_INJURY' and year(c.accident_date)=2023 and t.txn_type='PAYMENT' and t.cost_type='INDEMNITY' group by 1 having sum(t.amount)>0)"
+   },
+   "output": "count_star(),avg(p),sum(p)\n248,33958.17,8421627.32",
+   "error": false
+  }
+ ],
+ "usage": {
+  "input": 1804,
+  "output": 607,
+  "cache_read": 8120,
+  "cache_write": 0
+ },
+ "effort": "medium",
+ "prompt_version": "v1"
+}

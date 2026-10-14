@@ -1,0 +1,17 @@
+{
+ "model": "claude-sonnet-5-5",
+ "condition": "semantic",
+ "qid": "u02",
+ "question": "What is the booked ultimate loss ratio (including IBNR) for policy year 2023?",
+ "final_text": "I can't answer this for policy year 2023. The semantic layer defines `loss_ratio_ultimate` (reported loss plus IBNR, divided by earned premium) only on a calendar or accident basis. IBNR has no policy-year basis. The reserving team books it by accident year, and the layer has no way to split it by policy inception year.\n\nAccident-year 2023 would be a different measure. It groups losses by when the accident happened, not by when the policy started. Presenting it as policy-year 2023 would be wrong, so I haven't calculated it. I can run the accident-year 2023 ultimate loss ratio if that would help.\n\nANSWER: UNANSWERABLE",
+ "stop_reason": "end_turn",
+ "tool_calls": [],
+ "usage": {
+  "input": 105,
+  "output": 342,
+  "cache_read": 3682,
+  "cache_write": 0
+ },
+ "effort": "medium",
+ "prompt_version": "v1"
+}

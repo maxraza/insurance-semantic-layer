@@ -1,0 +1,36 @@
+{
+ "model": "claude-sonnet-5-5",
+ "condition": "semantic",
+ "qid": "r04",
+ "question": "What is the average reported cost per reported claim for own-damage claims in accident year 2024?",
+ "final_text": "Own-damage claims from accident year 2024 had an average reported cost of \u00a33,054.96 per reported claim, valued at 31 December 2025.\n\nThis is the reported severity figure. It counts paid amounts plus case reserves, and it includes claims closed without payment in the claim count. It excludes IBNR and ALAE.\n\nANSWER: 3054.96",
+ "stop_reason": "end_turn",
+ "tool_calls": [
+  {
+   "tool": "query_metrics",
+   "input": {
+    "metrics": [
+     "severity_reported"
+    ],
+    "basis": "accident",
+    "as_of": "2025-12-31",
+    "grain": "year",
+    "period_from": "2024-01-01",
+    "period_to": "2024-12-31",
+    "filters": {
+     "peril": "OWN_DAMAGE"
+    }
+   },
+   "output": "period,severity_reported\n2024,3054.96",
+   "error": false
+  }
+ ],
+ "usage": {
+  "input": 454,
+  "output": 344,
+  "cache_read": 7364,
+  "cache_write": 0
+ },
+ "effort": "medium",
+ "prompt_version": "v1"
+}

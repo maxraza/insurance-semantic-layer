@@ -1,0 +1,58 @@
+{
+ "model": "claude-haiku-5-5",
+ "condition": "raw",
+ "qid": "t03",
+ "question": "What was the renewal retention rate for customers acquired through price comparison websites, for renewals due in 2024?",
+ "final_text": "The renewal retention rate for PCW customers with renewals due in 2024 is 0.409.\n\nOf the 9,847 PCW renewal offers due in 2024, 4,028 were taken up (a renewed term is linked to the offer). The channel is consistent between the policy and the expiring term, and every linked renewal term exists in the data. For comparison, the same measure is 0.602 for broker and 0.607 for direct.\n\nANSWER: 0.409",
+ "stop_reason": "end_turn",
+ "tool_calls": [
+  {
+   "tool": "run_sql",
+   "input": {
+    "query": "SELECT 'policy' src, channel, COUNT(*) n FROM policy GROUP BY channel UNION ALL SELECT 'term', channel, COUNT(*) FROM policy_term GROUP BY channel UNION ALL SELECT 'quote', channel, COUNT(*) FROM quote GROUP BY channel"
+   },
+   "output": "src,channel,n\npolicy,PCW,42343\npolicy,BROKER,32227\npolicy,DIRECT,38985\nterm,DIRECT,78111\nterm,BROKER,64936\nterm,PCW,67272\nquote,PCW,606581\nquote,DIRECT,178313\nquote,BROKER,107402",
+   "error": false
+  },
+  {
+   "tool": "run_sql",
+   "input": {
+    "query": "SELECT COUNT(*) n, COUNT(renewed_term_id) renewed, MIN(due_date), MAX(due_date), COUNT(DISTINCT expiring_term_id) FROM renewal_offer WHERE due_date >= '2024-01-01' AND due_date < '2025-01-01'"
+   },
+   "output": "n,renewed,min(due_date),max(due_date),count(DISTINCT expiring_term_id)\n31987,17411,2024-01-01,2024-12-31,31987",
+   "error": false
+  },
+  {
+   "tool": "run_sql",
+   "input": {
+    "query": "SELECT pt.channel, COUNT(*) n, COUNT(ro.renewed_term_id) renewed, COUNT(ro.renewed_term_id)*1.0/COUNT(*) rate, SUM(CASE WHEN ro.renewed_term_id IS NOT NULL AND rt.term_id IS NULL THEN 1 ELSE 0 END) orphan, SUM(CASE WHEN pt.cancel_date IS NOT NULL AND pt.cancel_date < ro.due_date THEN 1 ELSE 0 END) cancelled_before_due FROM renewal_offer ro JOIN policy_term pt ON pt.term_id = ro.expiring_term_id LEFT JOIN policy_term rt ON rt.term_id = ro.renewed_term_id WHERE ro.due_date >= '2024-01-01' AND ro.due_date < '2025-01-01' GROUP BY pt.channel ORDER BY pt.channel"
+   },
+   "output": "channel,n,renewed,rate,orphan,cancelled_before_due\nBROKER,10138,6103,0.601993,0,0\nDIRECT,12002,7280,0.606566,0,0\nPCW,9847,4028,0.409059,0,0",
+   "error": false
+  },
+  {
+   "tool": "run_sql",
+   "input": {
+    "query": "SELECT ro.offer_id, ro.due_date, pt.inception_date, pt.expiry_date, pt.cancel_date, ro.renewed_term_id, rt.inception_date rinc, rt.policy_id, pt.policy_id FROM renewal_offer ro JOIN policy_term pt ON pt.term_id = ro.expiring_term_id LEFT JOIN policy_term rt ON rt.term_id = ro.renewed_term_id WHERE ro.due_date >= '2024-01-01' AND ro.due_date < '2025-01-01' AND ro.renewed_term_id IS NOT NULL LIMIT 8"
+   },
+   "output": "offer_id,due_date,inception_date,expiry_date,cancel_date,renewed_term_id,rinc,policy_id,policy_id\n55405,2024-01-08,2023-01-08,2024-01-08,None,145409,2024-01-08,59621,59621\n55409,2024-01-02,2023-01-02,2024-01-02,None,145411,2024-01-02,59627,59627\n55410,2024-01-05,2023-01-05,2024-01-05,None,145412,2024-01-05,59628,59628\n55415,2024-01-02,2023-01-02,2024-01-02,None,145413,2024-01-02,59633,59633\n55416,2024-01-08,2023-01-08,2024-01-08,None,145414,2024-01-08,59634,59634\n55419,2024-01-06,2023-01-06,2024-01-06,None,145415,2024-01-06,59637,59637\n55423,2024-01-05,2023-01-05,2024-01-05,None,145416,2024-01-05,59641,59641\n55424,2024-01-05,2023-01-05,2024-01-05,None,145417,2024-01-05,59642,59642",
+   "error": false
+  },
+  {
+   "tool": "run_sql",
+   "input": {
+    "query": "SELECT p.channel pol_ch, pt.channel term_ch, COUNT(*) n, AVG(CASE WHEN ro.renewed_term_id IS NOT NULL THEN 1.0 ELSE 0 END) rate FROM renewal_offer ro JOIN policy_term pt ON pt.term_id = ro.expiring_term_id JOIN policy p ON p.policy_id = pt.policy_id WHERE ro.due_date >= '2024-01-01' AND ro.due_date < '2025-01-01' GROUP BY 1,2 ORDER BY 1,2"
+   },
+   "output": "pol_ch,term_ch,n,rate\nBROKER,BROKER,10138,0.601993\nDIRECT,DIRECT,12002,0.606566\nPCW,PCW,9847,0.409059",
+   "error": false
+  }
+ ],
+ "usage": {
+  "input": 5461,
+  "output": 1780,
+  "cache_read": 8120,
+  "cache_write": 0
+ },
+ "effort": "medium",
+ "prompt_version": "v1"
+}

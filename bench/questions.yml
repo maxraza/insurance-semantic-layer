@@ -1,0 +1,372 @@
+# ISL-Bench v0.1 — questions over the synthetic motor book (seed 7, horizon 2025-12-31).
+#
+# Every answer is one number. A "cell" names a metric, a basis, a period and optionally
+# as_of (default 2025-12-31), grain (default year), filters, and a reduction over periods.
+#
+#   answer       the gold cell (or `derived`: an expression over named cells)
+#   accept       further cells that are also correct (ambiguous questions)
+#   traps        plausible misreadings, used only to label wrong answers
+#   ambiguous    the question doesn't fix basis / definition / valuation; any `accept` is right,
+#                and we separately score whether the answer states its assumptions
+#   unanswerable the data or definitions don't support a number; the right answer is to say so
+
+defaults:
+  as_of: 2025-12-31
+  grain: year
+
+questions:
+  # ------------------------------------------------------------------ control: no hidden semantics
+  - id: c01
+    category: control
+    question: How many quotes did we issue in 2024?
+    answer: {metric: quotes, basis: calendar, period: "2024"}
+  - id: c02
+    category: control
+    question: How many quotes came through price comparison websites in 2025?
+    answer: {metric: quotes, basis: calendar, period: "2025", filters: {channel: PCW}}
+  - id: c03
+    category: control
+    question: What was total gross written premium booked in calendar year 2024?
+    answer: {metric: written_premium, basis: calendar, period: "2024"}
+    traps: [{metric: earned_premium, basis: calendar, period: "2024"}]
+  - id: c04
+    category: control
+    question: What was the quote-to-bind conversion rate for price comparison website quotes in 2025?
+    answer: {metric: quote_conversion, basis: calendar, period: "2025", filters: {channel: PCW}}
+  - id: c05
+    category: control
+    question: How many claims were reported to us during calendar year 2025?
+    answer: {metric: reported_claim_count, basis: calendar, period: "2025"}
+    traps: [{metric: reported_claim_count, basis: accident, period: "2025"}]
+  - id: c06
+    category: control
+    question: What were our total expenses in 2024?
+    answer: {metric: expenses, basis: calendar, period: "2024"}
+  - id: c07
+    category: control
+    question: How much written premium did the broker channel book in 2023?
+    answer: {metric: written_premium, basis: calendar, period: "2023", filters: {channel: BROKER}}
+
+  # ------------------------------------------------------------------ earning
+  - id: e01
+    category: earning
+    question: What was earned premium in calendar year 2024?
+    answer: {metric: earned_premium, basis: calendar, period: "2024"}
+    traps: [{metric: written_premium, basis: calendar, period: "2024"}]
+  - id: e02
+    category: earning
+    question: How much premium was unearned at 31 December 2024?
+    answer: {metric: unearned_premium, basis: calendar, period: "2024"}
+  - id: e03
+    category: earning
+    question: How many car-years of exposure did we earn in 2025?
+    answer: {metric: earned_exposure, basis: calendar, period: "2025"}
+    traps: [{metric: written_exposure, basis: calendar, period: "2025"}]
+  - id: e04
+    category: earning
+    question: What was earned premium for the London region in 2025?
+    answer: {metric: earned_premium, basis: calendar, period: "2025", filters: {region: LONDON}}
+  - id: e05
+    category: earning
+    question: What was the average written premium per vehicle (per written car-year) in 2025?
+    answer: {metric: average_written_premium, basis: calendar, period: "2025"}
+  - id: e06
+    category: earning
+    question: As at 31 March 2023, how much premium had been earned so far in calendar year 2023?
+    answer: {metric: earned_premium, basis: calendar, period: "2023", as_of: 2023-03-31}
+    traps: [{metric: earned_premium, basis: calendar, period: "2023"}]
+
+  # ------------------------------------------------------------------ time basis (stated explicitly)
+  - id: b01
+    category: time_basis
+    question: >-
+      What is the accident-year 2023 loss ratio on a reported basis (paid plus case reserves, excluding
+      IBNR and ALAE), valued at 31 December 2025?
+    answer: {metric: loss_ratio_reported, basis: accident, period: "2023"}
+    traps: [{metric: loss_ratio_reported, basis: calendar, period: "2023"},
+            {metric: loss_ratio_reported, basis: policy, period: "2023"}]
+  - id: b02
+    category: time_basis
+    question: What was the calendar-year 2024 reported loss ratio (paid plus change in case reserves, excluding IBNR)?
+    answer: {metric: loss_ratio_reported, basis: calendar, period: "2024"}
+    traps: [{metric: loss_ratio_reported, basis: accident, period: "2024"}]
+  - id: b03
+    category: time_basis
+    question: What is the policy-year (underwriting-year) 2023 reported loss ratio as at 31 December 2025?
+    answer: {metric: loss_ratio_reported, basis: policy, period: "2023"}
+    traps: [{metric: loss_ratio_reported, basis: accident, period: "2023"}]
+  - id: b04
+    category: time_basis
+    question: What are the paid losses (indemnity, net of recoveries) for accidents that happened in 2022?
+    answer: {metric: paid_loss, basis: accident, period: "2022"}
+    traps: [{metric: paid_loss, basis: calendar, period: "2022"}]
+  - id: b05
+    category: time_basis
+    question: How much indemnity did we pay out during calendar year 2025, regardless of when the accidents happened?
+    answer: {metric: paid_loss, basis: calendar, period: "2025"}
+    traps: [{metric: paid_loss, basis: accident, period: "2025"}]
+  - id: b06
+    category: time_basis
+    question: What is the accident-year 2024 claim frequency, in reported claims per earned car-year?
+    answer: {metric: claim_frequency, basis: accident, period: "2024"}
+  - id: b07
+    category: time_basis
+    question: What is the total written premium for policies that incepted in 2022 (policy-year basis)?
+    answer: {metric: written_premium, basis: policy, period: "2022"}
+    traps: [{metric: written_premium, basis: calendar, period: "2022"}]
+  - id: b08
+    category: time_basis
+    question: How many claims with an accident date in 2024 have been reported to us so far?
+    answer: {metric: reported_claim_count, basis: accident, period: "2024"}
+
+  # ------------------------------------------------------------------ valuation date
+  - id: v01
+    category: valuation
+    question: What was the accident-year 2023 reported loss ratio as it stood at 31 December 2023?
+    answer: {metric: loss_ratio_reported, basis: accident, period: "2023", as_of: 2023-12-31}
+    traps: [{metric: loss_ratio_reported, basis: accident, period: "2023"}]
+  - id: v02
+    category: valuation
+    question: As at 30 June 2024, what was the reported loss (paid plus case reserves) for accident year 2023?
+    answer: {metric: reported_loss, basis: accident, period: "2023", as_of: 2024-06-30}
+    traps: [{metric: reported_loss, basis: accident, period: "2023"}]
+  - id: v03
+    category: valuation
+    question: At the 31 December 2024 valuation, how much IBNR was booked for accident year 2024?
+    answer: {metric: ibnr, basis: accident, period: "2024", as_of: 2024-12-31}
+    traps: [{metric: ibnr, basis: accident, period: "2024"}]
+  - id: v04
+    category: valuation
+    question: >-
+      By how much did accident-year 2022 reported loss (paid plus case) develop between the 31 December 2022
+      and 31 December 2025 valuations?
+    derived:
+      expr: late - early
+      parts:
+        late: {metric: reported_loss, basis: accident, period: "2022"}
+        early: {metric: reported_loss, basis: accident, period: "2022", as_of: 2022-12-31}
+  - id: v05
+    category: valuation
+    question: As at 30 September 2025, how many claims were open?
+    answer: {metric: open_claim_count, basis: calendar, period: "2025", as_of: 2025-09-30}
+    traps: [{metric: open_claim_count, basis: calendar, period: "2025"}]
+
+  # ------------------------------------------------------------------ loss definition
+  - id: l01
+    category: loss_definition
+    question: What is the accident-year 2024 ultimate loss ratio (reported loss plus booked IBNR, excluding ALAE) at 31 December 2025?
+    answer: {metric: loss_ratio_ultimate, basis: accident, period: "2024"}
+    traps: [{metric: loss_ratio_reported, basis: accident, period: "2024"}]
+  - id: l02
+    category: loss_definition
+    question: What is the accident-year 2024 paid loss ratio?
+    answer: {metric: loss_ratio_paid, basis: accident, period: "2024"}
+    traps: [{metric: loss_ratio_reported, basis: accident, period: "2024"}]
+  - id: l03
+    category: loss_definition
+    question: What is the accident-year 2023 loss and ALAE ratio, including IBNR?
+    answer: {metric: loss_alae_ratio_ultimate, basis: accident, period: "2023"}
+    traps: [{metric: loss_ratio_ultimate, basis: accident, period: "2023"}]
+  - id: l04
+    category: loss_definition
+    question: How much IBNR is held in total across all accident years at 31 December 2025?
+    answer: {metric: ibnr, basis: accident, period: all, reduce: sum}
+  - id: l05
+    category: loss_definition
+    question: What were outstanding case reserves at 31 December 2025?
+    answer: {metric: case_reserve, basis: calendar, period: "2025"}
+  - id: l06
+    category: loss_definition
+    question: What is the estimated ultimate loss (reported plus IBNR, excluding ALAE) for accident year 2023?
+    derived:
+      expr: reported + ibnr
+      parts:
+        reported: {metric: reported_loss, basis: accident, period: "2023"}
+        ibnr: {metric: ibnr, basis: accident, period: "2023"}
+  - id: l07
+    category: loss_definition
+    question: >-
+      What was the calendar-year 2024 combined ratio (reported loss, change in IBNR, paid ALAE and expenses,
+      over earned premium)?
+    # Moved from 2025 after the pilot: December 2025 expenses are booked in January 2026, so 2025 is incomplete.
+    answer: {metric: combined_ratio, basis: calendar, period: "2024"}
+
+  # ------------------------------------------------------------------ ratio aggregation
+  - id: r01
+    category: aggregation
+    question: What was the accident-year 2024 reported loss ratio for drivers aged 17-24?
+    answer: {metric: loss_ratio_reported, basis: accident, period: "2024", filters: {driver_age_band: "17-24"}}
+  - id: r02
+    category: aggregation
+    question: >-
+      We track the accident-year reported loss ratio quarter by quarter. What is the full-year figure for
+      accident year 2025?
+    answer: {metric: loss_ratio_reported, basis: accident, period: "2025"}
+    traps: [{metric: loss_ratio_reported, basis: accident, period: "2025", grain: quarter, reduce: mean, period_in_year: "2025"}]
+  - id: r03
+    category: aggregation
+    question: What was the price comparison website channel's accident-year 2024 reported loss ratio?
+    answer: {metric: loss_ratio_reported, basis: accident, period: "2024", filters: {channel: PCW}}
+  - id: r04
+    category: aggregation
+    question: What is the average reported cost per reported claim for own-damage claims in accident year 2024?
+    answer: {metric: severity_reported, basis: accident, period: "2024", filters: {peril: OWN_DAMAGE}}
+  - id: r05
+    category: aggregation
+    question: What is the average paid indemnity per paid bodily-injury claim for accident year 2023 (claims with no payment excluded)?
+    answer: {metric: severity_paid, basis: accident, period: "2023", filters: {peril: BODILY_INJURY}}
+  - id: r06
+    category: aggregation
+    question: What share of 2025 quotes for drivers aged 17-24 converted into policies?
+    answer: {metric: quote_conversion, basis: calendar, period: "2025", filters: {driver_age_band: "17-24"}}
+  - id: r07
+    category: aggregation
+    question: What was the accident-year 2023 claim frequency for vehicle group E?
+    answer: {metric: claim_frequency, basis: accident, period: "2023", filters: {vehicle_group: E}}
+
+  # ------------------------------------------------------------------ snapshots (semi-additive)
+  - id: s01
+    category: snapshot
+    question: How many vehicles were on cover at 31 December 2025?
+    answer: {metric: in_force_count, basis: calendar, period: "2025"}
+  - id: s02
+    category: snapshot
+    question: How many vehicles were in force at the end of the second quarter of 2025?
+    answer: {metric: in_force_count, basis: calendar, period: "2025-Q2", grain: quarter}
+  - id: s03
+    category: snapshot
+    question: How many claims were open at 31 December 2024?
+    answer: {metric: open_claim_count, basis: calendar, period: "2024"}
+  - id: s04
+    category: snapshot
+    question: What was the average number of vehicles in force across the four quarter-ends of 2025?
+    answer: {metric: in_force_count, basis: calendar, grain: quarter, period_in_year: "2025", reduce: mean}
+    traps: [{metric: in_force_count, basis: calendar, grain: quarter, period_in_year: "2025", reduce: sum}]
+  - id: s05
+    category: snapshot
+    question: What were case reserves outstanding on bodily-injury claims at 31 December 2025?
+    answer: {metric: case_reserve, basis: calendar, period: "2025", filters: {peril: BODILY_INJURY}}
+
+  # ------------------------------------------------------------------ counting conventions
+  - id: n01
+    category: counting
+    question: How many accident-year 2024 claims have had at least one indemnity payment?
+    answer: {metric: paid_claim_count, basis: accident, period: "2024"}
+    traps: [{metric: reported_claim_count, basis: accident, period: "2024"}]
+  - id: n02
+    category: counting
+    question: What is the average reported cost per reported windscreen claim in accident year 2024, counting nil claims?
+    answer: {metric: severity_reported, basis: accident, period: "2024", filters: {peril: WINDSCREEN}}
+
+  # ------------------------------------------------------------------ retention
+  - id: t01
+    category: retention
+    question: What was our policy-count renewal retention rate for renewals due in 2025?
+    answer: {metric: retention_rate, basis: calendar, period: "2025"}
+  - id: t02
+    category: retention
+    question: As at 30 September 2025, what is the year-to-date renewal retention rate for 2025?
+    answer: {metric: retention_rate, basis: calendar, period: "2025", as_of: 2025-09-30}
+  - id: t03
+    category: retention
+    question: What was the renewal retention rate for customers acquired through price comparison websites, for renewals due in 2024?
+    answer: {metric: retention_rate, basis: calendar, period: "2024", filters: {channel: PCW}}
+  - id: t04
+    category: retention
+    question: What was the renewal retention rate for renewals due in 2023?
+    answer: {metric: retention_rate, basis: calendar, period: "2023"}
+
+  # ------------------------------------------------------------------ ambiguous: definition not fixed
+  - id: a01
+    category: ambiguous
+    ambiguous: true
+    question: What was our loss ratio in 2024?
+    answer: {metric: loss_ratio_ultimate, basis: accident, period: "2024"}
+    accept:
+      - {metric: loss_ratio_reported, basis: accident, period: "2024"}
+      - {metric: loss_ratio_paid, basis: accident, period: "2024"}
+      - {metric: loss_ratio_ultimate, basis: calendar, period: "2024"}
+      - {metric: loss_ratio_reported, basis: calendar, period: "2024"}
+      - {metric: loss_ratio_paid, basis: calendar, period: "2024"}
+      - {metric: loss_ratio_reported, basis: policy, period: "2024"}
+      - {metric: loss_ratio_paid, basis: policy, period: "2024"}
+      - {metric: loss_alae_ratio_ultimate, basis: accident, period: "2024"}
+      - {metric: loss_alae_ratio_ultimate, basis: calendar, period: "2024"}
+  - id: a02
+    category: ambiguous
+    ambiguous: true
+    question: What were incurred losses in 2025?
+    answer: {metric: reported_loss, basis: accident, period: "2025"}
+    accept:
+      - {metric: reported_loss, basis: calendar, period: "2025"}
+      - {metric: reported_loss, basis: policy, period: "2025"}
+    accept_derived:
+      - {expr: r + i, parts: {r: {metric: reported_loss, basis: accident, period: "2025"}, i: {metric: ibnr, basis: accident, period: "2025"}}}
+      - {expr: r + i, parts: {r: {metric: reported_loss, basis: calendar, period: "2025"}, i: {metric: ibnr, basis: calendar, period: "2025"}}}
+      # Added after the pilot: "incurred" including ALAE is also defensible (Friedland counts ALAE in "claims").
+      - {expr: r + i + x, parts: {r: {metric: reported_loss, basis: accident, period: "2025"}, i: {metric: ibnr, basis: accident, period: "2025"}, x: {metric: paid_alae, basis: accident, period: "2025"}}}
+      - {expr: r + i + x, parts: {r: {metric: reported_loss, basis: calendar, period: "2025"}, i: {metric: ibnr, basis: calendar, period: "2025"}, x: {metric: paid_alae, basis: calendar, period: "2025"}}}
+      - {expr: r + x, parts: {r: {metric: reported_loss, basis: accident, period: "2025"}, x: {metric: paid_alae, basis: accident, period: "2025"}}}
+      - {expr: r + x, parts: {r: {metric: reported_loss, basis: calendar, period: "2025"}, x: {metric: paid_alae, basis: calendar, period: "2025"}}}
+  - id: a03
+    category: ambiguous
+    ambiguous: true
+    question: What was our expense ratio for 2024?
+    # Moved from 2025 after the pilot (incomplete December expenses; see l07).
+    answer: {metric: expense_ratio, basis: calendar, period: "2024"}
+    accept: [{metric: expense_ratio_written, basis: calendar, period: "2024"}]
+  - id: a04
+    category: ambiguous
+    ambiguous: true
+    question: How many claims did we have in 2024?
+    answer: {metric: reported_claim_count, basis: accident, period: "2024"}
+    accept:
+      - {metric: reported_claim_count, basis: calendar, period: "2024"}
+      - {metric: reported_claim_count, basis: policy, period: "2024"}
+  - id: a05
+    category: ambiguous
+    ambiguous: true
+    question: What was claim frequency in 2023?
+    answer: {metric: claim_frequency, basis: accident, period: "2023"}
+    accept:
+      - {metric: claim_frequency, basis: calendar, period: "2023"}
+      - {metric: claim_frequency, basis: policy, period: "2023"}
+  - id: a06
+    category: ambiguous
+    ambiguous: true
+    question: How much premium did we do in 2025?
+    answer: {metric: written_premium, basis: calendar, period: "2025"}
+    accept: [{metric: earned_premium, basis: calendar, period: "2025"}]
+  - id: a07
+    category: ambiguous
+    ambiguous: true
+    question: What is the loss ratio for the London region in 2024?
+    answer: {metric: loss_ratio_reported, basis: accident, period: "2024", filters: {region: LONDON}}
+    accept:
+      - {metric: loss_ratio_paid, basis: accident, period: "2024", filters: {region: LONDON}}
+      - {metric: loss_ratio_reported, basis: calendar, period: "2024", filters: {region: LONDON}}
+      - {metric: loss_ratio_paid, basis: calendar, period: "2024", filters: {region: LONDON}}
+      - {metric: loss_ratio_reported, basis: policy, period: "2024", filters: {region: LONDON}}
+      - {metric: loss_ratio_paid, basis: policy, period: "2024", filters: {region: LONDON}}
+
+  # ------------------------------------------------------------------ unanswerable as asked
+  - id: u01
+    category: unanswerable
+    unanswerable: true
+    question: What was the accident-year 2024 loss ratio for windscreen claims?
+    why: Premium is not split by peril, so there is no windscreen earned premium to divide by.
+  - id: u02
+    category: unanswerable
+    unanswerable: true
+    question: What is the booked ultimate loss ratio (including IBNR) for policy year 2023?
+    why: IBNR is booked by accident year only; there is no booked policy-year IBNR.
+  - id: u03
+    category: unanswerable
+    unanswerable: true
+    question: What is the accident-year 2024 ultimate loss ratio, including booked IBNR, for the price comparison website channel?
+    why: Booked IBNR is not allocated to channels.
+  - id: u04
+    category: unanswerable
+    unanswerable: true
+    question: What will our 2026 accident-year loss ratio be?
+    why: The data ends at 31 December 2025; this asks for a forecast.

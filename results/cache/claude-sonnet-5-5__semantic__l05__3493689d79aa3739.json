@@ -1,0 +1,33 @@
+{
+ "model": "claude-sonnet-5-5",
+ "condition": "semantic",
+ "qid": "l05",
+ "question": "What were outstanding case reserves at 31 December 2025?",
+ "final_text": "Outstanding case reserves at 31 December 2025 were \u00a315,020,532.03. This is the year-end balance for 2025, gross of reinsurance. Case reserves are a point-in-time balance, so I took the closing position at the end of the year, not a sum over the year.\n\nANSWER: 15020532.03",
+ "stop_reason": "end_turn",
+ "tool_calls": [
+  {
+   "tool": "query_metrics",
+   "input": {
+    "metrics": [
+     "case_reserve"
+    ],
+    "basis": "calendar",
+    "as_of": "2025-12-31",
+    "grain": "year",
+    "period_from": "2025-01-01",
+    "period_to": "2025-12-31"
+   },
+   "output": "period,case_reserve\n2025,15020532.03",
+   "error": false
+  }
+ ],
+ "usage": {
+  "input": 399,
+  "output": 318,
+  "cache_read": 7364,
+  "cache_write": 0
+ },
+ "effort": "medium",
+ "prompt_version": "v1"
+}

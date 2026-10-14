@@ -1,0 +1,66 @@
+{
+ "model": "claude-haiku-5-5",
+ "condition": "raw",
+ "qid": "e04",
+ "question": "What was earned premium for the London region in 2025?",
+ "final_text": "Earned premium for the London region in 2025 is about \u00a36,389,692.\n\nMethod: I took every premium transaction on London policy terms (new, renewal, mid-term adjustment and cancellation rows, 43,518 in total). Each one was spread evenly per day over its cover period, and the portion falling between 1 January and 31 December 2025 was summed. Cancellation rows are negative and run from the cancel date to the original expiry, so they reverse the unearned part. No transactions are booked after 31 December 2025, and none have zero-length cover periods.\n\nANSWER: 6389691.95",
+ "stop_reason": "end_turn",
+ "tool_calls": [
+  {
+   "tool": "run_sql",
+   "input": {
+    "query": "SELECT txn_type, COUNT(*) n, SUM(written_premium) wp, MIN(effective_date) mn, MAX(cover_end_date) mx, COUNT(DISTINCT region) FROM premium_txn JOIN policy_term USING (term_id) GROUP BY 1 ORDER BY 1;\nSELECT region, COUNT(*) FROM policy_term GROUP BY 1;\nSELECT DISTINCT region FROM policy;"
+   },
+   "output": "region\nSCOTLAND\nNORTH\nSOUTH\nMIDLANDS\nLONDON",
+   "error": false
+  },
+  {
+   "tool": "run_sql",
+   "input": {
+    "query": "SELECT txn_type, COUNT(*) n, SUM(written_premium) wp, MIN(effective_date) mn, MAX(cover_end_date) mx FROM premium_txn GROUP BY 1 ORDER BY 1"
+   },
+   "output": "txn_type,n,wp,mn,mx\nCANCEL,13081,-4423904.86,2019-01-28,2026-12-07\nMTA,22310,466631.74,2019-02-05,2026-12-07\nNEW,113555,74247233.10,2019-01-01,2027-01-14\nRENEWAL,96764,66470703.32,2020-01-01,2027-01-20",
+   "error": false
+  },
+  {
+   "tool": "run_sql",
+   "input": {
+    "query": "SELECT p.region AS policy_region, t.region AS term_region, COUNT(*) n FROM policy_term t JOIN policy p USING (policy_id) GROUP BY 1,2 ORDER BY 1,2"
+   },
+   "output": "policy_region,term_region,n\nLONDON,LONDON,37305\nMIDLANDS,MIDLANDS,42008\nNORTH,NORTH,45910\nSCOTLAND,SCOTLAND,25674\nSOUTH,SOUTH,59422",
+   "error": false
+  },
+  {
+   "tool": "run_sql",
+   "input": {
+    "query": "SELECT p.txn_type, p.booked_date, p.effective_date, p.cover_end_date, p.written_premium, p.exposure_units, t.inception_date, t.expiry_date, t.cancel_date, t.term_id FROM premium_txn p JOIN policy_term t USING (term_id) WHERE t.term_id IN (SELECT term_id FROM policy_term WHERE cancel_date IS NOT NULL LIMIT 3) OR t.term_id IN (SELECT term_id FROM policy_term WHERE region='LONDON' LIMIT 2) ORDER BY t.term_id, p.effective_date"
+   },
+   "output": "txn_type,booked_date,effective_date,cover_end_date,written_premium,exposure_units,inception_date,expiry_date,cancel_date,term_id\nNEW,2019-01-01,2019-01-03,2020-01-03,1071.49,1.000,2019-01-03,2020-01-03,None,2\nNEW,2019-01-01,2019-01-03,2020-01-03,346.29,1.000,2019-01-03,2020-01-03,2019-10-01,7\nCANCEL,2019-10-05,2019-10-01,2020-01-03,-89.18,-1.000,2019-01-03,2020-01-03,2019-10-01,7\nNEW,2019-01-01,2019-01-15,2020-01-15,1879.14,1.000,2019-01-15,2020-01-15,None,10\nNEW,2019-01-01,2019-01-14,2020-01-14,398.49,1.000,2019-01-14,2020-01-14,2019-09-17,24\nCANCEL,2019-09-19,2019-09-17,2020-01-14,-129.92,-1.000,2019-01-14,2020-01-14,2019-09-17,24\nNEW,2019-01-02,2019-01-15,2020-01-15,524.96,1.000,2019-01-15,2020-01-15,2019-05-30,32\nCANCEL,2019-06-01,2019-05-30,2020-01-15,-330.80,-1.000,2019-01-15,2020-01-15,2019-05-30,32",
+   "error": false
+  },
+  {
+   "tool": "run_sql",
+   "input": {
+    "query": "SELECT ROUND(SUM(written_premium * GREATEST(0, DATE_DIFF('day', GREATEST(effective_date, DATE '2025-01-01'), LEAST(cover_end_date, DATE '2026-01-01'))) / NULLIF(DATE_DIFF('day', effective_date, cover_end_date),0)), 2) AS earned_2025, COUNT(*) n, SUM(CASE WHEN cover_end_date<=effective_date THEN 1 ELSE 0 END) zero_len FROM premium_txn p JOIN policy_term t USING (term_id) WHERE t.region='LONDON'"
+   },
+   "output": "earned_2025,n,zero_len\n6389691.95,43518,0",
+   "error": false
+  },
+  {
+   "tool": "run_sql",
+   "input": {
+    "query": "SELECT MAX(booked_date), SUM(CASE WHEN booked_date>'2025-12-31' THEN 1 ELSE 0 END) future_booked FROM premium_txn"
+   },
+   "output": "max(booked_date),future_booked\n2025-12-31,0",
+   "error": false
+  }
+ ],
+ "usage": {
+  "input": 8785,
+  "output": 1978,
+  "cache_read": 12180,
+  "cache_write": 0
+ },
+ "effort": "medium",
+ "prompt_version": "v1"
+}

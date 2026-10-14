@@ -1,0 +1,33 @@
+{
+ "model": "claude-haiku-5-5",
+ "condition": "semantic",
+ "qid": "c05",
+ "question": "How many claims were reported to us during calendar year 2025?",
+ "final_text": "Reported claim count on a calendar basis for 2025 is 4,677 (valued at 31 December 2025, the calendar-year count of claims reported in the period).\n\nANSWER: 4677",
+ "stop_reason": "end_turn",
+ "tool_calls": [
+  {
+   "tool": "query_metrics",
+   "input": {
+    "metrics": [
+     "reported_claim_count"
+    ],
+    "basis": "calendar",
+    "as_of": "2025-12-31",
+    "grain": "year",
+    "period_from": "2025-01-01",
+    "period_to": "2025-12-31"
+   },
+   "output": "period,reported_claim_count\n2025,4677.00",
+   "error": false
+  }
+ ],
+ "usage": {
+  "input": 400,
+  "output": 254,
+  "cache_read": 7364,
+  "cache_write": 0
+ },
+ "effort": "medium",
+ "prompt_version": "v1"
+}

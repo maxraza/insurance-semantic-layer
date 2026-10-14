@@ -1,0 +1,26 @@
+{
+ "model": "claude-sonnet-5-5",
+ "condition": "docs",
+ "qid": "e06",
+ "question": "As at 31 March 2023, how much premium had been earned so far in calendar year 2023?",
+ "final_text": "Premium earned in calendar year 2023 up to 31 March 2023 was about \u00a35,060,696.\n\nI included every premium transaction booked on or before 31 March 2023. I earned each one pro rata by day over its cover period, from its effective date to its cover end date. I then counted only the days that fall between 1 January and 31 March 2023.\n\nANSWER: 5060695.55",
+ "stop_reason": "end_turn",
+ "tool_calls": [
+  {
+   "tool": "run_sql",
+   "input": {
+    "query": "select sum(written_premium * greatest(0, date_diff('day', greatest(effective_date, DATE '2023-01-01'), least(cover_end_date, DATE '2023-04-01')))::double / date_diff('day', effective_date, cover_end_date)) from premium_txn where booked_date <= DATE '2023-03-31' and cover_end_date > effective_date"
+   },
+   "output": "sum(((written_premium * CAST(greatest(0, date_diff('day', greatest(effective_date, CAST('2023-01-01' AS \"DATE\")), least(cover_end_date, CAST('2023-04-01' AS \"DATE\")))) AS \"DOUBLE\")) / date_diff('day', effective_date, cover_end_date)))\n5060695.55",
+   "error": false
+  }
+ ],
+ "usage": {
+  "input": 601,
+  "output": 388,
+  "cache_read": 10626,
+  "cache_write": 0
+ },
+ "effort": "medium",
+ "prompt_version": "v1"
+}

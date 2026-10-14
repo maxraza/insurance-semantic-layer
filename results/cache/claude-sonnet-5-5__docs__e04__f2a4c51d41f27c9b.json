@@ -1,0 +1,26 @@
+{
+ "model": "claude-sonnet-5-5",
+ "condition": "docs",
+ "qid": "e04",
+ "question": "What was earned premium for the London region in 2025?",
+ "final_text": "London's earned premium for 2025 was \u00a36,389,691.95.\n\nThis is on a calendar basis, valued at 31 December 2025. Each premium transaction booked on or before that date is earned pro rata by day over its cover period, and I counted only the part that falls in 2025. The region comes from the policy term.\n\nANSWER: 6389691.95",
+ "stop_reason": "end_turn",
+ "tool_calls": [
+  {
+   "tool": "run_sql",
+   "input": {
+    "query": "select t.region, sum(p.written_premium * greatest(0, date_diff('day', greatest(p.effective_date, date '2025-01-01'), least(p.cover_end_date, date '2026-01-01')))::double / date_diff('day', p.effective_date, p.cover_end_date)) ep\nfrom premium_txn p join policy_term t using(term_id)\nwhere p.booked_date <= date '2025-12-31' and p.cover_end_date > p.effective_date\ngroup by 1 order by 1"
+   },
+   "output": "region,ep\nLONDON,6389691.95\nMIDLANDS,5648176.12\nNORTH,5877735.64\nSCOTLAND,2782673.94\nSOUTH,7179043.07",
+   "error": false
+  }
+ ],
+ "usage": {
+  "input": 561,
+  "output": 420,
+  "cache_read": 10626,
+  "cache_write": 0
+ },
+ "effort": "medium",
+ "prompt_version": "v1"
+}

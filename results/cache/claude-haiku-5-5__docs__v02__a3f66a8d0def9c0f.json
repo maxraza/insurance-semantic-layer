@@ -1,0 +1,34 @@
+{
+ "model": "claude-haiku-5-5",
+ "condition": "docs",
+ "qid": "v02",
+ "question": "As at 30 June 2024, what was the reported loss (paid plus case reserves) for accident year 2023?",
+ "final_text": "The reported loss for accident year 2023, as at 30 June 2024, is **\u00a316,634,087.99**.\n\nBasis: claims with accident dates in 2023, using only transactions and reports dated on or before 30 June 2024. It is paid indemnity (\u00a311,358,005.49, net of recoveries, which are stored as negatives) plus case reserves (\u00a35,276,082.50). ALAE and IBNR are excluded, per the glossary definition. The figure covers 4,351 claims.\n\nANSWER: 16634087.99",
+ "stop_reason": "end_turn",
+ "tool_calls": [
+  {
+   "tool": "run_sql",
+   "input": {
+    "query": "\nSELECT\n  SUM(CASE WHEN t.txn_type IN ('PAYMENT','RECOVERY') AND t.cost_type='INDEMNITY' THEN t.amount ELSE 0 END) AS paid_indemnity,\n  SUM(CASE WHEN t.txn_type='RESERVE' AND t.cost_type='INDEMNITY' THEN t.amount ELSE 0 END) AS case_reserve_indemnity,\n  SUM(CASE WHEN t.cost_type='INDEMNITY' THEN t.amount ELSE 0 END) AS reported_loss,\n  COUNT(DISTINCT c.claim_id) AS claims\nFROM claim c\nJOIN claim_txn t ON t.claim_id = c.claim_id\nWHERE c.accident_date >= DATE '2023-01-01' AND c.accident_date < DATE '2024-01-01'\n  AND t.txn_date <= DATE '2024-06-30'\n  AND c.report_date <= DATE '2024-06-30'\n"
+   },
+   "output": "paid_indemnity,case_reserve_indemnity,reported_loss,claims\n11358005.49,5276082.50,16634087.99,4351",
+   "error": false
+  },
+  {
+   "tool": "run_sql",
+   "input": {
+    "query": "\nSELECT txn_type, cost_type, COUNT(*), SUM(amount), MIN(amount), MAX(amount)\nFROM claim_txn GROUP BY 1,2 ORDER BY 1,2\n"
+   },
+   "output": "txn_type,cost_type,count_star(),sum(amount),min(amount),max(amount)\nPAYMENT,ALAE,5482,4041773.75,5.38,129243.82\nPAYMENT,INDEMNITY,34398,78097079.75,0.10,1214443.66\nRECOVERY,INDEMNITY,1151,-2278660.54,-24511.92,-26.63\nRESERVE,INDEMNITY,79216,15020532.03,-1214443.66,1529370.74",
+   "error": false
+  }
+ ],
+ "usage": {
+  "input": 2351,
+  "output": 1241,
+  "cache_read": 15939,
+  "cache_write": 0
+ },
+ "effort": "medium",
+ "prompt_version": "v1"
+}

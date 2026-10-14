@@ -1,0 +1,283 @@
+# Insurance semantic layer — personal motor.
+#
+# A measure is defined *per time basis*. The same English word ("incurred loss") is a
+# different computation on a calendar, accident or policy basis, and some measures have
+# no meaning on some bases (premium has no accident date; IBNR is booked by accident
+# year, not by policy year). A basis that isn't listed is an error, not a guess.
+#
+# Every computation is valued at `as_of`: only facts whose knowledge date is on or
+# before it are used. Placeholders the compiler fills: {as_of}, {d} (snapshot date =
+# min(period end − 1 day, as_of)), {p_start}, {p_end}.
+#
+# Measure kinds:
+#   flow      sum (or distinct count) of rows whose basis date falls in the period
+#   earned    pro-rata earning of [start, end) intervals, clipped to the period and to as_of
+#   snapshot  balance at {d}; semi-additive: never summed across periods
+#   valuation latest booked estimate at or before a date (ASOF join)
+
+version: 0.1
+name: personal_motor
+
+sources:
+  premium:
+    from: premium_txn p JOIN policy_term t ON t.term_id = p.term_id
+    knowledge_date: p.booked_date
+    dimensions: &term_dims
+      region: t.region
+      channel: t.channel
+      vehicle_group: t.vehicle_group
+      driver_age_band: t.driver_age_band
+      business_type: "CASE WHEN t.term_number = 1 THEN 'NEW' ELSE 'RENEWAL' END"
+  claim_txn:
+    from: claim_txn x JOIN claim c ON c.claim_id = x.claim_id JOIN policy_term t ON t.term_id = c.term_id
+    knowledge_date: x.txn_date
+    dimensions:
+      <<: *term_dims
+      peril: c.peril
+  claim:
+    from: claim c JOIN policy_term t ON t.term_id = c.term_id
+    knowledge_date: c.report_date
+    dimensions:
+      <<: *term_dims
+      peril: c.peril
+  ibnr:
+    from: ibnr_valuation v
+    knowledge_date: v.valuation_date
+    dimensions: {}            # booked in bulk by accident year; not allocated to segments
+  expense:
+    from: expense e
+    knowledge_date: e.booked_date
+    dimensions:
+      channel: "COALESCE(e.channel, 'UNALLOCATED')"   # overheads are not allocated to channels
+      expense_type: e.expense_type
+  quote:
+    from: quote q
+    knowledge_date: q.quote_date
+    dimensions:
+      region: q.region
+      channel: q.channel
+      vehicle_group: q.vehicle_group
+      driver_age_band: q.driver_age_band
+  renewal:
+    from: >-
+      renewal_offer o JOIN policy_term t ON t.term_id = o.expiring_term_id
+      LEFT JOIN policy_term rt ON rt.term_id = o.renewed_term_id
+    knowledge_date: o.offer_date
+    dimensions:
+      <<: *term_dims
+
+measures:
+  written_premium:
+    description: Premium booked (new, renewal, mid-term adjustments, cancellation returns). Gross of reinsurance.
+    source: premium
+    amount: p.written_premium
+    bases:
+      calendar: {kind: flow, date: p.booked_date}
+      policy:   {kind: flow, date: t.inception_date}
+
+  earned_premium:
+    description: >-
+      Written premium earned pro rata (daily) over each transaction's cover period. On an accident basis
+      the denominator is the premium earned in the same period (standard pairing), so it equals calendar.
+    source: premium
+    amount: p.written_premium
+    bases:
+      calendar: {kind: earned, start: p.effective_date, end: p.cover_end_date}
+      accident: {kind: earned, start: p.effective_date, end: p.cover_end_date}
+      policy:   {kind: earned, start: p.effective_date, end: p.cover_end_date, cohort: t.inception_date}
+
+  unearned_premium:
+    description: Premium written but not yet earned, at the end of the period (or as_of). Semi-additive.
+    source: premium
+    amount: "p.written_premium * date_diff('day', GREATEST(p.effective_date, {d} + 1), p.cover_end_date) / date_diff('day', p.effective_date, p.cover_end_date)"
+    bases:
+      calendar: {kind: snapshot, where: "p.booked_date <= {d} AND p.cover_end_date > {d} + 1"}
+
+  written_exposure:
+    description: Car-years written (1 per new or renewal term; a cancellation returns the unexpired fraction).
+    source: premium
+    amount: p.exposure_units
+    bases:
+      calendar: {kind: flow, date: p.booked_date}
+      policy:   {kind: flow, date: t.inception_date}
+
+  earned_exposure:
+    description: Car-years earned (exposure units earned pro rata over cover).
+    source: premium
+    amount: p.exposure_units
+    bases:
+      calendar: {kind: earned, start: p.effective_date, end: p.cover_end_date}
+      accident: {kind: earned, start: p.effective_date, end: p.cover_end_date}
+      policy:   {kind: earned, start: p.effective_date, end: p.cover_end_date, cohort: t.inception_date}
+
+  in_force_count:
+    description: Vehicles on cover at the end of the period (or as_of). Semi-additive.
+    source: premium
+    amount: p.vehicle_delta
+    bases:
+      calendar: {kind: snapshot, where: "p.booked_date <= {d} AND p.effective_date <= {d} AND p.cover_end_date > {d}"}
+
+  paid_loss:
+    description: Indemnity payments net of recoveries (salvage/subrogation). Excludes ALAE.
+    source: claim_txn
+    amount: x.amount
+    where: "x.txn_type IN ('PAYMENT', 'RECOVERY') AND x.cost_type = 'INDEMNITY'"
+    bases:
+      calendar: {kind: flow, date: x.txn_date}
+      accident: {kind: flow, date: c.accident_date}
+      policy:   {kind: flow, date: t.inception_date}
+
+  case_reserve:
+    description: Outstanding case reserves set by claims handlers. Semi-additive on a calendar basis.
+    source: claim_txn
+    amount: x.amount
+    where: "x.txn_type = 'RESERVE'"
+    bases:
+      calendar: {kind: snapshot, where: "x.txn_date <= {d}"}
+      accident: {kind: flow, date: c.accident_date}
+      policy:   {kind: flow, date: t.inception_date}
+
+  reported_loss:
+    description: >-
+      Paid indemnity plus case reserves ("case incurred", Friedland's "reported"). Excludes IBNR and ALAE.
+      On a calendar basis it is the change in reported loss during the period.
+    source: claim_txn
+    amount: x.amount
+    where: "x.cost_type = 'INDEMNITY'"
+    bases:
+      calendar: {kind: flow, date: x.txn_date}
+      accident: {kind: flow, date: c.accident_date}
+      policy:   {kind: flow, date: t.inception_date}
+
+  paid_alae:
+    description: Allocated loss adjustment expense paid (legal and expert costs attributable to a claim).
+    source: claim_txn
+    amount: x.amount
+    where: "x.cost_type = 'ALAE'"
+    bases:
+      calendar: {kind: flow, date: x.txn_date}
+      accident: {kind: flow, date: c.accident_date}
+      policy:   {kind: flow, date: t.inception_date}
+
+  ibnr:
+    description: >-
+      Bulk IBNR (incurred but not reported, including development on known claims), booked by the
+      reserving team each quarter-end by accident year. Calendar basis: the change in total IBNR over
+      the period. No policy-year basis and no segment dimensions.
+    source: ibnr
+    amount: v.ibnr
+    bases:
+      accident: {kind: valuation, cohort_year: v.accident_year}
+      calendar: {kind: valuation, change: true}
+
+  reported_claim_count:
+    description: Claims reported, including those later closed without payment.
+    source: claim
+    agg: count
+    bases:
+      calendar: {kind: flow, date: c.report_date}
+      accident: {kind: flow, date: c.accident_date}
+      policy:   {kind: flow, date: t.inception_date}
+
+  paid_claim_count:
+    description: Claims with at least one indemnity payment (excludes nil claims).
+    source: claim_txn
+    agg: count_distinct
+    key: x.claim_id
+    where: "x.txn_type = 'PAYMENT' AND x.cost_type = 'INDEMNITY'"
+    bases:
+      calendar: {kind: flow, date: x.txn_date}
+      accident: {kind: flow, date: c.accident_date}
+      policy:   {kind: flow, date: t.inception_date}
+
+  open_claim_count:
+    description: Claims reported and not closed at the end of the period (or as_of). Semi-additive.
+    source: claim
+    agg: count
+    bases:
+      calendar: {kind: snapshot, where: "c.report_date <= {d} AND (c.closed_date IS NULL OR c.closed_date > {d})"}
+
+  expenses:
+    description: Acquisition (comparison-site and direct), broker commission, and admin, by month incurred.
+    source: expense
+    amount: e.amount
+    bases:
+      calendar: {kind: flow, date: e.expense_month}
+
+  quotes:
+    description: Quotes issued, across all channels.
+    source: quote
+    agg: count
+    bases:
+      calendar: {kind: flow, date: q.quote_date}
+
+  bound_quotes:
+    description: Quotes that became a policy (new business only).
+    source: quote
+    agg: count
+    where: q.bound_term_id IS NOT NULL
+    bases:
+      calendar: {kind: flow, date: q.quote_date}
+
+  renewals_due:
+    description: >-
+      Renewal invitations whose expiry date has passed by as_of (matured). Invitations still pending at
+      as_of are excluded, otherwise retention is understated for recent periods.
+    source: renewal
+    agg: count
+    where: "o.due_date <= {as_of}"
+    bases:
+      calendar: {kind: flow, date: o.due_date}
+
+  renewals_accepted:
+    description: Matured renewal invitations that were accepted (the renewed term was bound by as_of).
+    source: renewal
+    agg: count
+    where: "o.due_date <= {as_of} AND rt.bound_date <= {as_of}"
+    bases:
+      calendar: {kind: flow, date: o.due_date}
+
+metrics:
+  # Ratios are always ratios of sums at the requested grain; they are never averaged.
+  loss_ratio_paid:
+    description: Paid indemnity / earned premium.
+    expr: paid_loss / earned_premium
+  loss_ratio_reported:
+    description: (Paid + case reserves) / earned premium. Excludes IBNR and ALAE.
+    expr: reported_loss / earned_premium
+  loss_ratio_ultimate:
+    description: (Reported loss + IBNR) / earned premium. Accident or calendar basis only.
+    expr: (reported_loss + ibnr) / earned_premium
+  loss_alae_ratio_ultimate:
+    description: (Reported loss + IBNR + paid ALAE) / earned premium.
+    expr: (reported_loss + ibnr + paid_alae) / earned_premium
+  expense_ratio:
+    description: Expenses / earned premium (statutory-style; the trade basis divides by written).
+    expr: expenses / earned_premium
+  expense_ratio_written:
+    description: Expenses / written premium (trade basis).
+    expr: expenses / written_premium
+  combined_ratio:
+    description: (Reported loss + IBNR + paid ALAE + expenses) / earned premium. Calendar basis.
+    expr: (reported_loss + ibnr + paid_alae + expenses) / earned_premium
+  claim_frequency:
+    description: Reported claims per earned car-year.
+    expr: reported_claim_count / earned_exposure
+  severity_reported:
+    description: Reported loss per reported claim (nil claims in the denominator).
+    expr: reported_loss / reported_claim_count
+  severity_paid:
+    description: Paid loss per paid claim (nil claims excluded).
+    expr: paid_loss / paid_claim_count
+  pure_premium:
+    description: Reported loss per earned car-year.
+    expr: reported_loss / earned_exposure
+  average_written_premium:
+    description: Written premium per written car-year.
+    expr: written_premium / written_exposure
+  retention_rate:
+    description: Accepted / matured renewal invitations (policy-count basis).
+    expr: renewals_accepted / renewals_due
+  quote_conversion:
+    description: Bound / issued quotes.
+    expr: bound_quotes / quotes

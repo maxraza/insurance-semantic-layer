@@ -1,0 +1,34 @@
+{
+ "model": "claude-sonnet-5-5",
+ "condition": "raw",
+ "qid": "c03",
+ "question": "What was total gross written premium booked in calendar year 2024?",
+ "final_text": "Total gross written premium booked in calendar year 2024 was \u00a325,702,658.47. I summed `written_premium` on every premium transaction with a booked date in 2024. That is 41,882 transactions, and the total is net of cancellations and mid-term adjustments (MTAs).\n\n| Transaction type | Written premium (\u00a3) |\n|---|---|\n| New business | 13,355,087.73 |\n| Renewal | 13,111,694.98 |\n| MTA | 91,412.94 |\n| Cancellation | \u2212855,537.18 |\n\nIf you wanted new business and renewals only, with no cancellations or MTAs, the figure would be \u00a326,466,782.71 (13,355,087.73 + 13,111,694.98).\n\nANSWER: 25702658.47",
+ "stop_reason": "end_turn",
+ "tool_calls": [
+  {
+   "tool": "run_sql",
+   "input": {
+    "query": "select sum(written_premium), count(*), min(booked_date), max(booked_date) from premium_txn where booked_date between '2024-01-01' and '2024-12-31'"
+   },
+   "output": "sum(written_premium),count_star(),min(booked_date),max(booked_date)\n25702658.47,41882,2024-01-01,2024-12-31",
+   "error": false
+  },
+  {
+   "tool": "run_sql",
+   "input": {
+    "query": "select txn_type, count(*), sum(written_premium) from premium_txn where booked_date between '2024-01-01' and '2024-12-31' group by 1"
+   },
+   "output": "txn_type,count_star(),sum(written_premium)\nCANCEL,2352,-855537.18\nRENEWAL,17509,13111694.98\nNEW,17978,13355087.73\nMTA,4043,91412.94",
+   "error": false
+  }
+ ],
+ "usage": {
+  "input": 570,
+  "output": 446,
+  "cache_read": 4060,
+  "cache_write": 0
+ },
+ "effort": "medium",
+ "prompt_version": "v1"
+}

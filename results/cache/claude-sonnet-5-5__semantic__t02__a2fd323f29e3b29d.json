@@ -1,0 +1,35 @@
+{
+ "model": "claude-sonnet-5-5",
+ "condition": "semantic",
+ "qid": "t02",
+ "question": "As at 30 September 2025, what is the year-to-date renewal retention rate for 2025?",
+ "final_text": "The year-to-date renewal retention rate for 2025, as at 30 September 2025, is 0.6785. That is 16,278 accepted renewals out of 23,991 matured renewal invitations, counted by policy. Invitations still pending at that date are excluded.\n\nANSWER: 0.678504",
+ "stop_reason": "end_turn",
+ "tool_calls": [
+  {
+   "tool": "query_metrics",
+   "input": {
+    "metrics": [
+     "retention_rate",
+     "renewals_due",
+     "renewals_accepted"
+    ],
+    "basis": "calendar",
+    "as_of": "2025-09-30",
+    "period_from": "2025-01-01",
+    "period_to": "2025-09-30",
+    "grain": "year"
+   },
+   "output": "period,retention_rate,renewals_due,renewals_accepted\n2025,0.678504,23991.00,16278.00",
+   "error": false
+  }
+ ],
+ "usage": {
+  "input": 460,
+  "output": 301,
+  "cache_read": 7364,
+  "cache_write": 0
+ },
+ "effort": "medium",
+ "prompt_version": "v1"
+}

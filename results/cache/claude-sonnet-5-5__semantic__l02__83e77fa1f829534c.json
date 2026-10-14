@@ -1,0 +1,33 @@
+{
+ "model": "claude-sonnet-5-5",
+ "condition": "semantic",
+ "qid": "l02",
+ "question": "What is the accident-year 2024 paid loss ratio?",
+ "final_text": "The accident-year 2024 paid loss ratio is 0.5896. This is paid indemnity divided by premium earned in 2024, valued at 31 December 2025. It excludes case reserves, IBNR and ALAE.\n\nANSWER: 0.589567",
+ "stop_reason": "end_turn",
+ "tool_calls": [
+  {
+   "tool": "query_metrics",
+   "input": {
+    "metrics": [
+     "loss_ratio_paid"
+    ],
+    "basis": "accident",
+    "as_of": "2025-12-31",
+    "grain": "year",
+    "period_from": "2024-01-01",
+    "period_to": "2024-12-31"
+   },
+   "output": "period,loss_ratio_paid\n2024,0.589567",
+   "error": false
+  }
+ ],
+ "usage": {
+  "input": 405,
+  "output": 278,
+  "cache_read": 7364,
+  "cache_write": 0
+ },
+ "effort": "medium",
+ "prompt_version": "v1"
+}

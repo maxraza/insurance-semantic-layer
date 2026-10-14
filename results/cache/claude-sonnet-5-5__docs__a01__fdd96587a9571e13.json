@@ -1,0 +1,26 @@
+{
+ "model": "claude-sonnet-5-5",
+ "condition": "docs",
+ "qid": "a01",
+ "question": "What was our loss ratio in 2024?",
+ "final_text": "The 2024 loss ratio is about **0.793** on an accident-year basis, as at 31 December 2025. \"Loss ratio\" could mean several measures, so I used the reported one. That is paid indemnity plus case reserves, divided by earned premium.\n\n- **Paid indemnity (net of recoveries):** \u00a314.00m for 2024 accidents.\n- **Case reserves:** \u00a34.83m.\n- **Reported loss:** \u00a318.83m.\n- **Earned premium in 2024:** \u00a323.75m.\n\nReported loss divided by earned premium gives 0.793.\n\nIf you want IBNR included (the ultimate loss ratio), add \u00a30.61m of 2024 accident-year IBNR. That gives about 0.818.\n\nANSWER: 0.793",
+ "stop_reason": "end_turn",
+ "tool_calls": [
+  {
+   "tool": "run_sql",
+   "input": {
+    "query": "with ep as (select sum(written_premium*greatest(0,least(date '2025-01-01',cover_end_date)-greatest(date '2024-01-01',effective_date))::double/(cover_end_date-effective_date)) e from premium_txn where booked_date<=date '2025-12-31'),\ncl as (select sum(t.amount) filter (where t.txn_type in ('PAYMENT','RECOVERY') and t.cost_type='INDEMNITY') paid, sum(t.amount) filter (where t.txn_type='RESERVE' and t.cost_type='INDEMNITY') res, sum(t.amount) filter (where t.txn_type='RESERVE' and t.cost_type='ALAE') resalae from claim c join claim_txn t using(claim_id) where c.accident_date between date '2024-01-01' and date '2024-12-31' and t.txn_date<=date '2025-12-31'),\nib as (select ibnr from ibnr_valuation where valuation_date=date '2025-12-31' and accident_year=2024)\nselect * from ep,cl,ib"
+   },
+   "output": "e,paid,res,resalae,ibnr\n23748557.88,14001373.77,4826041.09,None,611435.82",
+   "error": false
+  }
+ ],
+ "usage": {
+  "input": 829,
+  "output": 983,
+  "cache_read": 10626,
+  "cache_write": 0
+ },
+ "effort": "medium",
+ "prompt_version": "v1"
+}

@@ -1,0 +1,50 @@
+{
+ "model": "claude-sonnet-5-5",
+ "condition": "raw",
+ "qid": "s05",
+ "question": "What were case reserves outstanding on bodily-injury claims at 31 December 2025?",
+ "final_text": "Case reserves outstanding on bodily-injury claims at 31 December 2025 were \u00a311,574,541.29.\n\nReserve transactions in the data are movements, not balances. Payments are offset by negative reserve entries. I therefore summed all indemnity reserve transactions on bodily-injury claims up to 31 December 2025.\n\nANSWER: 11574541.29",
+ "stop_reason": "end_turn",
+ "tool_calls": [
+  {
+   "tool": "run_sql",
+   "input": {
+    "query": "select peril, count(*) from claim group by 1"
+   },
+   "output": "peril,count_star()\nOWN_DAMAGE,9055\nBODILY_INJURY,1691\nTHIRD_PARTY_PROPERTY,6280\nTHEFT,872\nWINDSCREEN,5651",
+   "error": false
+  },
+  {
+   "tool": "run_sql",
+   "input": {
+    "query": "select txn_type, cost_type, count(*), sum(amount), min(txn_date), max(txn_date) from claim_txn group by 1,2"
+   },
+   "output": "txn_type,cost_type,count_star(),sum(amount),min(txn_date),max(txn_date)\nPAYMENT,ALAE,5482,4041773.75,2019-04-02,2025-12-31\nRECOVERY,INDEMNITY,1151,-2278660.54,2019-07-11,2025-12-31\nRESERVE,INDEMNITY,79216,15020532.03,2019-02-04,2025-12-31\nPAYMENT,INDEMNITY,34398,78097079.75,2019-02-22,2025-12-31",
+   "error": false
+  },
+  {
+   "tool": "run_sql",
+   "input": {
+    "query": "select c.claim_id, t.txn_date, t.txn_type, t.cost_type, t.amount from claim c join claim_txn t using(claim_id) where c.peril='BODILY_INJURY' and c.claim_id in (select claim_id from claim where peril='BODILY_INJURY' order by claim_id limit 3) order by 1,2"
+   },
+   "output": "claim_id,txn_date,txn_type,cost_type,amount\n30,2019-12-15,RESERVE,INDEMNITY,21349.81\n30,2020-02-15,RESERVE,INDEMNITY,-21349.81\n39,2019-08-07,RESERVE,INDEMNITY,986.57\n39,2020-11-18,PAYMENT,INDEMNITY,2482.55\n39,2020-11-18,RESERVE,INDEMNITY,-986.57\n39,2020-11-18,PAYMENT,ALAE,302.19\n47,2019-11-22,RESERVE,INDEMNITY,1049.00\n47,2020-01-11,PAYMENT,INDEMNITY,387.65\n47,2020-01-11,RESERVE,INDEMNITY,-387.65\n47,2020-04-30,PAYMENT,INDEMNITY,73.62\n47,2020-04-30,RESERVE,INDEMNITY,-73.62\n47,2020-07-12,RESERVE,INDEMNITY,772.46\n47,2020-07-13,PAYMENT,INDEMNITY,977.74\n47,2020-07-13,RESERVE,INDEMNITY,-977.74\n47,2020-09-24,PAYMENT,INDEMNITY,275.47\n47,2020-09-24,RESERVE,INDEMNITY,-275.47\n47,2020-09-24,PAYMENT,ALAE,144.74\n47,2020-09-24,RESERVE,INDEMNITY,-106.98",
+   "error": false
+  },
+  {
+   "tool": "run_sql",
+   "input": {
+    "query": "select sum(amount), count(distinct claim_id) from claim_txn t join claim c using(claim_id) where c.peril='BODILY_INJURY' and t.txn_type='RESERVE' and t.txn_date<='2025-12-31'"
+   },
+   "output": "sum(amount),count(DISTINCT claim_id)\n11574541.29,1691",
+   "error": false
+  }
+ ],
+ "usage": {
+  "input": 3541,
+  "output": 666,
+  "cache_read": 8120,
+  "cache_write": 0
+ },
+ "effort": "medium",
+ "prompt_version": "v1"
+}

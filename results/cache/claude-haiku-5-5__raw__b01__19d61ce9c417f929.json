@@ -1,0 +1,82 @@
+{
+ "model": "claude-haiku-5-5",
+ "condition": "raw",
+ "qid": "b01",
+ "question": "What is the accident-year 2023 loss ratio on a reported basis (paid plus case reserves, excluding IBNR and ALAE), valued at 31 December 2025?",
+ "final_text": "**Accident-year 2023 reported loss ratio: 0.935**\n\n- **Reported incurred (AY2023, excluding IBNR and ALAE):** paid indemnity of \u00a318,265,620 plus outstanding case reserves of \u00a31,665,781, giving \u00a319,931,401. Case reserves are the sum of RESERVE movements per claim, which net to the outstanding amount. Claims are grouped by accident date in 2023.\n- **Earned premium (calendar 2023):** \u00a321,308,633. Each premium transaction is spread pro rata over its own cover period, and the 2023 share is taken. Cancellations and mid-term adjustments are included in that spread.\n- **Ratio:** 19,931,401 / 21,308,633 = 0.9354.\n\nRecoveries (salvage/subrogation, \u2212\u00a3492,593 on AY2023 claims) are not in the definition, so I excluded them. If they were netted, the ratio would be 0.912.\n\nANSWER: 0.9354",
+ "stop_reason": "end_turn",
+ "tool_calls": [
+  {
+   "tool": "run_sql",
+   "input": {
+    "query": "SELECT 'claim_txn' src, txn_type, cost_type, count(*) n, sum(amount) amt FROM claim_txn GROUP BY 1,2,3\nUNION ALL SELECT 'premium_txn', txn_type, '', count(*), sum(written_premium) FROM premium_txn GROUP BY 1,2,3\nUNION ALL SELECT 'claim_peril', peril, '', count(*), NULL FROM claim GROUP BY 1,2,3"
+   },
+   "output": "src,txn_type,cost_type,n,amt\nclaim_txn,RECOVERY,INDEMNITY,1151,-2278660.54\nclaim_txn,RESERVE,INDEMNITY,79216,15020532.03\nclaim_txn,PAYMENT,ALAE,5482,4041773.75\nclaim_txn,PAYMENT,INDEMNITY,34398,78097079.75\npremium_txn,RENEWAL,,96764,66470703.32\npremium_txn,CANCEL,,13081,-4423904.86\npremium_txn,MTA,,22310,466631.74\npremium_txn,NEW,,113555,74247233.10\nclaim_peril,OWN_DAMAGE,,9055,None\nclaim_peril,THIRD_PARTY_PROPERTY,,6280,None\nclaim_peril,THEFT,,872,None\nclaim_peril,BODILY_INJURY,,1691,None\nclaim_peril,WINDSCREEN,,5651,None",
+   "error": false
+  },
+  {
+   "tool": "run_sql",
+   "input": {
+    "query": "SELECT * FROM claim_txn LIMIT 15; SELECT * FROM ibnr_valuation ORDER BY 1,2 LIMIT 40;"
+   },
+   "output": "valuation_date,accident_year,ibnr\n2019-12-31,2019,450298.72\n2020-03-31,2019,356582.03\n2020-03-31,2020,683142.67\n2020-06-30,2019,341514.05\n2020-06-30,2020,824481.35\n2020-09-30,2019,165779.06\n2020-09-30,2020,1891648.46\n2020-12-31,2019,97378.08\n2020-12-31,2020,1911713.85\n2021-03-31,2019,86329.61\n2021-03-31,2020,905461.64\n2021-03-31,2021,920121.97\n2021-06-30,2019,22351.59\n2021-06-30,2020,277377.64\n2021-06-30,2021,1511261.10\n2021-09-30,2019,1543.50\n2021-09-30,2020,194333.49\n2021-09-30,2021,1515044.78\n2021-12-31,2019,0.00\n2021-12-31,2020,22311.98\n2021-12-31,2021,1351498.40\n2022-03-31,2019,0.00\n2022-03-31,2020,59952.40\n2022-03-31,2021,760092.87\n2022-03-31,2022,951355.79\n2022-06-30,2019,0.00\n2022-06-30,2020,0.00\n2022-06-30,2021,0.00\n2022-06-30,2022,815343.77\n2022-09-30,2019,0.00\n2022-09-30,2020,0.00\n2022-09-30,2021,104469.41\n2022-09-30,2022,2029753.62\n2022-12-31,2019,0.00\n2022-12-31,2020,7662.80\n2022-12-31,2021,194613.54\n2022-12-31,2022,2433916.61\n2023-03-31,2019,0.00\n2023-03-31,2020,0.00\n2023-03-31,2021,80286.90",
+   "error": false
+  },
+  {
+   "tool": "run_sql",
+   "input": {
+    "query": "WITH c AS (SELECT claim_id, SUM(CASE WHEN txn_type='RESERVE' THEN amount ELSE 0 END) res, SUM(CASE WHEN txn_type='PAYMENT' AND cost_type='INDEMNITY' THEN amount ELSE 0 END) paid, SUM(CASE WHEN txn_type='RECOVERY' THEN amount ELSE 0 END) rec FROM claim_txn GROUP BY 1)\nSELECT (cl.closed_date IS NOT NULL) closed, count(*) n, round(avg(res),0) avg_res, round(sum(res),0) sum_res, round(sum(paid),0) paid, round(sum(rec),0) rec, sum(CASE WHEN res<0 THEN 1 ELSE 0 END) neg_res, sum(CASE WHEN abs(res)<0.005 THEN 1 ELSE 0 END) zero_res FROM c JOIN claim cl USING(claim_id) GROUP BY 1;\nSELECT * FROM claim_txn WHERE claim_id IN (SELECT claim_id FROM claim_txn WHERE txn_type='RECOVERY' LIMIT 1) ORDER BY txn_date;\nSELECT cl.claim_id, cl.accident_date, cl.closed_date, t.txn_date, t.txn_type, t.cost_type, t.amount FROM claim cl JOIN claim_txn t USING(claim_id) WHERE cl.claim_id IN (SELECT claim_id FROM claim WHERE closed_date IS NOT NULL LIMIT 2) ORDER BY 1,4;"
+   },
+   "output": "claim_id,accident_date,closed_date,txn_date,txn_type,cost_type,amount\n1,2019-11-10,2020-01-03,2019-11-13,RESERVE,INDEMNITY,1511.36\n1,2019-11-10,2020-01-03,2019-11-23,PAYMENT,INDEMNITY,40.80\n1,2019-11-10,2020-01-03,2019-11-23,RESERVE,INDEMNITY,-40.80\n1,2019-11-10,2020-01-03,2019-11-28,RESERVE,INDEMNITY,-18.26\n1,2019-11-10,2020-01-03,2019-11-29,PAYMENT,INDEMNITY,1339.91\n1,2019-11-10,2020-01-03,2019-11-29,RESERVE,INDEMNITY,-1339.91\n1,2019-11-10,2020-01-03,2020-01-03,PAYMENT,INDEMNITY,355.89\n1,2019-11-10,2020-01-03,2020-01-03,RESERVE,INDEMNITY,-112.39\n1,2019-11-10,2020-01-03,2020-01-03,PAYMENT,ALAE,194.55\n2,2019-11-13,2020-02-15,2019-11-14,RESERVE,INDEMNITY,96.92\n2,2019-11-13,2020-02-15,2020-02-15,PAYMENT,INDEMNITY,179.10\n2,2019-11-13,2020-02-15,2020-02-15,RESERVE,INDEMNITY,-96.92\n2,2019-11-13,2020-02-15,2020-02-15,PAYMENT,ALAE,24.55\n2,2019-11-13,2020-02-15,2020-04-21,RECOVERY,INDEMNITY,-87.11",
+   "error": false
+  },
+  {
+   "tool": "run_sql",
+   "input": {
+    "query": "WITH c AS (\n SELECT t.claim_id,\n  SUM(CASE WHEN txn_type='RESERVE' THEN amount ELSE 0 END) case_res,\n  SUM(CASE WHEN txn_type='PAYMENT' AND cost_type='INDEMNITY' THEN amount ELSE 0 END) paid_ind,\n  SUM(CASE WHEN txn_type='RECOVERY' THEN amount ELSE 0 END) recov\n FROM claim_txn t GROUP BY 1)\nSELECT count(*) n_claims, round(sum(paid_ind),2) paid, round(sum(recov),2) recov, round(sum(case_res),2) case_res,\n round(sum(paid_ind)+sum(case_res),2) reported_ex_recov, round(sum(paid_ind)+sum(recov)+sum(case_res),2) reported_net_recov\nFROM claim cl JOIN c USING(claim_id) WHERE EXTRACT(year FROM cl.accident_date)=2023;\nSELECT 'prem' k, count(*), round(sum(written_premium),2), min(effective_date), max(effective_date), max(cover_end_date) FROM premium_txn;\nSELECT txn_type, count(*), sum(CASE WHEN cover_end_date<effective_date THEN 1 ELSE 0 END) bad, sum(exposure_units) FROM premium_txn GROUP BY 1;"
+   },
+   "output": "txn_type,count_star(),bad,sum(exposure_units)\nCANCEL,13081,0,-13081.000\nRENEWAL,96764,0,96764.000\nNEW,113555,0,113555.000\nMTA,22310,0,0.000",
+   "error": false
+  },
+  {
+   "tool": "run_sql",
+   "input": {
+    "query": "WITH c AS (\n SELECT t.claim_id,\n  SUM(CASE WHEN txn_type='RESERVE' THEN amount ELSE 0 END) case_res,\n  SUM(CASE WHEN txn_type='PAYMENT' AND cost_type='INDEMNITY' THEN amount ELSE 0 END) paid_ind,\n  SUM(CASE WHEN txn_type='RECOVERY' THEN amount ELSE 0 END) recov\n FROM claim_txn t GROUP BY 1)\nSELECT count(*) n_claims, round(sum(paid_ind),2) paid, round(sum(recov),2) recov, round(sum(case_res),2) case_res,\n round(sum(paid_ind)+sum(case_res),2) reported_ex_recov, round(sum(paid_ind)+sum(recov)+sum(case_res),2) reported_net_recov\nFROM claim cl JOIN c USING(claim_id) WHERE EXTRACT(year FROM cl.accident_date)=2023"
+   },
+   "output": "n_claims,paid,recov,case_res,reported_ex_recov,reported_net_recov\n4379,18265620.16,-492593.24,1665781.33,19931401.49,19438808.25",
+   "error": false
+  },
+  {
+   "tool": "run_sql",
+   "input": {
+    "query": "SELECT txn_type, count(*), sum(CASE WHEN cover_end_date<effective_date THEN 1 ELSE 0 END) bad, round(sum(written_premium),2) wp, min(effective_date), max(effective_date), max(cover_end_date) FROM premium_txn GROUP BY 1"
+   },
+   "output": "txn_type,count_star(),bad,wp,min(effective_date),max(effective_date),max(cover_end_date)\nMTA,22310,0,466631.74,2019-02-05,2025-12-31,2026-12-07\nRENEWAL,96764,0,66470703.32,2020-01-01,2026-01-20,2027-01-20\nNEW,113555,0,74247233.10,2019-01-01,2026-01-14,2027-01-14\nCANCEL,13081,0,-4423904.86,2019-01-28,2025-12-31,2026-12-07",
+   "error": false
+  },
+  {
+   "tool": "run_sql",
+   "input": {
+    "query": "SELECT p.term_id, p.txn_type, p.booked_date, p.effective_date, p.cover_end_date, p.written_premium, p.exposure_units, t.inception_date, t.expiry_date, t.cancel_date FROM premium_txn p JOIN policy_term t USING(term_id) WHERE p.term_id IN (SELECT term_id FROM premium_txn WHERE txn_type='CANCEL' LIMIT 2) OR p.term_id IN (SELECT term_id FROM premium_txn WHERE txn_type='MTA' LIMIT 2) ORDER BY 1,p.effective_date"
+   },
+   "output": "term_id,txn_type,booked_date,effective_date,cover_end_date,written_premium,exposure_units,inception_date,expiry_date,cancel_date\n3,NEW,2019-01-01,2019-01-07,2020-01-07,418.20,1.000,2019-01-07,2020-01-07,None\n3,MTA,2019-03-15,2019-03-13,2020-01-07,-20.62,0.000,2019-01-07,2020-01-07,None\n7,NEW,2019-01-01,2019-01-03,2020-01-03,346.29,1.000,2019-01-03,2020-01-03,2019-10-01\n7,CANCEL,2019-10-05,2019-10-01,2020-01-03,-89.18,-1.000,2019-01-03,2020-01-03,2019-10-01\n17,NEW,2019-01-01,2019-01-02,2020-01-02,555.54,1.000,2019-01-02,2020-01-02,None\n17,MTA,2019-10-24,2019-10-24,2020-01-02,-6.39,0.000,2019-01-02,2020-01-02,None\n24,NEW,2019-01-01,2019-01-14,2020-01-14,398.49,1.000,2019-01-14,2020-01-14,2019-09-17\n24,CANCEL,2019-09-19,2019-09-17,2020-01-14,-129.92,-1.000,2019-01-14,2020-01-14,2019-09-17",
+   "error": false
+  },
+  {
+   "tool": "run_sql",
+   "input": {
+    "query": "WITH ep AS (\n SELECT round(sum(written_premium * GREATEST(0, date_diff('day', GREATEST(effective_date, DATE '2023-01-01'), LEAST(cover_end_date, DATE '2023-12-31')) + 1) / (date_diff('day', effective_date, cover_end_date) + 1)),2) earned_2023,\n sum(written_premium) wp_all FROM premium_txn),\nc AS (\n SELECT t.claim_id,\n  SUM(CASE WHEN txn_type='RESERVE' THEN amount ELSE 0 END) case_res,\n  SUM(CASE WHEN txn_type='PAYMENT' AND cost_type='INDEMNITY' THEN amount ELSE 0 END) paid_ind,\n  SUM(CASE WHEN txn_type='RECOVERY' THEN amount ELSE 0 END) recov\n FROM claim_txn t GROUP BY 1),\nl AS (SELECT sum(paid_ind)+sum(case_res) rep_ex, sum(paid_ind)+sum(recov)+sum(case_res) rep_net FROM claim cl JOIN c USING(claim_id) WHERE EXTRACT(year FROM cl.accident_date)=2023)\nSELECT ep.earned_2023, l.rep_ex, l.rep_net, round(l.rep_ex/ep.earned_2023,4) lr_ex, round(l.rep_net/ep.earned_2023,4) lr_net FROM ep, l"
+   },
+   "output": "earned_2023,rep_ex,rep_net,lr_ex,lr_net\n21308632.68,19931401.49,19438808.25,0.9354,0.9123",
+   "error": false
+  }
+ ],
+ "usage": {
+  "input": 27149,
+  "output": 5140,
+  "cache_read": 12180,
+  "cache_write": 2030
+ },
+ "effort": "medium",
+ "prompt_version": "v1"
+}

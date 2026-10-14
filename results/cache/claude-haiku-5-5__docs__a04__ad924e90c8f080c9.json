@@ -1,0 +1,26 @@
+{
+ "model": "claude-haiku-5-5",
+ "condition": "docs",
+ "qid": "a04",
+ "question": "How many claims did we have in 2024?",
+ "final_text": "**Answer: 4,396 reported claims with accident dates in 2024** (accident-year basis, valued at 31 Dec 2025, when all 2024 claims had been reported).\n\nThe question didn't specify a basis, so the other common readings give:\n- **Calendar basis** (claims reported in 2024): 4,398\n- **Policy basis** (claims on policy terms incepting in 2024): 4,545\n\nI've used the accident basis because it is the standard view of claim counts for a year. Let me know if you wanted one of the others.\n\nANSWER: 4396",
+ "stop_reason": "end_turn",
+ "tool_calls": [
+  {
+   "tool": "run_sql",
+   "input": {
+    "query": "SELECT\n  (SELECT COUNT(*) FROM claim WHERE accident_date >= '2024-01-01' AND accident_date < '2025-01-01') AS accident_basis_2024,\n  (SELECT COUNT(*) FROM claim WHERE report_date >= '2024-01-01' AND report_date < '2025-01-01') AS calendar_reported_2024,\n  (SELECT COUNT(*) FROM claim c JOIN policy_term t ON c.term_id = t.term_id WHERE t.inception_date >= '2024-01-01' AND t.inception_date < '2025-01-01') AS policy_basis_2024,\n  (SELECT COUNT(*) FROM claim) AS total_claims,\n  (SELECT MIN(accident_date) FROM claim) AS min_acc,\n  (SELECT MAX(accident_date) FROM claim) AS max_acc,\n  (SELECT MAX(report_date) FROM claim) AS max_report"
+   },
+   "output": "accident_basis_2024,calendar_reported_2024,policy_basis_2024,total_claims,min_acc,max_acc,max_report\n4396,4398,4545,23549,2019-01-21,2025-12-31,2025-12-31",
+   "error": false
+  }
+ ],
+ "usage": {
+  "input": 807,
+  "output": 914,
+  "cache_read": 10626,
+  "cache_write": 0
+ },
+ "effort": "medium",
+ "prompt_version": "v1"
+}

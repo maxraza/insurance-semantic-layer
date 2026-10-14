@@ -1,0 +1,34 @@
+{
+ "model": "claude-haiku-5-5",
+ "condition": "docs",
+ "qid": "b02",
+ "question": "What was the calendar-year 2024 reported loss ratio (paid plus change in case reserves, excluding IBNR)?",
+ "final_text": "**Calendar-2024 reported loss ratio: 0.844**\n\n- **Reported loss, calendar 2024: \u00a319,037,477** (indemnity only, as at 31 Dec 2025). This is indemnity payments plus recoveries (\u00a316,194,524 net), plus the change in indemnity case reserves booked in 2024 (\u00a33,842,954).\n- **Earned premium, calendar 2024: \u00a323,748,558.** Each premium transaction is earned pro rata daily over its cover period, counting only the days falling in 2024.\n- **Ratio:** 19,037,477 / 23,748,558 = 0.843734.\n\nALAE and IBNR are excluded, as the definition requires. Recoveries are stored as negatives, so they reduce the paid figure as intended.\n\nANSWER: 0.844",
+ "stop_reason": "end_turn",
+ "tool_calls": [
+  {
+   "tool": "run_sql",
+   "input": {
+    "query": "\nWITH ep AS (\n  SELECT SUM(written_premium * (date_diff('day', GREATEST(effective_date, DATE '2024-01-01'), LEAST(cover_end_date, DATE '2025-01-01')))\n             / date_diff('day', effective_date, cover_end_date)) AS earned_premium_2024,\n         COUNT(*) FILTER (WHERE cover_end_date <= effective_date) AS zero_len_rows\n  FROM premium_txn\n  WHERE cover_end_date > effective_date\n    AND effective_date < DATE '2025-01-01' AND cover_end_date > DATE '2024-01-01'\n),\ncl AS (\n  SELECT\n    SUM(CASE WHEN txn_type IN ('PAYMENT','RECOVERY') THEN amount ELSE 0 END) AS paid_2024,\n    SUM(CASE WHEN txn_type = 'RESERVE' THEN amount ELSE 0 END) AS reserve_chg_2024,\n    SUM(CASE WHEN txn_type IN ('PAYMENT','RECOVERY') THEN 1 ELSE 0 END) AS n_paid_rows\n  FROM claim_txn\n  WHERE cost_type = 'INDEMNITY' AND txn_date >= DATE '2024-01-01' AND txn_date < DATE '2025-01-01'\n)\nSELECT ep.*, cl.*, (cl.paid_2024 + cl.reserve_chg_2024) / ep.earned_premium_2024 AS loss_ratio_reported\nFROM ep, cl;\n"
+   },
+   "output": "earned_premium_2024,zero_len_rows,paid_2024,reserve_chg_2024,n_paid_rows,loss_ratio_reported\n23748557.88,0,16194523.55,3842953.89,6857,0.843734",
+   "error": false
+  },
+  {
+   "tool": "run_sql",
+   "input": {
+    "query": "\nSELECT txn_type, cost_type, COUNT(*), MIN(amount), MAX(amount), SUM(amount)\nFROM claim_txn GROUP BY 1,2 ORDER BY 1,2;\n"
+   },
+   "output": "txn_type,cost_type,count_star(),min(amount),max(amount),sum(amount)\nPAYMENT,ALAE,5482,5.38,129243.82,4041773.75\nPAYMENT,INDEMNITY,34398,0.10,1214443.66,78097079.75\nRECOVERY,INDEMNITY,1151,-24511.92,-26.63,-2278660.54\nRESERVE,INDEMNITY,79216,-1214443.66,1529370.74,15020532.03",
+   "error": false
+  }
+ ],
+ "usage": {
+  "input": 2037,
+  "output": 1914,
+  "cache_read": 10626,
+  "cache_write": 0
+ },
+ "effort": "medium",
+ "prompt_version": "v1"
+}

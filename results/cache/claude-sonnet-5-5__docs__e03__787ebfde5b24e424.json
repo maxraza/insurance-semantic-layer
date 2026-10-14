@@ -1,0 +1,26 @@
+{
+ "model": "claude-sonnet-5-5",
+ "condition": "docs",
+ "qid": "e03",
+ "question": "How many car-years of exposure did we earn in 2025?",
+ "final_text": "In 2025 we earned about 36,813 car-years of exposure.\n\nI counted each exposure row from the premium transactions, booked on or before 31 December 2025. Each row is earned evenly from its effective date to its cover end date, and I kept only the part that falls in 2025. Cancellations carry negative exposure, so they reduce the total.\n\nANSWER: 36813.19",
+ "stop_reason": "end_turn",
+ "tool_calls": [
+  {
+   "tool": "run_sql",
+   "input": {
+    "query": "select sum(exposure_units * greatest(0, date_diff('day', greatest(effective_date, date '2025-01-01'), least(cover_end_date, date '2026-01-01')))::double / date_diff('day', effective_date, cover_end_date)) e from premium_txn where booked_date <= date '2025-12-31' and cover_end_date>effective_date"
+   },
+   "output": "e\n36813.19",
+   "error": false
+  }
+ ],
+ "usage": {
+  "input": 425,
+  "output": 394,
+  "cache_read": 5412,
+  "cache_write": 5412
+ },
+ "effort": "medium",
+ "prompt_version": "v1"
+}

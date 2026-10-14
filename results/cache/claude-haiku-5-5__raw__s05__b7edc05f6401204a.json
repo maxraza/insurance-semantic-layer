@@ -1,0 +1,50 @@
+{
+ "model": "claude-haiku-5-5",
+ "condition": "raw",
+ "qid": "s05",
+ "question": "What were case reserves outstanding on bodily-injury claims at 31 December 2025?",
+ "final_text": "Case reserves on open bodily-injury claims at 31 December 2025 total \u00a311,574,541.29.\n\nI summed the RESERVE transactions per claim (cumulative to 31 Dec 2025) for all bodily-injury claims with no closed date. Those are 675 open claims, and none has a negative balance. Closed claims net to exactly zero, which supports treating the RESERVE sum as the outstanding balance. No transactions are dated after the valuation date.\n\nANSWER: 11574541.29",
+ "stop_reason": "end_turn",
+ "tool_calls": [
+  {
+   "tool": "run_sql",
+   "input": {
+    "query": "SELECT 'peril' AS f, peril AS v, COUNT(*) n FROM claim GROUP BY peril UNION ALL SELECT 'txn_type', txn_type, COUNT(*) FROM claim_txn GROUP BY txn_type UNION ALL SELECT 'cost_type', cost_type, COUNT(*) FROM claim_txn GROUP BY cost_type ORDER BY 1,2"
+   },
+   "output": "f,v,n\ncost_type,ALAE,5482\ncost_type,INDEMNITY,114765\nperil,BODILY_INJURY,1691\nperil,OWN_DAMAGE,9055\nperil,THEFT,872\nperil,THIRD_PARTY_PROPERTY,6280\nperil,WINDSCREEN,5651\ntxn_type,PAYMENT,39880\ntxn_type,RECOVERY,1151\ntxn_type,RESERVE,79216",
+   "error": false
+  },
+  {
+   "tool": "run_sql",
+   "input": {
+    "query": "SELECT c.claim_id, c.peril, c.report_date, c.closed_date, t.txn_date, t.txn_type, t.cost_type, t.amount FROM claim c JOIN claim_txn t USING(claim_id) WHERE c.claim_id IN (SELECT claim_id FROM claim LIMIT 3) ORDER BY 1,5"
+   },
+   "output": "claim_id,peril,report_date,closed_date,txn_date,txn_type,cost_type,amount\n1,THIRD_PARTY_PROPERTY,2019-11-13,2020-01-03,2019-11-13,RESERVE,INDEMNITY,1511.36\n1,THIRD_PARTY_PROPERTY,2019-11-13,2020-01-03,2019-11-23,PAYMENT,INDEMNITY,40.80\n1,THIRD_PARTY_PROPERTY,2019-11-13,2020-01-03,2019-11-23,RESERVE,INDEMNITY,-40.80\n1,THIRD_PARTY_PROPERTY,2019-11-13,2020-01-03,2019-11-28,RESERVE,INDEMNITY,-18.26\n1,THIRD_PARTY_PROPERTY,2019-11-13,2020-01-03,2019-11-29,PAYMENT,INDEMNITY,1339.91\n1,THIRD_PARTY_PROPERTY,2019-11-13,2020-01-03,2019-11-29,RESERVE,INDEMNITY,-1339.91\n1,THIRD_PARTY_PROPERTY,2019-11-13,2020-01-03,2020-01-03,PAYMENT,INDEMNITY,355.89\n1,THIRD_PARTY_PROPERTY,2019-11-13,2020-01-03,2020-01-03,RESERVE,INDEMNITY,-112.39\n1,THIRD_PARTY_PROPERTY,2019-11-13,2020-01-03,2020-01-03,PAYMENT,ALAE,194.55\n2,THIRD_PARTY_PROPERTY,2019-11-14,2020-02-15,2019-11-14,RESERVE,INDEMNITY,96.92\n2,THIRD_PARTY_PROPERTY,2019-11-14,2020-02-15,2020-02-15,PAYMENT,INDEMNITY,179.10\n2,THIRD_PARTY_PROPERTY,2019-11-14,2020-02-15,2020-02-15,RESERVE,INDEMNITY,-96.92\n2,THIRD_PARTY_PROPERTY,2019-11-14,2020-02-15,2020-02-15,PAYMENT,ALAE,24.55\n2,THIRD_PARTY_PROPERTY,2019-11-14,2020-02-15,2020-04-21,RECOVERY,INDEMNITY,-87.11\n3,WINDSCREEN,2019-07-13,2019-07-19,2019-07-13,RESERVE,INDEMNITY,274.03\n3,WINDSCREEN,2019-07-13,2019-07-19,2019-07-19,PAYMENT,INDEMNITY,337.15\n3,WINDSCREEN,2019-07-13,2019-07-19,2019-07-19,RESERVE,INDEMNITY,-274.03",
+   "error": false
+  },
+  {
+   "tool": "run_sql",
+   "input": {
+    "query": "WITH r AS (\n SELECT c.claim_id, c.closed_date, SUM(CASE WHEN t.txn_type='RESERVE' AND t.txn_date<=DATE '2025-12-31' THEN t.amount ELSE 0 END) res,\n MAX(t.txn_date) last_txn, SUM(CASE WHEN t.txn_type='RESERVE' AND t.txn_date>DATE '2025-12-31' THEN 1 ELSE 0 END) future_res\n FROM claim c LEFT JOIN claim_txn t USING(claim_id) WHERE c.peril='BODILY_INJURY' GROUP BY c.claim_id, c.closed_date)\nSELECT CASE WHEN closed_date IS NULL THEN 'open_null' WHEN closed_date>DATE '2025-12-31' THEN 'closed_after_ye' ELSE 'closed_by_ye' END status,\n COUNT(*) n, ROUND(SUM(res),2) reserve_sum, SUM(CASE WHEN ABS(res)>0.005 THEN 1 ELSE 0 END) nonzero, SUM(future_res) fut, SUM(CASE WHEN last_txn>DATE '2025-12-31' THEN 1 ELSE 0 END) late_txn\nFROM r GROUP BY 1 ORDER BY 1"
+   },
+   "output": "status,n,reserve_sum,nonzero,fut,late_txn\nclosed_by_ye,1016,0.00,0,0,0\nopen_null,675,11574541.29,654,0,0",
+   "error": false
+  },
+  {
+   "tool": "run_sql",
+   "input": {
+    "query": "WITH r AS (SELECT c.claim_id, SUM(CASE WHEN t.txn_type='RESERVE' THEN t.amount ELSE 0 END) res FROM claim c JOIN claim_txn t USING(claim_id) WHERE c.peril='BODILY_INJURY' AND c.closed_date IS NULL GROUP BY c.claim_id)\nSELECT COUNT(*) n, SUM(CASE WHEN res<0 THEN 1 ELSE 0 END) neg, SUM(CASE WHEN res>0 THEN res ELSE 0 END) pos_sum, SUM(CASE WHEN res<0 THEN res ELSE 0 END) neg_sum, ROUND(SUM(res),2) net FROM r"
+   },
+   "output": "n,neg,pos_sum,neg_sum,net\n675,0,11574541.29,0.00,11574541.29",
+   "error": false
+  }
+ ],
+ "usage": {
+  "input": 7360,
+  "output": 1715,
+  "cache_read": 8120,
+  "cache_write": 0
+ },
+ "effort": "medium",
+ "prompt_version": "v1"
+}

@@ -1,0 +1,31 @@
+{
+ "model": "claude-haiku-5-5",
+ "condition": "semantic",
+ "qid": "l04",
+ "question": "How much IBNR is held in total across all accident years at 31 December 2025?",
+ "final_text": "Total IBNR held at 31 December 2025 is **\u00a35,248,275.43**, summed across accident years 2019 to 2025.\n\n| Accident year | IBNR (\u00a3) |\n|---|---|\n| 2019 | 0.00 |\n| 2020 | 1,540.89 |\n| 2021 | 38,210.26 |\n| 2022 | 163,122.73 |\n| 2023 | 184,880.76 |\n| 2024 | 611,435.82 |\n| 2025 | 4,249,084.97 |\n\nThe query returned no accident years before 2019, so I've treated the total as complete. The 2025 accident year accounts for about 81% of the total.\n\nANSWER: 5248275.43",
+ "stop_reason": "end_turn",
+ "tool_calls": [
+  {
+   "tool": "query_metrics",
+   "input": {
+    "metrics": [
+     "ibnr"
+    ],
+    "basis": "accident",
+    "as_of": "2025-12-31",
+    "grain": "year"
+   },
+   "output": "period,ibnr\n2019,0\n2020,1540.89\n2021,38210.26\n2022,163122.73\n2023,184880.76\n2024,611435.82\n2025,4249084.97",
+   "error": false
+  }
+ ],
+ "usage": {
+  "input": 568,
+  "output": 724,
+  "cache_read": 7364,
+  "cache_write": 0
+ },
+ "effort": "medium",
+ "prompt_version": "v1"
+}

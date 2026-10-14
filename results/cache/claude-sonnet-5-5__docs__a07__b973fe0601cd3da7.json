@@ -1,0 +1,42 @@
+{
+ "model": "claude-sonnet-5-5",
+ "condition": "docs",
+ "qid": "a07",
+ "question": "What is the loss ratio for the London region in 2024?",
+ "final_text": "London's reported loss ratio for 2024 is about 0.791. That is reported loss (paid plus case reserves, excluding IBNR and ALAE) divided by earned premium, on a calendar basis, valued at 31 December 2025.\n\n\"Loss ratio\" could mean several things, so I made two choices:\n- **Ratio type:** I used the reported ratio. The ultimate ratio needs IBNR, which has no regional split, so I couldn't produce it for London.\n- **Time basis:** I used calendar. Reported loss is the change in reported loss booked during 2024, which was \u00a34.27m. Earned premium for London in 2024 was \u00a35.40m.\n\nThe other bases give different answers:\n- **Accident-year reported:** 0.761.\n- **Paid, accident-year:** 0.611.\n\nANSWER: 0.791",
+ "stop_reason": "end_turn",
+ "tool_calls": [
+  {
+   "tool": "run_sql",
+   "input": {
+    "query": "with ep as (\nselect sum(p.written_premium * greatest(0, least(date '2025-01-01', p.cover_end_date) - greatest(date '2024-01-01', p.effective_date))::double / (p.cover_end_date - p.effective_date)) e\nfrom premium_txn p join policy_term t using(term_id) where t.region='London' and p.booked_date<=date '2025-12-31'),\ncl as (\nselect sum(case when c.accident_date between date '2024-01-01' and date '2024-12-31' then x.amount end) acc_rep,\n sum(case when x.txn_type in('PAYMENT','RECOVERY') and c.accident_date between date '2024-01-01' and date '2024-12-31' then x.amount end) acc_paid\nfrom claim_txn x join claim c using(claim_id) join policy_term t using(term_id)\nwhere t.region='London' and x.cost_type='INDEMNITY' and x.txn_date<=date '2025-12-31'),\ncal as (\nselect sum(x.amount) r from claim_txn x join claim c using(claim_id) join policy_term t using(term_id)\nwhere t.region='London' and x.cost_type='INDEMNITY' and x.txn_date between date '2024-01-01' and date '2024-12-31')\nselect e, acc_rep, acc_paid, r, acc_rep/e, r/e, acc_paid/e from ep, cl, cal"
+   },
+   "output": "e,acc_rep,acc_paid,r,(acc_rep / e),(r / e),(acc_paid / e)\nNone,None,None,None,None,None,None",
+   "error": false
+  },
+  {
+   "tool": "run_sql",
+   "input": {
+    "query": "select distinct region from policy_term"
+   },
+   "output": "region\nLONDON\nMIDLANDS\nSOUTH\nNORTH\nSCOTLAND",
+   "error": false
+  },
+  {
+   "tool": "run_sql",
+   "input": {
+    "query": "with ep as (\nselect sum(p.written_premium * greatest(0, least(date '2025-01-01', p.cover_end_date) - greatest(date '2024-01-01', p.effective_date))::double / (p.cover_end_date - p.effective_date)) e\nfrom premium_txn p join policy_term t using(term_id) where t.region='LONDON' and p.booked_date<=date '2025-12-31'),\ncl as (\nselect sum(case when c.accident_date between date '2024-01-01' and date '2024-12-31' then x.amount end) acc_rep,\n sum(case when x.txn_type in('PAYMENT','RECOVERY') and c.accident_date between date '2024-01-01' and date '2024-12-31' then x.amount end) acc_paid\nfrom claim_txn x join claim c using(claim_id) join policy_term t using(term_id)\nwhere t.region='LONDON' and x.cost_type='INDEMNITY' and x.txn_date<=date '2025-12-31'),\ncal as (\nselect sum(x.amount) r from claim_txn x join claim c using(claim_id) join policy_term t using(term_id)\nwhere t.region='LONDON' and x.cost_type='INDEMNITY' and x.txn_date between date '2024-01-01' and date '2024-12-31')\nselect e, acc_rep, acc_paid, r, acc_rep/e, r/e, acc_paid/e from ep, cl, cal"
+   },
+   "output": "e,acc_rep,acc_paid,r,(acc_rep / e),(r / e),(acc_paid / e)\n5401939.37,4108593.27,3300888.96,4273622.90,0.760577,0.791128,0.611056",
+   "error": false
+  }
+ ],
+ "usage": {
+  "input": 3446,
+  "output": 1781,
+  "cache_read": 21252,
+  "cache_write": 0
+ },
+ "effort": "medium",
+ "prompt_version": "v1"
+}

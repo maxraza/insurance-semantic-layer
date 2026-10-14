@@ -1,0 +1,66 @@
+{
+ "model": "claude-haiku-5-5",
+ "condition": "raw",
+ "qid": "e03",
+ "question": "How many car-years of exposure did we earn in 2025?",
+ "final_text": "**Earned car-years in 2025: about 36,813** (36,813.11 exactly).\n\nI calculated this from each policy term's cover period rather than from the transaction exposure units. Each term's earned share is the elapsed days over its full length, cut off at any cancellation date. I took the difference between the earned position at 1 Jan 2026 and at 1 Jan 2025, summed across the 75,437 terms that had cover in 2025.\n\nThe check on the transaction table agrees with this method: CANCEL exposure units are the unexpired fraction of the term, so the elapsed fraction is the complement. The cancellation dates are consistent with the CANCEL transactions except for 13 terms cancelled in late December 2025 (cancel dates 27\u201331 Dec) that have no CANCEL transaction yet. I included them using their cancel dates. Excluding them would lower the total by well under one car-year.\n\nANSWER: 36813.11",
+ "stop_reason": "end_turn",
+ "tool_calls": [
+  {
+   "tool": "run_sql",
+   "input": {
+    "query": "SELECT txn_type, COUNT(*) n, SUM(exposure_units) exp_units, MIN(effective_date) mn, MAX(effective_date) mx, MIN(cover_end_date) mince, MAX(cover_end_date) maxce, SUM(vehicle_delta) vd FROM premium_txn GROUP BY txn_type ORDER BY txn_type"
+   },
+   "output": "txn_type,n,exp_units,mn,mx,mince,maxce,vd\nCANCEL,13081,-6630.491786,2019-01-28,2025-12-31,2020-01-03,2026-12-07,-13081\nMTA,22310,0.000000,2019-02-05,2025-12-31,2020-01-01,2026-12-07,0\nNEW,113555,113555.000000,2019-01-01,2026-01-14,2020-01-01,2027-01-14,113555\nRENEWAL,96764,96764.000000,2020-01-01,2026-01-20,2021-01-01,2027-01-20,96764",
+   "error": false
+  },
+  {
+   "tool": "run_sql",
+   "input": {
+    "query": "SELECT * FROM premium_txn ORDER BY term_id, booked_date LIMIT 20"
+   },
+   "output": "premium_txn_id,term_id,txn_type,booked_date,effective_date,cover_end_date,written_premium,exposure_units,vehicle_delta\n1,1,NEW,2019-01-01,2019-01-13,2020-01-13,301.57,1.000000,1\n2,2,NEW,2019-01-01,2019-01-03,2020-01-03,1071.49,1.000000,1\n3,3,NEW,2019-01-01,2019-01-07,2020-01-07,418.20,1.000000,1\n4,3,MTA,2019-03-15,2019-03-13,2020-01-07,-20.62,0.000000,0\n5,4,NEW,2019-01-01,2019-01-11,2020-01-11,337.96,1.000000,1\n6,5,NEW,2019-01-01,2019-01-01,2020-01-01,356.50,1.000000,1\n7,6,NEW,2019-01-01,2019-01-06,2020-01-06,437.02,1.000000,1\n8,7,NEW,2019-01-01,2019-01-03,2020-01-03,346.29,1.000000,1\n9,7,CANCEL,2019-10-05,2019-10-01,2020-01-03,-89.18,-0.257534,-1\n10,8,NEW,2019-01-01,2019-01-05,2020-01-05,560.53,1.000000,1\n11,9,NEW,2019-01-01,2019-01-08,2020-01-08,315.58,1.000000,1\n12,10,NEW,2019-01-01,2019-01-15,2020-01-15,1879.14,1.000000,1\n13,11,NEW,2019-01-01,2019-01-09,2020-01-09,383.50,1.000000,1\n14,12,NEW,2019-01-01,2019-01-01,2020-01-01,619.64,1.000000,1\n15,13,NEW,2019-01-01,2019-01-04,2020-01-04,523.28,1.000000,1\n16,14,NEW,2019-01-01,2019-01-03,2020-01-03,1102.77,1.000000,1\n17,15,NEW,2019-01-01,2019-01-01,2020-01-01,547.55,1.000000,1\n18,16,NEW,2019-01-01,2019-01-05,2020-01-05,393.01,1.000000,1\n19,17,NEW,2019-01-01,2019-01-02,2020-01-02,555.54,1.000000,1\n20,17,MTA,2019-10-24,2019-10-24,2020-01-02,-6.39,0.000000,0",
+   "error": false
+  },
+  {
+   "tool": "run_sql",
+   "input": {
+    "query": "\nWITH t AS (\n  SELECT term_id, inception_date inc, expiry_date exp_d,\n         COALESCE(cancel_date, expiry_date) AS end_d,\n         DATE '2025-01-01' AS s, DATE '2026-01-01' AS e\n  FROM policy_term\n),\nf AS (\n  SELECT term_id,\n    GREATEST(0, DATE_DIFF('day', inc, LEAST(end_d, exp_d, e)) ) * 1.0 / DATE_DIFF('day', inc, exp_d) AS e_end,\n    GREATEST(0, DATE_DIFF('day', inc, LEAST(end_d, exp_d, s)) ) * 1.0 / DATE_DIFF('day', inc, exp_d) AS e_start\n  FROM t\n  WHERE inc < e AND COALESCE(end_d, exp_d) >= s\n)\nSELECT SUM(e_end - e_start) AS earned_2025, COUNT(*) n_terms FROM f;\n"
+   },
+   "output": "earned_2025,n_terms\n36813.11,75437",
+   "error": false
+  },
+  {
+   "tool": "run_sql",
+   "input": {
+    "query": "\nSELECT COUNT(*) n, SUM(CASE WHEN cancel_date IS NOT NULL THEN 1 ELSE 0 END) n_cancel,\n SUM(CASE WHEN cancel_date IS NOT NULL AND cancel_date > expiry_date THEN 1 ELSE 0 END) cancel_after_expiry,\n SUM(CASE WHEN expiry_date <= inception_date THEN 1 ELSE 0 END) bad_len,\n MIN(DATE_DIFF('day', inception_date, expiry_date)) minlen, MAX(DATE_DIFF('day', inception_date, expiry_date)) maxlen\nFROM policy_term;\n"
+   },
+   "output": "n,n_cancel,cancel_after_expiry,bad_len,minlen,maxlen\n210319,13094,0,0,365,366",
+   "error": false
+  },
+  {
+   "tool": "run_sql",
+   "input": {
+    "query": "\nWITH c AS (SELECT term_id, MIN(effective_date) ce, SUM(exposure_units) ex, COUNT(*) n FROM premium_txn WHERE txn_type='CANCEL' GROUP BY term_id)\nSELECT\n SUM(CASE WHEN pt.cancel_date IS NOT NULL AND c.term_id IS NULL THEN 1 ELSE 0 END) cancel_date_no_txn,\n SUM(CASE WHEN pt.cancel_date IS NULL AND c.term_id IS NOT NULL THEN 1 ELSE 0 END) txn_no_cancel_date,\n SUM(CASE WHEN pt.cancel_date <> c.ce THEN 1 ELSE 0 END) date_mismatch,\n SUM(CASE WHEN c.n>1 THEN 1 ELSE 0 END) multi_cancel,\n SUM(CASE WHEN pt.cancel_date IS NOT NULL AND c.term_id IS NULL AND pt.cancel_date >= DATE '2025-01-01' AND pt.cancel_date < DATE '2026-01-01' THEN 1 ELSE 0 END) missing_in_2025\nFROM policy_term pt LEFT JOIN c ON c.term_id = pt.term_id;\n"
+   },
+   "output": "cancel_date_no_txn,txn_no_cancel_date,date_mismatch,multi_cancel,missing_in_2025\n13,0,0,0,13",
+   "error": false
+  },
+  {
+   "tool": "run_sql",
+   "input": {
+    "query": "\nSELECT pt.term_id, pt.inception_date, pt.expiry_date, pt.cancel_date, pt.bound_date, pt.channel\nFROM policy_term pt WHERE pt.cancel_date IS NOT NULL AND NOT EXISTS (SELECT 1 FROM premium_txn p WHERE p.term_id=pt.term_id AND p.txn_type='CANCEL')\n"
+   },
+   "output": "term_id,inception_date,expiry_date,cancel_date,bound_date,channel\n154220,2025-01-31,2026-01-31,2025-12-29,2025-01-25,PCW\n157054,2025-04-28,2026-04-28,2025-12-31,2025-04-17,PCW\n218459,2025-04-29,2026-04-29,2025-12-30,2025-04-23,DIRECT\n232776,2025-02-22,2026-02-22,2025-12-31,2025-02-04,PCW\n96932,2025-02-14,2026-02-14,2025-12-30,2025-02-04,PCW\n99381,2025-03-25,2026-03-25,2025-12-30,2025-03-17,DIRECT\n99622,2025-03-23,2026-03-23,2025-12-30,2025-03-22,BROKER\n102941,2025-06-02,2026-06-02,2025-12-30,2025-05-30,PCW\n103537,2025-06-17,2026-06-17,2025-12-31,2025-06-12,BROKER\n104699,2025-07-12,2026-07-12,2025-12-29,2025-07-10,PCW\n105867,2025-08-09,2026-08-09,2025-12-27,2025-08-06,BROKER\n105868,2025-08-11,2026-08-11,2025-12-29,2025-08-06,BROKER\n109392,2025-10-19,2026-10-19,2025-12-30,2025-10-19,DIRECT",
+   "error": false
+  }
+ ],
+ "usage": {
+  "input": 14124,
+  "output": 3667,
+  "cache_read": 8212,
+  "cache_write": 2053
+ },
+ "effort": "medium",
+ "prompt_version": "v1"
+}

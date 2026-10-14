@@ -1,0 +1,33 @@
+{
+ "model": "claude-haiku-5-5",
+ "condition": "semantic",
+ "qid": "u02",
+ "question": "What is the booked ultimate loss ratio (including IBNR) for policy year 2023?",
+ "final_text": "I can't answer this from the available data. The booked ultimate loss ratio (`loss_ratio_ultimate`) is only defined on calendar and accident bases, and the query confirmed it returns an error on the policy basis. IBNR, which the ultimate ratio includes, also has no policy-year basis and no segment dimensions. So there is no way to produce a policy-year 2023 ultimate loss ratio that includes IBNR.\n\nThe nearest available figure would be the accident-year 2023 ultimate loss ratio, which I could pull if that would serve. It is a different cut from policy year 2023.\n\nANSWER: UNANSWERABLE",
+ "stop_reason": "end_turn",
+ "tool_calls": [
+  {
+   "tool": "query_metrics",
+   "input": {
+    "metrics": [
+     "loss_ratio_ultimate"
+    ],
+    "basis": "policy",
+    "as_of": "2025-12-31",
+    "period_from": "2023-01-01",
+    "period_to": "2023-12-31",
+    "grain": "year"
+   },
+   "output": "error: 'loss_ratio_ultimate' is not defined on a policy basis. Allowed: calendar, accident",
+   "error": true
+  }
+ ],
+ "usage": {
+  "input": 670,
+  "output": 797,
+  "cache_read": 7364,
+  "cache_write": 0
+ },
+ "effort": "medium",
+ "prompt_version": "v1"
+}

@@ -1,0 +1,26 @@
+{
+ "model": "claude-haiku-5-5",
+ "condition": "raw",
+ "qid": "c03",
+ "question": "What was total gross written premium booked in calendar year 2024?",
+ "final_text": "Gross written premium booked in calendar year 2024 was \u00a325,702,658.47. I summed `written_premium` in `premium_txn` for transactions with a booked date in 2024, across all transaction types. Cancellations are already stored as negative amounts, so they reduce the total.\n\n| Transaction type | Count | Written premium (\u00a3) |\n|---|---|---|\n| NEW | 17,978 | 13,355,087.73 |\n| RENEWAL | 17,509 | 13,111,694.98 |\n| MTA | 4,043 | 91,412.94 |\n| CANCEL | 2,352 | \u2212855,537.18 |\n\nANSWER: 25702658.47",
+ "stop_reason": "end_turn",
+ "tool_calls": [
+  {
+   "tool": "run_sql",
+   "input": {
+    "query": "SELECT txn_type, COUNT(*) AS n, SUM(written_premium) AS wp, MIN(booked_date), MAX(booked_date) FROM premium_txn WHERE booked_date >= '2024-01-01' AND booked_date < '2025-01-01' GROUP BY txn_type ORDER BY txn_type"
+   },
+   "output": "txn_type,n,wp,min(booked_date),max(booked_date)\nCANCEL,2352,-855537.18,2024-01-01,2024-12-31\nMTA,4043,91412.94,2024-01-01,2024-12-31\nNEW,17978,13355087.73,2024-01-01,2024-12-31\nRENEWAL,17509,13111694.98,2024-01-01,2024-12-31",
+   "error": false
+  }
+ ],
+ "usage": {
+  "input": 583,
+  "output": 655,
+  "cache_read": 4060,
+  "cache_write": 0
+ },
+ "effort": "medium",
+ "prompt_version": "v1"
+}

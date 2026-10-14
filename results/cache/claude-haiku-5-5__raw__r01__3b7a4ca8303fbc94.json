@@ -1,0 +1,98 @@
+{
+ "model": "claude-haiku-5-5",
+ "condition": "raw",
+ "qid": "r01",
+ "question": "What was the accident-year 2024 reported loss ratio for drivers aged 17-24?",
+ "final_text": "The accident-year 2024 reported loss ratio for drivers aged 17-24 is about **0.777**.\n\n- **Numerator:** reported incurred on AY2024 claims (accident date in 2024) for the 17-24 band, \u00a33,361,815. This is all payments, recoveries and case reserves as at 31 December 2025, including ALAE. It excludes IBNR, and reserve rows are treated as movements that net to the outstanding case reserve.\n- **Denominator:** earned premium in calendar 2024 for the 17-24 band, \u00a34,327,481. Each premium transaction (new, renewal, mid-term adjustment, cancellation) is earned pro rata by day over its own cover period.\n- **Claims count:** 692 claims.\n\nExcluding ALAE (indemnity only) gives 0.747. The ALAE-inclusive figure is the one above.\n\nANSWER: 0.777",
+ "stop_reason": "end_turn",
+ "tool_calls": [
+  {
+   "tool": "run_sql",
+   "input": {
+    "query": "SELECT driver_age_band, COUNT(*) FROM policy_term GROUP BY 1 ORDER BY 1;"
+   },
+   "output": "driver_age_band,count_star()\n17-24,17931\n25-39,77753\n40-59,80346\n60+,34289",
+   "error": false
+  },
+  {
+   "tool": "run_sql",
+   "input": {
+    "query": "SELECT txn_type, cost_type, COUNT(*), SUM(amount) FROM claim_txn GROUP BY 1,2 ORDER BY 1,2;"
+   },
+   "output": "txn_type,cost_type,count_star(),sum(amount)\nPAYMENT,ALAE,5482,4041773.75\nPAYMENT,INDEMNITY,34398,78097079.75\nRECOVERY,INDEMNITY,1151,-2278660.54\nRESERVE,INDEMNITY,79216,15020532.03",
+   "error": false
+  },
+  {
+   "tool": "run_sql",
+   "input": {
+    "query": "SELECT txn_type, COUNT(*), SUM(written_premium), SUM(exposure_units) FROM premium_txn GROUP BY 1;"
+   },
+   "output": "txn_type,count_star(),sum(written_premium),sum(exposure_units)\nRENEWAL,96764,66470703.32,96764.000\nCANCEL,13081,-4423904.86,-13081.000\nMTA,22310,466631.74,0.000\nNEW,113555,74247233.10,113555.000",
+   "error": false
+  },
+  {
+   "tool": "run_sql",
+   "input": {
+    "query": "SELECT c.claim_id, c.accident_date, c.report_date, c.closed_date, t.txn_date, t.txn_type, t.cost_type, t.amount FROM claim c JOIN claim_txn t USING(claim_id) WHERE c.claim_id IN (SELECT claim_id FROM claim LIMIT 4) ORDER BY 1,5;"
+   },
+   "output": "claim_id,accident_date,report_date,closed_date,txn_date,txn_type,cost_type,amount\n1,2019-11-10,2019-11-13,2020-01-03,2019-11-13,RESERVE,INDEMNITY,1511.36\n1,2019-11-10,2019-11-13,2020-01-03,2019-11-23,PAYMENT,INDEMNITY,40.80\n1,2019-11-10,2019-11-13,2020-01-03,2019-11-23,RESERVE,INDEMNITY,-40.80\n1,2019-11-10,2019-11-13,2020-01-03,2019-11-28,RESERVE,INDEMNITY,-18.26\n1,2019-11-10,2019-11-13,2020-01-03,2019-11-29,PAYMENT,INDEMNITY,1339.91\n1,2019-11-10,2019-11-13,2020-01-03,2019-11-29,RESERVE,INDEMNITY,-1339.91\n1,2019-11-10,2019-11-13,2020-01-03,2020-01-03,PAYMENT,INDEMNITY,355.89\n1,2019-11-10,2019-11-13,2020-01-03,2020-01-03,RESERVE,INDEMNITY,-112.39\n1,2019-11-10,2019-11-13,2020-01-03,2020-01-03,PAYMENT,ALAE,194.55\n2,2019-11-13,2019-11-14,2020-02-15,2019-11-14,RESERVE,INDEMNITY,96.92\n2,2019-11-13,2019-11-14,2020-02-15,2020-02-15,PAYMENT,INDEMNITY,179.10\n2,2019-11-13,2019-11-14,2020-02-15,2020-02-15,RESERVE,INDEMNITY,-96.92\n2,2019-11-13,2019-11-14,2020-02-15,2020-02-15,PAYMENT,ALAE,24.55\n2,2019-11-13,2019-11-14,2020-02-15,2020-04-21,RECOVERY,INDEMNITY,-87.11\n3,2019-07-07,2019-07-13,2019-07-19,2019-07-13,RESERVE,INDEMNITY,274.03\n3,2019-07-07,2019-07-13,2019-07-19,2019-07-19,PAYMENT,INDEMNITY,337.15\n3,2019-07-07,2019-07-13,2019-07-19,2019-07-19,RESERVE,INDEMNITY,-274.03\n4,2019-09-08,2019-09-16,2019-09-22,2019-09-16,RESERVE,INDEMNITY,210.37\n4,2019-09-08,2019-09-16,2019-09-22,2019-09-22,PAYMENT,INDEMNITY,331.19\n4,2019-09-08,2019-09-16,2019-09-22,2019-09-22,RESERVE,INDEMNITY,-210.37",
+   "error": false
+  },
+  {
+   "tool": "run_sql",
+   "input": {
+    "query": "SELECT * FROM premium_txn WHERE term_id IN (SELECT term_id FROM premium_txn LIMIT 2) ORDER BY term_id, booked_date;"
+   },
+   "output": "premium_txn_id,term_id,txn_type,booked_date,effective_date,cover_end_date,written_premium,exposure_units\n1,1,NEW,2019-01-01,2019-01-13,2020-01-13,301.57,1.000\n2,2,NEW,2019-01-01,2019-01-03,2020-01-03,1071.49,1.000",
+   "error": false
+  },
+  {
+   "tool": "run_sql",
+   "input": {
+    "query": "SELECT * FROM ibnr_valuation ORDER BY 1,2 LIMIT 20;"
+   },
+   "output": "valuation_date,accident_year,ibnr\n2019-12-31,2019,450298.72\n2020-03-31,2019,356582.03\n2020-03-31,2020,683142.67\n2020-06-30,2019,341514.05\n2020-06-30,2020,824481.35\n2020-09-30,2019,165779.06\n2020-09-30,2020,1891648.46\n2020-12-31,2019,97378.08\n2020-12-31,2020,1911713.85\n2021-03-31,2019,86329.61\n2021-03-31,2020,905461.64\n2021-03-31,2021,920121.97\n2021-06-30,2019,22351.59\n2021-06-30,2020,277377.64\n2021-06-30,2021,1511261.10\n2021-09-30,2019,1543.50\n2021-09-30,2020,194333.49\n2021-09-30,2021,1515044.78\n2021-12-31,2019,0.00\n2021-12-31,2020,22311.98",
+   "error": false
+  },
+  {
+   "tool": "run_sql",
+   "input": {
+    "query": "SELECT p.* FROM premium_txn p WHERE term_id IN (SELECT term_id FROM premium_txn WHERE txn_type='CANCEL' LIMIT 2) ORDER BY term_id, booked_date;"
+   },
+   "output": "premium_txn_id,term_id,txn_type,booked_date,effective_date,cover_end_date,written_premium,exposure_units\n8,7,NEW,2019-01-01,2019-01-03,2020-01-03,346.29,1.000\n9,7,CANCEL,2019-10-05,2019-10-01,2020-01-03,-89.18,-1.000\n27,24,NEW,2019-01-01,2019-01-14,2020-01-14,398.49,1.000\n28,24,CANCEL,2019-09-19,2019-09-17,2020-01-14,-129.92,-1.000",
+   "error": false
+  },
+  {
+   "tool": "run_sql",
+   "input": {
+    "query": "SELECT p.* FROM premium_txn p WHERE term_id IN (SELECT term_id FROM premium_txn WHERE txn_type='MTA' LIMIT 2) ORDER BY term_id, booked_date;"
+   },
+   "output": "premium_txn_id,term_id,txn_type,booked_date,effective_date,cover_end_date,written_premium,exposure_units\n3,3,NEW,2019-01-01,2019-01-07,2020-01-07,418.20,1.000\n4,3,MTA,2019-03-15,2019-03-13,2020-01-07,-20.62,0.000\n19,17,NEW,2019-01-01,2019-01-02,2020-01-02,555.54,1.000\n20,17,MTA,2019-10-24,2019-10-24,2020-01-02,-6.39,0.000",
+   "error": false
+  },
+  {
+   "tool": "run_sql",
+   "input": {
+    "query": "SELECT COUNT(*) AS n_terms, COUNT(DISTINCT term_id) FROM premium_txn; SELECT COUNT(*) FROM policy_term WHERE term_id NOT IN (SELECT term_id FROM premium_txn); SELECT MIN(effective_date), MAX(cover_end_date), MIN(booked_date), MAX(booked_date) FROM premium_txn;"
+   },
+   "output": "min(effective_date),max(cover_end_date),min(booked_date),max(booked_date)\n2019-01-01,2027-01-20,2019-01-01,2025-12-31",
+   "error": false
+  },
+  {
+   "tool": "run_sql",
+   "input": {
+    "query": "\nWITH earned AS (\n  SELECT t.driver_age_band,\n    SUM(p.written_premium * GREATEST(0, DATE_DIFF('day', GREATEST(p.effective_date, DATE '2024-01-01'), LEAST(p.cover_end_date, DATE '2025-01-01'))) / DATE_DIFF('day', p.effective_date, p.cover_end_date)) AS ep\n  FROM premium_txn p JOIN policy_term t USING (term_id)\n  GROUP BY 1),\ninc AS (\n  SELECT t.driver_age_band,\n    SUM(ct.amount) AS incurred_all,\n    SUM(CASE WHEN ct.cost_type='INDEMNITY' THEN ct.amount ELSE 0 END) AS incurred_indemnity,\n    COUNT(DISTINCT c.claim_id) AS n_claims\n  FROM claim c JOIN claim_txn ct USING (claim_id) JOIN policy_term t ON t.term_id = c.term_id\n  WHERE EXTRACT(year FROM c.accident_date) = 2024\n  GROUP BY 1)\nSELECT e.driver_age_band, e.ep, i.incurred_all, i.incurred_indemnity, i.n_claims,\n  i.incurred_all / e.ep AS lr_all, i.incurred_indemnity / e.ep AS lr_indemnity\nFROM earned e JOIN inc i USING (driver_age_band)\nORDER BY 1;\n"
+   },
+   "output": "driver_age_band,ep,incurred_all,incurred_indemnity,n_claims,lr_all,lr_indemnity\n17-24,4327481.00,3361814.98,3232832.53,692,0.776853,0.747047\n25-39,9070486.35,7816508.12,7566093.69,1647,0.861752,0.834144\n40-59,6978146.86,5688564.99,5497664.80,1382,0.815197,0.78784\n60+,3372443.67,2613258.12,2530823.84,675,0.774886,0.750442",
+   "error": false
+  }
+ ],
+ "usage": {
+  "input": 15601,
+  "output": 4477,
+  "cache_read": 10150,
+  "cache_write": 0
+ },
+ "effort": "medium",
+ "prompt_version": "v1"
+}

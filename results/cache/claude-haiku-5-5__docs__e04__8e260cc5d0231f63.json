@@ -1,0 +1,42 @@
+{
+ "model": "claude-haiku-5-5",
+ "condition": "docs",
+ "qid": "e04",
+ "question": "What was earned premium for the London region in 2025?",
+ "final_text": "London earned premium for 2025 is **\u00a36,389,691.95**, on a calendar basis, gross of reinsurance.\n\nMethod: I took every London premium transaction booked on or before 31 Dec 2025 (all of them, since the data runs to that date). Each transaction's written premium was spread evenly over its cover period [effective_date, cover_end_date), and I summed the share falling in 1 Jan to 31 Dec 2025. Region comes from the policy term, which matches the policy record for every row. Cancellation and mid-term adjustment rows are included, so returns reduce earned premium as they should.\n\nANSWER: 6389691.95",
+ "stop_reason": "end_turn",
+ "tool_calls": [
+  {
+   "tool": "run_sql",
+   "input": {
+    "query": "SELECT t.region AS term_region, p.region AS policy_region, COUNT(*) n, SUM(pt.written_premium) wp, MIN(pt.effective_date) mine, MAX(pt.booked_date) maxbook, SUM(CASE WHEN pt.effective_date=pt.cover_end_date THEN 1 ELSE 0 END) zero_len FROM premium_txn pt JOIN policy_term t ON pt.term_id=t.term_id JOIN policy p ON t.policy_id=p.policy_id GROUP BY ALL ORDER BY 1,2"
+   },
+   "output": "term_region,policy_region,n,wp,mine,maxbook,zero_len\nLONDON,LONDON,43518,31515134.43,2019-01-01,2025-12-31,0\nMIDLANDS,MIDLANDS,48961,27523897.45,2019-01-03,2025-12-31,0\nNORTH,NORTH,53751,28705349.08,2019-01-01,2025-12-31,0\nSCOTLAND,SCOTLAND,30036,13649677.57,2019-01-03,2025-12-31,0\nSOUTH,SOUTH,69444,35366604.77,2019-01-01,2025-12-31,0",
+   "error": false
+  },
+  {
+   "tool": "run_sql",
+   "input": {
+    "query": "SELECT txn_type, COUNT(*), SUM(written_premium), SUM(CASE WHEN booked_date>effective_date THEN 1 ELSE 0 END) late_booked, MIN(effective_date), MAX(cover_end_date) FROM premium_txn GROUP BY 1 ORDER BY 1"
+   },
+   "output": "txn_type,count_star(),sum(written_premium),late_booked,min(effective_date),max(cover_end_date)\nCANCEL,13081,-4423904.86,10917,2019-01-28,2026-12-07\nMTA,22310,466631.74,16733,2019-02-05,2026-12-07\nNEW,113555,74247233.10,0,2019-01-01,2027-01-14\nRENEWAL,96764,66470703.32,0,2020-01-01,2027-01-20",
+   "error": false
+  },
+  {
+   "tool": "run_sql",
+   "input": {
+    "query": "WITH x AS (\nSELECT pt.written_premium wp, pt.effective_date s, pt.cover_end_date e\nFROM premium_txn pt JOIN policy_term t ON pt.term_id=t.term_id\nWHERE t.region='LONDON' AND pt.booked_date <= DATE '2025-12-31')\nSELECT ROUND(SUM(wp * GREATEST(0, DATE_DIFF('day', GREATEST(s, DATE '2025-01-01'), LEAST(e, DATE '2026-01-01'))) / DATE_DIFF('day', s, e)), 2) AS earned_2025, COUNT(*) n\nFROM x WHERE e > s"
+   },
+   "output": "earned_2025,n\n6389691.95,43518",
+   "error": false
+  }
+ ],
+ "usage": {
+  "input": 3582,
+  "output": 2027,
+  "cache_read": 15939,
+  "cache_write": 0
+ },
+ "effort": "medium",
+ "prompt_version": "v1"
+}

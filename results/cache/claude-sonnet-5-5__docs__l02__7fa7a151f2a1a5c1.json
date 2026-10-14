@@ -1,0 +1,26 @@
+{
+ "model": "claude-sonnet-5-5",
+ "condition": "docs",
+ "qid": "l02",
+ "question": "What is the accident-year 2024 paid loss ratio?",
+ "final_text": "Paid loss ratio = 14,001,373.77 / 23,748,557.88 \u2248 0.590.\n\nI used the accident basis, valued at 31 Dec 2025:\n- **Paid loss:** indemnity payments net of recoveries, for claims with an accident date in 2024.\n- **Earned premium:** premium earned pro rata over calendar 2024, which equals the accident-basis denominator.\n\nANSWER: 0.5896",
+ "stop_reason": "end_turn",
+ "tool_calls": [
+  {
+   "tool": "run_sql",
+   "input": {
+    "query": "select (select sum(ct.amount) from claim_txn ct join claim c using(claim_id) where ct.cost_type='INDEMNITY' and ct.txn_type in ('PAYMENT','RECOVERY') and ct.txn_date<=DATE '2025-12-31' and c.accident_date between DATE '2024-01-01' and DATE '2024-12-31') paid,\n(select sum(written_premium*greatest(0,date_diff('day',greatest(effective_date,DATE '2024-01-01'),least(cover_end_date,DATE '2025-01-01')))*1.0/date_diff('day',effective_date,cover_end_date)) from premium_txn where booked_date<=DATE '2025-12-31') ep"
+   },
+   "output": "paid,ep\n14001373.77,23748557.88",
+   "error": false
+  }
+ ],
+ "usage": {
+  "input": 672,
+  "output": 608,
+  "cache_read": 10626,
+  "cache_write": 0
+ },
+ "effort": "medium",
+ "prompt_version": "v1"
+}

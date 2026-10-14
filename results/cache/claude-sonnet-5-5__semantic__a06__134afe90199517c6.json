@@ -1,0 +1,34 @@
+{
+ "model": "claude-sonnet-5-5",
+ "condition": "semantic",
+ "qid": "a06",
+ "question": "How much premium did we do in 2025?",
+ "final_text": "We wrote \u00a330,274,839 of premium in 2025. I read \"premium we did\" as written premium. That figure includes new business, renewals, mid-term adjustments and cancellation returns, and it is gross of reinsurance.\n\nEarned premium for 2025 was lower, at \u00a327,877,321. That is the part of written premium that falls within the year, because premium is earned over each policy's cover period.\n\nANSWER: 30274839.20",
+ "stop_reason": "end_turn",
+ "tool_calls": [
+  {
+   "tool": "query_metrics",
+   "input": {
+    "metrics": [
+     "written_premium",
+     "earned_premium"
+    ],
+    "basis": "calendar",
+    "as_of": "2025-12-31",
+    "grain": "year",
+    "period_from": "2025-01-01",
+    "period_to": "2025-12-31"
+   },
+   "output": "period,written_premium,earned_premium\n2025,30274839.20,27877320.72",
+   "error": false
+  }
+ ],
+ "usage": {
+  "input": 437,
+  "output": 368,
+  "cache_read": 7364,
+  "cache_write": 0
+ },
+ "effort": "medium",
+ "prompt_version": "v1"
+}

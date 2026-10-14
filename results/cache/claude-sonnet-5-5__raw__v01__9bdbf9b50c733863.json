@@ -1,0 +1,66 @@
+{
+ "model": "claude-sonnet-5-5",
+ "condition": "raw",
+ "qid": "v01",
+ "question": "What was the accident-year 2023 reported loss ratio as it stood at 31 December 2023?",
+ "final_text": "The accident-year 2023 reported loss ratio at 31 December 2023 is about 0.706 (net of recoveries). That is 15.06m of reported incurred divided by 21.31m of earned premium.\n\n- **Reported incurred:** I summed indemnity payments, ALAE payments and case-reserve movements, net of recoveries. I used claims with a 2023 accident date and transactions dated on or before 31 Dec 2023. IBNR is excluded, since \"reported\" means paid plus case reserves. The reserve rows are movements, so their sum gives the outstanding case reserve.\n- **Earned premium:** I earned each premium transaction booked on or before 31 Dec 2023 evenly over its own cover period. I counted only the part falling in 2023 and up to year-end. Cancellations and mid-term adjustments are included on the same basis.\n- **Recoveries:** The brief doesn't say whether to net recoveries. Netting them gives 0.707, as above. Leaving them out gives 0.714 (15.23m of incurred), so the choice moves the ratio by under 0.01.\n\nANSWER: 0.7067",
+ "stop_reason": "end_turn",
+ "tool_calls": [
+  {
+   "tool": "run_sql",
+   "input": {
+    "query": "select txn_type,cost_type,count(*),sum(amount),min(txn_date),max(txn_date) from claim_txn group by all"
+   },
+   "output": "txn_type,cost_type,count_star(),sum(amount),min(txn_date),max(txn_date)\nPAYMENT,ALAE,5482,4041773.75,2019-04-02,2025-12-31\nRECOVERY,INDEMNITY,1151,-2278660.54,2019-07-11,2025-12-31\nPAYMENT,INDEMNITY,34398,78097079.75,2019-02-22,2025-12-31\nRESERVE,INDEMNITY,79216,15020532.03,2019-02-04,2025-12-31",
+   "error": false
+  },
+  {
+   "tool": "run_sql",
+   "input": {
+    "query": "select txn_type,count(*),sum(written_premium),sum(exposure_units),min(booked_date),max(booked_date) from premium_txn group by all"
+   },
+   "output": "txn_type,count_star(),sum(written_premium),sum(exposure_units),min(booked_date),max(booked_date)\nMTA,22310,466631.74,0.000,2019-02-08,2025-12-31\nCANCEL,13081,-4423904.86,-13081.000,2019-02-02,2025-12-31\nNEW,113555,74247233.10,113555.000,2019-01-01,2025-12-31\nRENEWAL,96764,66470703.32,96764.000,2019-12-15,2025-12-31",
+   "error": false
+  },
+  {
+   "tool": "run_sql",
+   "input": {
+    "query": "select c.claim_id,c.accident_date,t.txn_date,t.txn_type,t.cost_type,t.amount from claim c join claim_txn t using(claim_id) where c.claim_id in (select claim_id from claim order by claim_id limit 4) order by 1,3"
+   },
+   "output": "claim_id,accident_date,txn_date,txn_type,cost_type,amount\n1,2019-11-10,2019-11-13,RESERVE,INDEMNITY,1511.36\n1,2019-11-10,2019-11-23,PAYMENT,INDEMNITY,40.80\n1,2019-11-10,2019-11-23,RESERVE,INDEMNITY,-40.80\n1,2019-11-10,2019-11-28,RESERVE,INDEMNITY,-18.26\n1,2019-11-10,2019-11-29,PAYMENT,INDEMNITY,1339.91\n1,2019-11-10,2019-11-29,RESERVE,INDEMNITY,-1339.91\n1,2019-11-10,2020-01-03,PAYMENT,INDEMNITY,355.89\n1,2019-11-10,2020-01-03,RESERVE,INDEMNITY,-112.39\n1,2019-11-10,2020-01-03,PAYMENT,ALAE,194.55\n2,2019-11-13,2019-11-14,RESERVE,INDEMNITY,96.92\n2,2019-11-13,2020-02-15,PAYMENT,INDEMNITY,179.10\n2,2019-11-13,2020-02-15,RESERVE,INDEMNITY,-96.92\n2,2019-11-13,2020-02-15,PAYMENT,ALAE,24.55\n2,2019-11-13,2020-04-21,RECOVERY,INDEMNITY,-87.11\n3,2019-07-07,2019-07-13,RESERVE,INDEMNITY,274.03\n3,2019-07-07,2019-07-19,PAYMENT,INDEMNITY,337.15\n3,2019-07-07,2019-07-19,RESERVE,INDEMNITY,-274.03\n4,2019-09-08,2019-09-16,RESERVE,INDEMNITY,210.37\n4,2019-09-08,2019-09-22,PAYMENT,INDEMNITY,331.19\n4,2019-09-08,2019-09-22,RESERVE,INDEMNITY,-210.37",
+   "error": false
+  },
+  {
+   "tool": "run_sql",
+   "input": {
+    "query": "select * from premium_txn where term_id in (select term_id from premium_txn where txn_type in('CANCEL','MTA') limit 3) order by term_id,booked_date"
+   },
+   "output": "premium_txn_id,term_id,txn_type,booked_date,effective_date,cover_end_date,written_premium,exposure_units\n3,3,NEW,2019-01-01,2019-01-07,2020-01-07,418.20,1.000\n4,3,MTA,2019-03-15,2019-03-13,2020-01-07,-20.62,0.000\n8,7,NEW,2019-01-01,2019-01-03,2020-01-03,346.29,1.000\n9,7,CANCEL,2019-10-05,2019-10-01,2020-01-03,-89.18,-1.000\n19,17,NEW,2019-01-01,2019-01-02,2020-01-02,555.54,1.000\n20,17,MTA,2019-10-24,2019-10-24,2020-01-02,-6.39,0.000",
+   "error": false
+  },
+  {
+   "tool": "run_sql",
+   "input": {
+    "query": "with ep as (select sum(written_premium*greatest(0,least(cover_end_date,date '2024-01-01')-greatest(effective_date,date '2023-01-01'))/(cover_end_date-effective_date)) ep from premium_txn where booked_date<='2023-12-31' and effective_date<=date '2023-12-31' and cover_end_date>effective_date),\ncl as (select sum(case when txn_type<>'RECOVERY' then amount end) gross, sum(amount) net from claim_txn t join claim c using(claim_id) where year(c.accident_date)=2023 and t.txn_date<='2023-12-31')\nselect ep,gross,net,gross/ep,net/ep from ep,cl"
+   },
+   "output": "ep,gross,net,(gross / ep),(net / ep)\n21311826.07,15226866.08,15061254.47,0.71448,0.706709",
+   "error": false
+  },
+  {
+   "tool": "run_sql",
+   "input": {
+    "query": "select count(*) from premium_txn where cover_end_date<=effective_date"
+   },
+   "output": "count_star()\n0",
+   "error": false
+  }
+ ],
+ "usage": {
+  "input": 6569,
+  "output": 2031,
+  "cache_read": 8120,
+  "cache_write": 0
+ },
+ "effort": "medium",
+ "prompt_version": "v1"
+}

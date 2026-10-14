@@ -1,0 +1,36 @@
+{
+ "model": "claude-haiku-5-5",
+ "condition": "semantic",
+ "qid": "r07",
+ "question": "What was the accident-year 2023 claim frequency for vehicle group E?",
+ "final_text": "Accident-year 2023 claim frequency for vehicle group E, valued at 31 December 2025, is 0.163589 (reported claims per earned car-year).\n\nANSWER: 0.163589",
+ "stop_reason": "end_turn",
+ "tool_calls": [
+  {
+   "tool": "query_metrics",
+   "input": {
+    "metrics": [
+     "claim_frequency"
+    ],
+    "basis": "accident",
+    "as_of": "2025-12-31",
+    "filters": {
+     "vehicle_group": "E"
+    },
+    "period_from": "2023-01-01",
+    "period_to": "2023-12-31",
+    "grain": "year"
+   },
+   "output": "period,claim_frequency\n2023,0.163589",
+   "error": false
+  }
+ ],
+ "usage": {
+  "input": 443,
+  "output": 288,
+  "cache_read": 7378,
+  "cache_write": 0
+ },
+ "effort": "medium",
+ "prompt_version": "v1"
+}

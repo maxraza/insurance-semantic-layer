@@ -1,0 +1,34 @@
+{
+ "model": "claude-haiku-5-5",
+ "condition": "raw",
+ "qid": "c04",
+ "question": "What was the quote-to-bind conversion rate for price comparison website quotes in 2025?",
+ "final_text": "The quote-to-bind conversion rate for PCW quotes in 2025 was about 0.0698.\n\nOf the 99,720 PCW quotes dated in 2025, 6,957 have a bound term. Every bound quote links to a valid policy term, and none were bound before the quote date, so the bound flags look sound.\n\nANSWER: 0.0698",
+ "stop_reason": "end_turn",
+ "tool_calls": [
+  {
+   "tool": "run_sql",
+   "input": {
+    "query": "SELECT channel, COUNT(*) AS quotes, COUNT(bound_term_id) AS bound, COUNT(DISTINCT quote_id) FROM quote WHERE quote_date >= '2025-01-01' AND quote_date <= '2025-12-31' GROUP BY channel ORDER BY channel"
+   },
+   "output": "channel,quotes,bound,count(DISTINCT quote_id)\nBROKER,17886,5201,17886\nDIRECT,29426,6495,29426\nPCW,99720,6957,99720",
+   "error": false
+  },
+  {
+   "tool": "run_sql",
+   "input": {
+    "query": "SELECT COUNT(*) AS pcw_bound_quotes, COUNT(pt.term_id) AS matched_terms, SUM(CASE WHEN pt.bound_date < q.quote_date THEN 1 ELSE 0 END) AS bound_before_quote FROM quote q LEFT JOIN policy_term pt ON pt.term_id = q.bound_term_id WHERE q.channel='PCW' AND q.quote_date BETWEEN '2025-01-01' AND '2025-12-31' AND q.bound_term_id IS NOT NULL"
+   },
+   "output": "pcw_bound_quotes,matched_terms,bound_before_quote\n6957,6957,0",
+   "error": false
+  }
+ ],
+ "usage": {
+  "input": 1331,
+  "output": 730,
+  "cache_read": 6090,
+  "cache_write": 0
+ },
+ "effort": "medium",
+ "prompt_version": "v1"
+}

@@ -1,0 +1,33 @@
+{
+ "model": "claude-haiku-5-5",
+ "condition": "semantic",
+ "qid": "b06",
+ "question": "What is the accident-year 2024 claim frequency, in reported claims per earned car-year?",
+ "final_text": "The accident-year 2024 claim frequency is 0.133 reported claims per earned car-year, valued at 31 December 2025 on the accident basis.\n\nANSWER: 0.133143",
+ "stop_reason": "end_turn",
+ "tool_calls": [
+  {
+   "tool": "query_metrics",
+   "input": {
+    "metrics": [
+     "claim_frequency"
+    ],
+    "basis": "accident",
+    "as_of": "2025-12-31",
+    "grain": "year",
+    "period_from": "2024-01-01",
+    "period_to": "2024-12-31"
+   },
+   "output": "period,claim_frequency\n2024,0.133143",
+   "error": false
+  }
+ ],
+ "usage": {
+  "input": 419,
+  "output": 251,
+  "cache_read": 7378,
+  "cache_write": 0
+ },
+ "effort": "medium",
+ "prompt_version": "v1"
+}

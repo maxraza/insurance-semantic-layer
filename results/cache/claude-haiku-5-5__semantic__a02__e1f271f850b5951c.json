@@ -1,0 +1,36 @@
+{
+ "model": "claude-haiku-5-5",
+ "condition": "semantic",
+ "qid": "a02",
+ "question": "What were incurred losses in 2025?",
+ "final_text": "Incurred losses for calendar 2025 are **\u00a321,288,367.50**, which is reported loss plus the IBNR change (indemnity only, excluding ALAE).\n\n- Reported loss (paid plus case reserves, change over 2025): \u00a320,602,374.15\n- IBNR change over 2025: \u00a3685,993.35\n- Paid ALAE (excluded, shown for reference): \u00a31,218,806.94\n\nIf \"incurred\" should include ALAE, the figure is \u00a322,507,174.44. The data does not define \"incurred losses\" directly, so I've used the standard reported-plus-IBNR build.\n\nANSWER: 21288367.50",
+ "stop_reason": "end_turn",
+ "tool_calls": [
+  {
+   "tool": "query_metrics",
+   "input": {
+    "metrics": [
+     "reported_loss",
+     "ibnr",
+     "paid_alae",
+     "paid_loss"
+    ],
+    "basis": "calendar",
+    "as_of": "2025-12-31",
+    "period_from": "2025-01-01",
+    "period_to": "2025-12-31",
+    "grain": "year"
+   },
+   "output": "period,reported_loss,ibnr,paid_alae,paid_loss\n2025,20602374.15,685993.35,1218806.94,20236714.68",
+   "error": false
+  }
+ ],
+ "usage": {
+  "input": 619,
+  "output": 869,
+  "cache_read": 7364,
+  "cache_write": 0
+ },
+ "effort": "medium",
+ "prompt_version": "v1"
+}

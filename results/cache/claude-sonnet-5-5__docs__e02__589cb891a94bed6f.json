@@ -1,0 +1,26 @@
+{
+ "model": "claude-sonnet-5-5",
+ "condition": "docs",
+ "qid": "e02",
+ "question": "How much premium was unearned at 31 December 2024?",
+ "final_text": "Unearned premium at 31 December 2024 was about \u00a313,515,392.\n\nI took every premium transaction booked on or before 31 December 2024. Each one earns pro rata, day by day, from its effective date to its cover end date. I counted the share of each transaction's premium still unearned from 1 January 2025 onward and summed it across all transactions. Cancellation return premiums are included as negatives.\n\nANSWER: 13515392.14",
+ "stop_reason": "end_turn",
+ "tool_calls": [
+  {
+   "tool": "run_sql",
+   "input": {
+    "query": "select sum(written_premium*greatest(0,date_diff('day',greatest(effective_date,DATE '2025-01-01'),cover_end_date))*1.0/date_diff('day',effective_date,cover_end_date)) from premium_txn where booked_date<=DATE '2024-12-31' and cover_end_date>effective_date"
+   },
+   "output": "sum((((written_premium * greatest(0, date_diff('day', greatest(effective_date, CAST('2025-01-01' AS \"DATE\")), cover_end_date))) * 1.0) / date_diff('day', effective_date, cover_end_date)))\n13515392.14",
+   "error": false
+  }
+ ],
+ "usage": {
+  "input": 653,
+  "output": 512,
+  "cache_read": 10626,
+  "cache_write": 0
+ },
+ "effort": "medium",
+ "prompt_version": "v1"
+}

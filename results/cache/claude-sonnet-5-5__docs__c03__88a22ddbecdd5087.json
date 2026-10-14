@@ -1,0 +1,26 @@
+{
+ "model": "claude-sonnet-5-5",
+ "condition": "docs",
+ "qid": "c03",
+ "question": "What was total gross written premium booked in calendar year 2024?",
+ "final_text": "Total gross written premium booked in calendar year 2024 was \u00a325,702,658.47. This sums `written_premium` over all 41,882 premium transactions with a booked date in 2024. That covers new business, renewals, mid-term adjustments and cancellation returns.\n\nANSWER: 25702658.47",
+ "stop_reason": "end_turn",
+ "tool_calls": [
+  {
+   "tool": "run_sql",
+   "input": {
+    "query": "select sum(written_premium), count(*) from premium_txn where booked_date>='2024-01-01' and booked_date<'2025-01-01'"
+   },
+   "output": "sum(written_premium),count_star()\n25702658.47,41882",
+   "error": false
+  }
+ ],
+ "usage": {
+  "input": 310,
+  "output": 194,
+  "cache_read": 10626,
+  "cache_write": 0
+ },
+ "effort": "medium",
+ "prompt_version": "v1"
+}

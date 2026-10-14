@@ -1,0 +1,26 @@
+{
+ "model": "claude-haiku-5-5",
+ "condition": "raw",
+ "qid": "b08",
+ "question": "How many claims with an accident date in 2024 have been reported to us so far?",
+ "final_text": "There are **4,396** claims with an accident date in 2024 in the claim table. Every one has a report date on or before 31 December 2025, and none has a report date before its accident date, so the count is clean. The `report_date` column is mandatory, so every claim recorded is treated as reported.\n\nANSWER: 4396",
+ "stop_reason": "end_turn",
+ "tool_calls": [
+  {
+   "tool": "run_sql",
+   "input": {
+    "query": "SELECT COUNT(*) AS claims_2024, SUM(CASE WHEN report_date > DATE '2025-12-31' THEN 1 ELSE 0 END) AS reported_after_cutoff, SUM(CASE WHEN report_date < accident_date THEN 1 ELSE 0 END) AS report_before_accident FROM claim WHERE accident_date >= DATE '2024-01-01' AND accident_date < DATE '2025-01-01'"
+   },
+   "output": "claims_2024,reported_after_cutoff,report_before_accident\n4396,0,0",
+   "error": false
+  }
+ ],
+ "usage": {
+  "input": 560,
+  "output": 465,
+  "cache_read": 4060,
+  "cache_write": 0
+ },
+ "effort": "medium",
+ "prompt_version": "v1"
+}

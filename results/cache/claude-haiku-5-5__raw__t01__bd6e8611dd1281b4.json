@@ -1,0 +1,42 @@
+{
+ "model": "claude-haiku-5-5",
+ "condition": "raw",
+ "qid": "t01",
+ "question": "What was our policy-count renewal retention rate for renewals due in 2025?",
+ "final_text": "The 2025 policy-count renewal retention rate is **0.6888** (22,667 of 32,909 renewal offers due in 2025 were taken up).\n\n- **Scope:** renewal offers with `due_date` from 1 January to 31 December 2025.\n- **Renewed:** an offer counts as renewed when `renewed_term_id` is populated.\n- **Checks:** every expiring term exists, every renewed term exists, and each renewed term's inception matches the due date. No expiring term was cancelled before its due date, so no offers needed excluding.\n\nANSWER: 0.6888",
+ "stop_reason": "end_turn",
+ "tool_calls": [
+  {
+   "tool": "run_sql",
+   "input": {
+    "query": "SELECT COUNT(*) AS offers, COUNT(renewed_term_id) AS renewed, COUNT(DISTINCT expiring_term_id) AS distinct_expiring, SUM(CASE WHEN renewed_term_id IS NOT NULL AND renewed_term_id NOT IN (SELECT term_id FROM policy_term) THEN 1 ELSE 0 END) AS orphan_renewed, MIN(due_date), MAX(due_date) FROM renewal_offer WHERE due_date >= '2025-01-01' AND due_date <= '2025-12-31'"
+   },
+   "output": "offers,renewed,distinct_expiring,orphan_renewed,min(due_date),max(due_date)\n32909,22667,32909,0,2025-01-01,2025-12-31",
+   "error": false
+  },
+  {
+   "tool": "run_sql",
+   "input": {
+    "query": "SELECT r.offer_id, r.offer_date, r.due_date, r.renewed_term_id, t.term_number, t.inception_date, t.cancel_date, t.expiry_date FROM renewal_offer r LEFT JOIN policy_term t ON t.term_id = r.expiring_term_id WHERE r.due_date BETWEEN '2025-01-01' AND '2025-12-31' AND r.renewed_term_id IS NOT NULL LIMIT 8"
+   },
+   "output": "offer_id,offer_date,due_date,renewed_term_id,term_number,inception_date,cancel_date,expiry_date\n70797,2024-12-11,2025-01-01,153064,1,2024-01-01,None,2025-01-01\n70849,2024-12-12,2025-01-02,153091,1,2024-01-02,None,2025-01-02\n70865,2024-12-12,2025-01-02,153101,1,2024-01-02,None,2025-01-02\n70868,2024-12-11,2025-01-01,153104,1,2024-01-01,None,2025-01-01\n70879,2024-12-12,2025-01-02,153110,1,2024-01-02,None,2025-01-02\n70911,2024-12-13,2025-01-03,153133,1,2024-01-03,None,2025-01-03\n70932,2024-12-13,2025-01-03,153142,1,2024-01-03,None,2025-01-03\n70933,2024-12-11,2025-01-01,153143,1,2024-01-01,None,2025-01-01",
+   "error": false
+  },
+  {
+   "tool": "run_sql",
+   "input": {
+    "query": "SELECT COUNT(*) AS offers, SUM(CASE WHEN r.renewed_term_id IS NOT NULL THEN 1 ELSE 0 END) AS renewed,\nSUM(CASE WHEN t.cancel_date IS NOT NULL AND t.cancel_date < r.due_date THEN 1 ELSE 0 END) AS cancelled_before_due,\nSUM(CASE WHEN r.renewed_term_id IS NOT NULL AND nt.term_id IS NULL THEN 1 ELSE 0 END) AS renewed_missing_term,\nSUM(CASE WHEN r.renewed_term_id IS NOT NULL AND nt.inception_date <> r.due_date THEN 1 ELSE 0 END) AS renewed_incep_mismatch,\nSUM(CASE WHEN r.renewed_term_id IS NULL AND t.cancel_date IS NOT NULL THEN 1 ELSE 0 END) AS unrenewed_cancelled\nFROM renewal_offer r JOIN policy_term t ON t.term_id = r.expiring_term_id LEFT JOIN policy_term nt ON nt.term_id = r.renewed_term_id WHERE r.due_date BETWEEN '2025-01-01' AND '2025-12-31'"
+   },
+   "output": "offers,renewed,cancelled_before_due,renewed_missing_term,renewed_incep_mismatch,unrenewed_cancelled\n32909,22667,0,0,0,0",
+   "error": false
+  }
+ ],
+ "usage": {
+  "input": 3033,
+  "output": 1558,
+  "cache_read": 6090,
+  "cache_write": 0
+ },
+ "effort": "medium",
+ "prompt_version": "v1"
+}

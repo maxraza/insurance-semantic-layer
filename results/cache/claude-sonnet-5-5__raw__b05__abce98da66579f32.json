@@ -1,0 +1,26 @@
+{
+ "model": "claude-sonnet-5-5",
+ "condition": "raw",
+ "qid": "b05",
+ "question": "How much indemnity did we pay out during calendar year 2025, regardless of when the accidents happened?",
+ "final_text": "Indemnity payments booked in calendar year 2025 were \u00a320,735,785.11. That is every `PAYMENT` transaction with cost type `INDEMNITY` and a transaction date in 2025, whatever the accident date.\n\n- I left out reserve movements, because they aren't cash paid.\n- I left out ALAE payments (\u00a31.22m), because they are expenses rather than indemnity.\n- I did not net off indemnity recoveries of \u00a3499,070.43. Net of those, the figure would be about \u00a320.24m.\n\nANSWER: 20735785.11",
+ "stop_reason": "end_turn",
+ "tool_calls": [
+  {
+   "tool": "run_sql",
+   "input": {
+    "query": "select txn_type, cost_type, count(*), sum(amount) from claim_txn where txn_date between '2025-01-01' and '2025-12-31' group by all order by all"
+   },
+   "output": "txn_type,cost_type,count_star(),sum(amount)\nPAYMENT,ALAE,1246,1218806.94\nPAYMENT,INDEMNITY,7185,20735785.11\nRECOVERY,INDEMNITY,248,-499070.43\nRESERVE,INDEMNITY,16351,365659.47",
+   "error": false
+  }
+ ],
+ "usage": {
+  "input": 435,
+  "output": 379,
+  "cache_read": 4060,
+  "cache_write": 0
+ },
+ "effort": "medium",
+ "prompt_version": "v1"
+}

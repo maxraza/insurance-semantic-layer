@@ -1,0 +1,48 @@
+{
+ "model": "claude-sonnet-5-5",
+ "condition": "semantic",
+ "qid": "v04",
+ "question": "By how much did accident-year 2022 reported loss (paid plus case) develop between the 31 December 2022 and 31 December 2025 valuations?",
+ "final_text": "Accident-year 2022 reported loss (paid plus case) rose by \u00a32,192,550.84 between the two valuations:\n\n- At 31 December 2022: \u00a312,882,431.30\n- At 31 December 2025: \u00a315,074,982.14\n\nThat is an increase of about 17%. It excludes IBNR and ALAE.\n\nANSWER: 2192550.84",
+ "stop_reason": "end_turn",
+ "tool_calls": [
+  {
+   "tool": "query_metrics",
+   "input": {
+    "metrics": [
+     "reported_loss"
+    ],
+    "basis": "accident",
+    "as_of": "2022-12-31",
+    "grain": "year",
+    "period_from": "2022-01-01",
+    "period_to": "2022-12-31"
+   },
+   "output": "period,reported_loss\n2022,12882431.30",
+   "error": false
+  },
+  {
+   "tool": "query_metrics",
+   "input": {
+    "metrics": [
+     "reported_loss"
+    ],
+    "basis": "accident",
+    "as_of": "2025-12-31",
+    "grain": "year",
+    "period_from": "2022-01-01",
+    "period_to": "2022-12-31"
+   },
+   "output": "period,reported_loss\n2022,15074982.14",
+   "error": false
+  }
+ ],
+ "usage": {
+  "input": 711,
+  "output": 489,
+  "cache_read": 7364,
+  "cache_write": 0
+ },
+ "effort": "medium",
+ "prompt_version": "v1"
+}

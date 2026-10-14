@@ -1,0 +1,36 @@
+{
+ "model": "claude-haiku-5-5",
+ "condition": "semantic",
+ "qid": "a01",
+ "question": "What was our loss ratio in 2024?",
+ "final_text": "Our 2024 loss ratio was **0.893** on an ultimate basis (reported loss plus IBNR, divided by earned premium), calendar basis, valued at 31 December 2025. Earned premium for 2024 was \u00a323,748,558.\n\nFor comparison, the reported loss ratio (paid plus case reserves, excluding IBNR) was 0.844, and the paid loss ratio was 0.682. I've used the ultimate figure as the headline because it is the complete loss ratio; the other two are shown for reference.\n\nANSWER: 0.893",
+ "stop_reason": "end_turn",
+ "tool_calls": [
+  {
+   "tool": "query_metrics",
+   "input": {
+    "metrics": [
+     "loss_ratio_ultimate",
+     "loss_ratio_reported",
+     "loss_ratio_paid",
+     "earned_premium"
+    ],
+    "basis": "calendar",
+    "as_of": "2025-12-31",
+    "grain": "year",
+    "period_from": "2024-01-01",
+    "period_to": "2024-12-31"
+   },
+   "output": "period,loss_ratio_ultimate,loss_ratio_reported,loss_ratio_paid,earned_premium\n2024,0.893059,0.843734,0.681916,23748557.88",
+   "error": false
+  }
+ ],
+ "usage": {
+  "input": 654,
+  "output": 625,
+  "cache_read": 7364,
+  "cache_write": 0
+ },
+ "effort": "medium",
+ "prompt_version": "v1"
+}

@@ -1,0 +1,38 @@
+{
+ "model": "claude-haiku-5-5",
+ "condition": "semantic",
+ "qid": "t03",
+ "question": "What was the renewal retention rate for customers acquired through price comparison websites, for renewals due in 2024?",
+ "final_text": "The renewal retention rate for PCW-acquired customers, for renewals due in 2024, is **0.409** (about 40.9%).\n\nOf the 9,847 renewal invitations that fell due in 2024 on PCW, 4,028 were accepted by 31 December 2025. Those invitations had all matured by that date, so the rate is not understated by pending renewals.\n\nANSWER: 0.409",
+ "stop_reason": "end_turn",
+ "tool_calls": [
+  {
+   "tool": "query_metrics",
+   "input": {
+    "metrics": [
+     "retention_rate",
+     "renewals_due",
+     "renewals_accepted"
+    ],
+    "basis": "calendar",
+    "as_of": "2025-12-31",
+    "filters": {
+     "channel": "PCW"
+    },
+    "grain": "year",
+    "period_from": "2024-01-01",
+    "period_to": "2024-12-31"
+   },
+   "output": "period,retention_rate,renewals_due,renewals_accepted\n2024,0.409059,9847.00,4028.00",
+   "error": false
+  }
+ ],
+ "usage": {
+  "input": 652,
+  "output": 582,
+  "cache_read": 7364,
+  "cache_write": 0
+ },
+ "effort": "medium",
+ "prompt_version": "v1"
+}

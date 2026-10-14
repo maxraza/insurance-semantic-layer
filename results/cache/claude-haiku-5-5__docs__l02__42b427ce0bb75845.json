@@ -1,0 +1,50 @@
+{
+ "model": "claude-haiku-5-5",
+ "condition": "docs",
+ "qid": "l02",
+ "question": "What is the accident-year 2024 paid loss ratio?",
+ "final_text": "**AY2024 paid loss ratio: 0.590** (0.5896, valued at 31 December 2025)\n\n- **Paid loss, AY2024:** \u00a314,001,374. This is indemnity payments plus recoveries (recoveries are stored as negatives) on claims with accident dates in 2024, excluding ALAE.\n- **Earned premium, AY2024:** \u00a323,748,558. Under the glossary, accident-basis earned premium equals premium earned in the same calendar period. I pro-rated each premium transaction's written premium over its cover period and kept the 2024 portion.\n\nRatio: 14,001,374 / 23,748,558 = 0.5896.\n\nANSWER: 0.590",
+ "stop_reason": "end_turn",
+ "tool_calls": [
+  {
+   "tool": "run_sql",
+   "input": {
+    "query": "SELECT txn_type, cost_type, COUNT(*) n, SUM(amount) s, MIN(amount) mn, MAX(amount) mx FROM claim_txn GROUP BY 1,2 ORDER BY 1,2"
+   },
+   "output": "txn_type,cost_type,n,s,mn,mx\nPAYMENT,ALAE,5482,4041773.75,5.38,129243.82\nPAYMENT,INDEMNITY,34398,78097079.75,0.10,1214443.66\nRECOVERY,INDEMNITY,1151,-2278660.54,-24511.92,-26.63\nRESERVE,INDEMNITY,79216,15020532.03,-1214443.66,1529370.74",
+   "error": false
+  },
+  {
+   "tool": "run_sql",
+   "input": {
+    "query": "SELECT MIN(effective_date), MAX(effective_date), MIN(booked_date), MAX(booked_date), SUM(written_premium), COUNT(*) FROM premium_txn"
+   },
+   "output": "min(effective_date),max(effective_date),min(booked_date),max(booked_date),sum(written_premium),count_star()\n2019-01-01,2026-01-20,2019-01-01,2025-12-31,136760663.30,245710",
+   "error": false
+  },
+  {
+   "tool": "run_sql",
+   "input": {
+    "query": "SELECT MIN(accident_date), MAX(accident_date), MAX(report_date), MAX(txn_date) FROM claim JOIN claim_txn USING(claim_id)"
+   },
+   "output": "min(accident_date),max(accident_date),max(report_date),max(txn_date)\n2019-01-21,2025-12-31,2025-12-31,2025-12-31",
+   "error": false
+  },
+  {
+   "tool": "run_sql",
+   "input": {
+    "query": "SELECT\n (SELECT SUM(ct.amount) FROM claim_txn ct JOIN claim c USING(claim_id)\n   WHERE ct.txn_type IN ('PAYMENT','RECOVERY') AND ct.cost_type='INDEMNITY'\n   AND c.accident_date >= DATE '2024-01-01' AND c.accident_date < DATE '2025-01-01' AND ct.txn_date <= DATE '2025-12-31') AS paid_loss_ay2024,\n (SELECT SUM(GREATEST(0, DATE_DIFF('day', GREATEST(effective_date, DATE '2024-01-01'), LEAST(cover_end_date, DATE '2025-01-01'))) * written_premium / NULLIF(DATE_DIFF('day', effective_date, cover_end_date),0))\n   FROM premium_txn WHERE booked_date <= DATE '2025-12-31') AS earned_prem_2024,\n (SELECT COUNT(*) FROM premium_txn WHERE cover_end_date <= effective_date) AS zero_len"
+   },
+   "output": "paid_loss_ay2024,earned_prem_2024,zero_len\n14001373.77,23748557.88,0",
+   "error": false
+  }
+ ],
+ "usage": {
+  "input": 3279,
+  "output": 2068,
+  "cache_read": 15939,
+  "cache_write": 0
+ },
+ "effort": "medium",
+ "prompt_version": "v1"
+}

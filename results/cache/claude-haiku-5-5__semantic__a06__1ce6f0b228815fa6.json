@@ -1,0 +1,34 @@
+{
+ "model": "claude-haiku-5-5",
+ "condition": "semantic",
+ "qid": "a06",
+ "question": "How much premium did we do in 2025?",
+ "final_text": "In 2025 we wrote **\u00a330,274,839.20** of gross written premium (calendar basis, valued at 31 December 2025). Written premium is the premium booked in the year, including new business, renewals, mid-term adjustments and cancellation returns.\n\nFor reference, earned premium for the same period was \u00a327,877,320.72. Earned is lower because part of the 2025 written premium covers cover periods running into 2026.\n\nANSWER: 30274839.20",
+ "stop_reason": "end_turn",
+ "tool_calls": [
+  {
+   "tool": "query_metrics",
+   "input": {
+    "metrics": [
+     "written_premium",
+     "earned_premium"
+    ],
+    "basis": "calendar",
+    "as_of": "2025-12-31",
+    "grain": "year",
+    "period_from": "2025-01-01",
+    "period_to": "2025-12-31"
+   },
+   "output": "period,written_premium,earned_premium\n2025,30274839.20,27877320.72",
+   "error": false
+  }
+ ],
+ "usage": {
+  "input": 505,
+  "output": 474,
+  "cache_read": 7364,
+  "cache_write": 0
+ },
+ "effort": "medium",
+ "prompt_version": "v1"
+}

@@ -1,0 +1,50 @@
+{
+ "model": "claude-haiku-5-5",
+ "condition": "raw",
+ "qid": "n01",
+ "question": "How many accident-year 2024 claims have had at least one indemnity payment?",
+ "final_text": "**3,725** accident-year 2024 claims have at least one indemnity payment.\n\nI counted distinct claims whose accident date falls in 2024 and that have a claim transaction with `txn_type = 'PAYMENT'` and `cost_type = 'INDEMNITY'`. I excluded indemnity reserves (which are not payments) and indemnity recoveries (money coming back to us). Every indemnity payment in the data is positive, so no reversals affect the count. Of the 4,396 accident-year 2024 claims, 3,725 have at least one indemnity payment.\n\nANSWER: 3725",
+ "stop_reason": "end_turn",
+ "tool_calls": [
+  {
+   "tool": "run_sql",
+   "input": {
+    "query": "SELECT txn_type, cost_type, COUNT(*) n, SUM(amount) amt FROM claim_txn GROUP BY 1,2 ORDER BY 1,2"
+   },
+   "output": "txn_type,cost_type,n,amt\nPAYMENT,ALAE,5482,4041773.75\nPAYMENT,INDEMNITY,34398,78097079.75\nRECOVERY,INDEMNITY,1151,-2278660.54\nRESERVE,INDEMNITY,79216,15020532.03",
+   "error": false
+  },
+  {
+   "tool": "run_sql",
+   "input": {
+    "query": "SELECT COUNT(*) total_2024, COUNT(DISTINCT claim_id) distinct_claims FROM claim WHERE EXTRACT(year FROM accident_date)=2024"
+   },
+   "output": "total_2024,distinct_claims\n4396,4396",
+   "error": false
+  },
+  {
+   "tool": "run_sql",
+   "input": {
+    "query": "SELECT COUNT(DISTINCT c.claim_id) AS claims_with_indemnity_payment FROM claim c JOIN claim_txn t ON t.claim_id=c.claim_id WHERE EXTRACT(year FROM c.accident_date)=2024 AND t.txn_type='PAYMENT' AND t.cost_type='INDEMNITY'"
+   },
+   "output": "claims_with_indemnity_payment\n3725",
+   "error": false
+  },
+  {
+   "tool": "run_sql",
+   "input": {
+    "query": "SELECT COUNT(DISTINCT c.claim_id) AS claims_net_positive_indemnity FROM claim c JOIN claim_txn t ON t.claim_id=c.claim_id WHERE EXTRACT(year FROM c.accident_date)=2024 AND t.txn_type='PAYMENT' AND t.cost_type='INDEMNITY' AND t.amount>0; SELECT COUNT(*) FROM claim_txn WHERE txn_type='PAYMENT' AND cost_type='INDEMNITY' AND amount<=0"
+   },
+   "output": "count_star()\n0",
+   "error": false
+  }
+ ],
+ "usage": {
+  "input": 2574,
+  "output": 1061,
+  "cache_read": 8120,
+  "cache_write": 0
+ },
+ "effort": "medium",
+ "prompt_version": "v1"
+}

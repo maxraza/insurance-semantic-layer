@@ -1,0 +1,36 @@
+{
+ "model": "claude-haiku-5-5",
+ "condition": "semantic",
+ "qid": "e04",
+ "question": "What was earned premium for the London region in 2025?",
+ "final_text": "Earned premium for the London region in calendar year 2025 was \u00a36,389,691.95 (calendar basis, valued at 31 December 2025).\n\nANSWER: 6389691.95",
+ "stop_reason": "end_turn",
+ "tool_calls": [
+  {
+   "tool": "query_metrics",
+   "input": {
+    "metrics": [
+     "earned_premium"
+    ],
+    "basis": "calendar",
+    "as_of": "2025-12-31",
+    "filters": {
+     "region": "LONDON"
+    },
+    "grain": "year",
+    "period_from": "2025-01-01",
+    "period_to": "2025-12-31"
+   },
+   "output": "period,earned_premium\n2025,6389691.95",
+   "error": false
+  }
+ ],
+ "usage": {
+  "input": 423,
+  "output": 281,
+  "cache_read": 7364,
+  "cache_write": 0
+ },
+ "effort": "medium",
+ "prompt_version": "v1"
+}

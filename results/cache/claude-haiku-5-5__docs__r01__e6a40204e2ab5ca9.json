@@ -1,0 +1,26 @@
+{
+ "model": "claude-haiku-5-5",
+ "condition": "docs",
+ "qid": "r01",
+ "question": "What was the accident-year 2024 reported loss ratio for drivers aged 17-24?",
+ "final_text": "The accident-year 2024 reported loss ratio for drivers aged 17-24 is about 0.747, valued at 31 December 2025.\n\n- **Reported loss:** \u00a33,232,833 (indemnity paid of \u00a32,557,351 net of recoveries, plus case reserves of \u00a3675,482). Claims are those with an accident date in 2024 on policy terms with driver age band 17-24. ALAE and IBNR are excluded, per the reported loss definition.\n- **Earned premium:** \u00a34,327,481. Written premium on those terms is earned pro rata daily over each transaction's cover period, counting only the part falling in calendar 2024. The glossary says accident-basis earned premium equals calendar, so this is the matching denominator.\n- **Ratio:** 3,232,833 / 4,327,481 = 0.747.\n\nANSWER: 0.747",
+ "stop_reason": "end_turn",
+ "tool_calls": [
+  {
+   "tool": "run_sql",
+   "input": {
+    "query": "\nWITH seg_terms AS (\n  SELECT term_id FROM policy_term WHERE driver_age_band = '17-24'\n),\nep AS (\n  SELECT SUM(p.written_premium * GREATEST(0, DATE_DIFF('day', GREATEST(p.effective_date, DATE '2024-01-01'), LEAST(p.cover_end_date, DATE '2025-01-01'))) * 1.0\n             / NULLIF(DATE_DIFF('day', p.effective_date, p.cover_end_date), 0)) AS earned_premium\n  FROM premium_txn p JOIN seg_terms s ON p.term_id = s.term_id\n),\ncl AS (\n  SELECT c.claim_id FROM claim c JOIN seg_terms s ON c.term_id = s.term_id\n  WHERE YEAR(c.accident_date) = 2024\n),\nloss AS (\n  SELECT SUM(CASE WHEN t.txn_type = 'PAYMENT' THEN t.amount\n                  WHEN t.txn_type = 'RECOVERY' THEN t.amount\n                  WHEN t.txn_type = 'RESERVE' THEN t.amount ELSE 0 END) AS reported_loss,\n         SUM(CASE WHEN t.txn_type IN ('PAYMENT','RECOVERY') THEN t.amount ELSE 0 END) AS paid,\n         SUM(CASE WHEN t.txn_type = 'RESERVE' THEN t.amount ELSE 0 END) AS reserve\n  FROM claim_txn t JOIN cl ON t.claim_id = cl.claim_id\n  WHERE t.cost_type = 'INDEMNITY' AND t.txn_date <= DATE '2025-12-31'\n)\nSELECT ep.earned_premium, loss.reported_loss, loss.paid, loss.reserve,\n       loss.reported_loss / ep.earned_premium AS loss_ratio_reported\nFROM ep, loss\n"
+   },
+   "output": "earned_premium,reported_loss,paid,reserve,loss_ratio_reported\n4327481.00,3232832.53,2557350.72,675481.81,0.747047",
+   "error": false
+  }
+ ],
+ "usage": {
+  "input": 1532,
+  "output": 1725,
+  "cache_read": 10626,
+  "cache_write": 0
+ },
+ "effort": "medium",
+ "prompt_version": "v1"
+}

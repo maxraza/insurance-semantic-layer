@@ -1,0 +1,42 @@
+{
+ "model": "claude-sonnet-5-5",
+ "condition": "raw",
+ "qid": "b06",
+ "question": "What is the accident-year 2024 claim frequency, in reported claims per earned car-year?",
+ "final_text": "AccidentYear 2024 claim frequency is about 0.1331 reported claims per earned car-year.\n\n- **Claims:** 4,396 claims have an accident date in 2024 and were reported by 31 December 2025. I counted every claim record and did not exclude any by status or cost.\n- **Earned car-years:** 33,017.02. I took each new, renewal and cancellation transaction's exposure units and pro-rated them by the share of its cover period (effective date to cover end date) that falls in 2024. Cancellations reduce exposure from their effective date. Mid-term adjustments carry no exposure.\n\nFrequency is 4,396 / 33,017.02 = 0.1331.\n\nANSWER: 0.1331",
+ "stop_reason": "end_turn",
+ "tool_calls": [
+  {
+   "tool": "run_sql",
+   "input": {
+    "query": "select txn_type, count(*), sum(exposure_units), min(exposure_units), max(exposure_units), sum(written_premium), min(vehicle_delta), max(vehicle_delta) from premium_txn group by 1"
+   },
+   "output": "txn_type,count_star(),sum(exposure_units),min(exposure_units),max(exposure_units),sum(written_premium),min(vehicle_delta),max(vehicle_delta)\nRENEWAL,96764,96764.000000,1.000000,1.000000,66470703.32,1,1\nCANCEL,13081,-6630.491786,-0.961749,-0.021858,-4423904.86,-1,-1\nMTA,22310,0.000000,0.000000,0.000000,466631.74,0,0\nNEW,113555,113555.000000,1.000000,1.000000,74247233.10,1,1",
+   "error": false
+  },
+  {
+   "tool": "run_sql",
+   "input": {
+    "query": "select * from premium_txn order by term_id, booked_date limit 12"
+   },
+   "output": "premium_txn_id,term_id,txn_type,booked_date,effective_date,cover_end_date,written_premium,exposure_units,vehicle_delta\n1,1,NEW,2019-01-01,2019-01-13,2020-01-13,301.57,1.000000,1\n2,2,NEW,2019-01-01,2019-01-03,2020-01-03,1071.49,1.000000,1\n3,3,NEW,2019-01-01,2019-01-07,2020-01-07,418.20,1.000000,1\n4,3,MTA,2019-03-15,2019-03-13,2020-01-07,-20.62,0.000000,0\n5,4,NEW,2019-01-01,2019-01-11,2020-01-11,337.96,1.000000,1\n6,5,NEW,2019-01-01,2019-01-01,2020-01-01,356.50,1.000000,1\n7,6,NEW,2019-01-01,2019-01-06,2020-01-06,437.02,1.000000,1\n8,7,NEW,2019-01-01,2019-01-03,2020-01-03,346.29,1.000000,1\n9,7,CANCEL,2019-10-05,2019-10-01,2020-01-03,-89.18,-0.257534,-1\n10,8,NEW,2019-01-01,2019-01-05,2020-01-05,560.53,1.000000,1\n11,9,NEW,2019-01-01,2019-01-08,2020-01-08,315.58,1.000000,1\n12,10,NEW,2019-01-01,2019-01-15,2020-01-15,1879.14,1.000000,1",
+   "error": false
+  },
+  {
+   "tool": "run_sql",
+   "input": {
+    "query": "with e as (select sum(exposure_units * greatest(0, date_diff('day', greatest(effective_date, date '2024-01-01'), least(cover_end_date, date '2025-01-01')))::double / date_diff('day', effective_date, cover_end_date)) ee from premium_txn),\nc as (select count(*) n, count(distinct claim_id) d from claim where accident_date between '2024-01-01' and '2024-12-31' and report_date<='2025-12-31')\nselect * , n/ee from e, c"
+   },
+   "output": "ee,n,d,(n / ee)\n33017.02,4396,4396,0.133143",
+   "error": false
+  }
+ ],
+ "usage": {
+  "input": 2997,
+  "output": 998,
+  "cache_read": 6159,
+  "cache_write": 0
+ },
+ "effort": "medium",
+ "prompt_version": "v1"
+}

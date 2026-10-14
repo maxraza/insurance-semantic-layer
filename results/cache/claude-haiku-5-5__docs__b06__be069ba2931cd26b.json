@@ -1,0 +1,42 @@
+{
+ "model": "claude-haiku-5-5",
+ "condition": "docs",
+ "qid": "b06",
+ "question": "What is the accident-year 2024 claim frequency, in reported claims per earned car-year?",
+ "final_text": "**Accident-year 2024 claim frequency: 0.133 reported claims per earned car-year** (4,396 claims / 33,017 earned car-years, valued at 31 Dec 2025).\n\n- **Claims:** 4,396 claims with accident date in 2024. All were reported by 7 Nov 2025, so none are missing at the valuation date.\n- **Earned exposure:** each premium transaction's exposure units are earned pro rata by day over its cover period, counted only for the part falling in calendar 2024. Cancellations reduce exposure from their effective date. This gives 33,017.02 car-years.\n\nANSWER: 0.133",
+ "stop_reason": "end_turn",
+ "tool_calls": [
+  {
+   "tool": "run_sql",
+   "input": {
+    "query": "SELECT 'claims' AS t, COUNT(*) AS n, MIN(accident_date) mn, MAX(accident_date) mx, MAX(report_date) max_rep FROM claim\nUNION ALL SELECT 'acc2024', COUNT(*), MIN(accident_date), MAX(accident_date), MAX(report_date) FROM claim WHERE accident_date >= '2024-01-01' AND accident_date < '2025-01-01'\nUNION ALL SELECT 'acc2024_reported_by_2025', COUNT(*), NULL, NULL, NULL FROM claim WHERE accident_date >= '2024-01-01' AND accident_date < '2025-01-01' AND report_date <= '2025-12-31'\nUNION ALL SELECT 'premtxn', COUNT(*), MIN(effective_date), MAX(cover_end_date), MAX(booked_date) FROM premium_txn;"
+   },
+   "output": "t,n,mn,mx,max_rep\nclaims,23549,2019-01-21,2025-12-31,2025-12-31\nacc2024,4396,2024-01-01,2024-12-31,2025-11-07\nacc2024_reported_by_2025,4396,None,None,None\npremtxn,245710,2019-01-01,2027-01-20,2025-12-31",
+   "error": false
+  },
+  {
+   "tool": "run_sql",
+   "input": {
+    "query": "SELECT txn_type, COUNT(*), SUM(exposure_units), MIN(effective_date), MAX(cover_end_date), MIN(booked_date), MAX(booked_date) FROM premium_txn GROUP BY 1;"
+   },
+   "output": "txn_type,count_star(),sum(exposure_units),min(effective_date),max(cover_end_date),min(booked_date),max(booked_date)\nCANCEL,13081,-6630.491786,2019-01-28,2026-12-07,2019-02-02,2025-12-31\nNEW,113555,113555.000000,2019-01-01,2027-01-14,2019-01-01,2025-12-31\nMTA,22310,0.000000,2019-02-05,2026-12-07,2019-02-08,2025-12-31\nRENEWAL,96764,96764.000000,2020-01-01,2027-01-20,2019-12-15,2025-12-31",
+   "error": false
+  },
+  {
+   "tool": "run_sql",
+   "input": {
+    "query": "WITH e AS (\nSELECT SUM(exposure_units * GREATEST(0, DATE_DIFF('day', GREATEST(effective_date, DATE '2024-01-01'), LEAST(cover_end_date, DATE '2025-01-01')))::DOUBLE\n / NULLIF(DATE_DIFF('day', effective_date, cover_end_date),0)) AS earned_exp,\n SUM(CASE WHEN cover_end_date=effective_date THEN 1 ELSE 0 END) AS zero_len\nFROM premium_txn WHERE effective_date < DATE '2025-01-01' AND cover_end_date > DATE '2024-01-01')\nSELECT e.earned_exp, e.zero_len,\n (SELECT COUNT(*) FROM claim WHERE accident_date >= '2024-01-01' AND accident_date < '2025-01-01') AS rep_claims,\n (SELECT COUNT(*) FROM claim WHERE accident_date >= '2024-01-01' AND accident_date < '2025-01-01') / e.earned_exp AS freq\nFROM e;"
+   },
+   "output": "earned_exp,zero_len,rep_claims,freq\n33017.02,0,4396,0.133143",
+   "error": false
+  }
+ ],
+ "usage": {
+  "input": 3482,
+  "output": 2009,
+  "cache_read": 16236,
+  "cache_write": 0
+ },
+ "effort": "medium",
+ "prompt_version": "v1"
+}

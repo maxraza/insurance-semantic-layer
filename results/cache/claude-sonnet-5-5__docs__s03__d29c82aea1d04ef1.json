@@ -1,0 +1,26 @@
+{
+ "model": "claude-sonnet-5-5",
+ "condition": "docs",
+ "qid": "s03",
+ "question": "How many claims were open at 31 December 2024?",
+ "final_text": "There were 1,437 claims open at 31 December 2024. I counted claims reported on or before that date that had no closed date, or a closed date after it.\n\nANSWER: 1437",
+ "stop_reason": "end_turn",
+ "tool_calls": [
+  {
+   "tool": "run_sql",
+   "input": {
+    "query": "select count(*) from claim where report_date<=DATE '2024-12-31' and (closed_date is null or closed_date>DATE '2024-12-31')"
+   },
+   "output": "count_star()\n1437",
+   "error": false
+  }
+ ],
+ "usage": {
+  "input": 334,
+  "output": 198,
+  "cache_read": 10626,
+  "cache_write": 0
+ },
+ "effort": "medium",
+ "prompt_version": "v1"
+}

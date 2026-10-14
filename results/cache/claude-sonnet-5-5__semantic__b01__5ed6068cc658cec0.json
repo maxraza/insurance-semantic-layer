@@ -1,0 +1,33 @@
+{
+ "model": "claude-sonnet-5-5",
+ "condition": "semantic",
+ "qid": "b01",
+ "question": "What is the accident-year 2023 loss ratio on a reported basis (paid plus case reserves, excluding IBNR and ALAE), valued at 31 December 2025?",
+ "final_text": "The accident-year 2023 reported loss ratio (paid plus case reserves, excluding IBNR and ALAE), valued at 31 December 2025, is 0.912. I took this directly from the accident-basis reported loss ratio for 2023.\n\nANSWER: 0.912117",
+ "stop_reason": "end_turn",
+ "tool_calls": [
+  {
+   "tool": "query_metrics",
+   "input": {
+    "metrics": [
+     "loss_ratio_reported"
+    ],
+    "basis": "accident",
+    "as_of": "2025-12-31",
+    "grain": "year",
+    "period_from": "2023-01-01",
+    "period_to": "2023-12-31"
+   },
+   "output": "period,loss_ratio_reported\n2023,0.912117",
+   "error": false
+  }
+ ],
+ "usage": {
+  "input": 479,
+  "output": 285,
+  "cache_read": 7364,
+  "cache_write": 0
+ },
+ "effort": "medium",
+ "prompt_version": "v1"
+}

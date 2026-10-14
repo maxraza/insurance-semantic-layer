@@ -1,0 +1,38 @@
+{
+ "model": "claude-haiku-5-5",
+ "condition": "semantic",
+ "qid": "r05",
+ "question": "What is the average paid indemnity per paid bodily-injury claim for accident year 2023 (claims with no payment excluded)?",
+ "final_text": "For accident year 2023, bodily-injury claims had \u00a38,421,627.32 of paid indemnity across 248 paid claims (nil claims excluded). That gives an average of \u00a333,958.17 per paid claim. Paid indemnity excludes ALAE, and the figures are valued at 31 December 2025.\n\nANSWER: 33958.17",
+ "stop_reason": "end_turn",
+ "tool_calls": [
+  {
+   "tool": "query_metrics",
+   "input": {
+    "metrics": [
+     "paid_loss",
+     "paid_claim_count",
+     "severity_paid"
+    ],
+    "basis": "accident",
+    "as_of": "2025-12-31",
+    "filters": {
+     "peril": "BODILY_INJURY"
+    },
+    "grain": "year",
+    "period_from": "2023-01-01",
+    "period_to": "2023-12-31"
+   },
+   "output": "period,paid_loss,paid_claim_count,severity_paid\n2023,8421627.32,248.00,33958.17",
+   "error": false
+  }
+ ],
+ "usage": {
+  "input": 655,
+  "output": 531,
+  "cache_read": 7364,
+  "cache_write": 0
+ },
+ "effort": "medium",
+ "prompt_version": "v1"
+}

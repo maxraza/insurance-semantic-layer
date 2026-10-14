@@ -1,0 +1,32 @@
+{
+ "model": "claude-sonnet-5-5",
+ "condition": "semantic",
+ "qid": "v05",
+ "question": "As at 30 September 2025, how many claims were open?",
+ "final_text": "As at 30 September 2025, 1,542 claims were open. These are claims that had been reported and not yet closed at that date.\n\nANSWER: 1542",
+ "stop_reason": "end_turn",
+ "tool_calls": [
+  {
+   "tool": "query_metrics",
+   "input": {
+    "metrics": [
+     "open_claim_count"
+    ],
+    "basis": "calendar",
+    "as_of": "2025-09-30",
+    "period_to": "2025-09-30",
+    "period_from": "2025-09-30"
+   },
+   "output": "period,open_claim_count\n2025,1542.00",
+   "error": false
+  }
+ ],
+ "usage": {
+  "input": 374,
+  "output": 264,
+  "cache_read": 7364,
+  "cache_write": 0
+ },
+ "effort": "medium",
+ "prompt_version": "v1"
+}

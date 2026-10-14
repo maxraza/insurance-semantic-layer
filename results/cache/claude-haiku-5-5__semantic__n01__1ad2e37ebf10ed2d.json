@@ -1,0 +1,33 @@
+{
+ "model": "claude-haiku-5-5",
+ "condition": "semantic",
+ "qid": "n01",
+ "question": "How many accident-year 2024 claims have had at least one indemnity payment?",
+ "final_text": "Accident-year 2024 claims with at least one indemnity payment, valued at 31 December 2025, total 3,725. This is the accident-basis paid claim count (nil claims excluded), so it counts claims by accident date rather than by payment date.\n\nANSWER: 3725",
+ "stop_reason": "end_turn",
+ "tool_calls": [
+  {
+   "tool": "query_metrics",
+   "input": {
+    "metrics": [
+     "paid_claim_count"
+    ],
+    "basis": "accident",
+    "as_of": "2025-12-31",
+    "grain": "year",
+    "period_from": "2024-01-01",
+    "period_to": "2024-01-01"
+   },
+   "output": "period,paid_claim_count\n2024,3725.00",
+   "error": false
+  }
+ ],
+ "usage": {
+  "input": 455,
+  "output": 324,
+  "cache_read": 7364,
+  "cache_write": 0
+ },
+ "effort": "medium",
+ "prompt_version": "v1"
+}

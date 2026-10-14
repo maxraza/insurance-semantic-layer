@@ -1,0 +1,33 @@
+{
+ "model": "claude-sonnet-5-5",
+ "condition": "semantic",
+ "qid": "s01",
+ "question": "How many vehicles were on cover at 31 December 2025?",
+ "final_text": "There were 39,920 vehicles on cover at 31 December 2025. This is the in-force count at the end of the 2025 period, valued as at 31 December 2025.\n\nANSWER: 39920",
+ "stop_reason": "end_turn",
+ "tool_calls": [
+  {
+   "tool": "query_metrics",
+   "input": {
+    "metrics": [
+     "in_force_count"
+    ],
+    "basis": "calendar",
+    "as_of": "2025-12-31",
+    "grain": "year",
+    "period_from": "2025-01-01",
+    "period_to": "2025-12-31"
+   },
+   "output": "period,in_force_count\n2025,39920.00",
+   "error": false
+  }
+ ],
+ "usage": {
+  "input": 398,
+  "output": 253,
+  "cache_read": 7364,
+  "cache_write": 0
+ },
+ "effort": "medium",
+ "prompt_version": "v1"
+}

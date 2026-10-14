@@ -1,0 +1,26 @@
+{
+ "model": "claude-sonnet-5-5",
+ "condition": "raw",
+ "qid": "t02",
+ "question": "As at 30 September 2025, what is the year-to-date renewal retention rate for 2025?",
+ "final_text": "Retention is 16,278 / 23,991 = 0.6785.\n\nI counted renewal offers with a due date from 1 January to 30 September 2025, and treated an offer as retained if it has a renewed term. All 16,278 renewed terms were bound and incepted by 30 September, so the \"as at\" date doesn't change the count. I didn't exclude any offers, for example where the expiring term was cancelled.\n\nANSWER: 0.6785",
+ "stop_reason": "end_turn",
+ "tool_calls": [
+  {
+   "tool": "run_sql",
+   "input": {
+    "query": "select count(*) n, count(o.renewed_term_id) r, sum(case when t.bound_date<=DATE '2025-09-30' then 1 else 0 end) r_bound, sum(case when t.inception_date<=DATE '2025-09-30' then 1 else 0 end) r_inc, min(o.due_date), max(o.due_date)\nfrom renewal_offer o left join policy_term t on t.term_id=o.renewed_term_id\nwhere o.due_date between DATE '2025-01-01' and DATE '2025-09-30'"
+   },
+   "output": "n,r,r_bound,r_inc,min(o.due_date),max(o.due_date)\n23991,16278,16278,16278,2025-01-01,2025-09-30",
+   "error": false
+  }
+ ],
+ "usage": {
+  "input": 607,
+  "output": 520,
+  "cache_read": 4060,
+  "cache_write": 0
+ },
+ "effort": "medium",
+ "prompt_version": "v1"
+}

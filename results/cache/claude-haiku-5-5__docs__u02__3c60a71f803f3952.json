@@ -1,0 +1,17 @@
+{
+ "model": "claude-haiku-5-5",
+ "condition": "docs",
+ "qid": "u02",
+ "question": "What is the booked ultimate loss ratio (including IBNR) for policy year 2023?",
+ "final_text": "I can't give a policy-year 2023 ultimate loss ratio from this data.\n\nThe ultimate loss ratio is (reported loss + IBNR) / earned premium, and the glossary says it is defined only on accident or calendar bases. IBNR is booked by accident year, with no policy-year basis and no segment splits (`ibnr_valuation` is keyed on `valuation_date` and `accident_year`). Reported loss can be put on a policy basis, but IBNR cannot, so the numerator would mix bases. Two options would give a number, but neither is the requested measure: allocating accident-year IBNR to policy year 2023 by assumption, or using accident year 2023 as a proxy. I haven't done either.\n\nTo answer, you could ask for the accident-year 2023 ultimate loss ratio (accident basis, valued at 31 December 2025), or for a policy-year reported loss ratio without IBNR.\n\nANSWER: UNANSWERABLE",
+ "stop_reason": "end_turn",
+ "tool_calls": [],
+ "usage": {
+  "input": 105,
+  "output": 708,
+  "cache_read": 5313,
+  "cache_write": 0
+ },
+ "effort": "medium",
+ "prompt_version": "v1"
+}

@@ -1,0 +1,26 @@
+{
+ "model": "claude-haiku-5-5",
+ "condition": "docs",
+ "qid": "b07",
+ "question": "What is the total written premium for policies that incepted in 2022 (policy-year basis)?",
+ "final_text": "The total written premium for policies that incepted in 2022 on a policy-year basis is \u00a320,136,044.70.\n\nThis sums every premium transaction (new, renewal, mid-term adjustment and cancellation) on the 34,188 policy terms whose inception date falls in 2022, valued as at 31 December 2025. It is gross of reinsurance.\n\nANSWER: 20136044.70",
+ "stop_reason": "end_turn",
+ "tool_calls": [
+  {
+   "tool": "run_sql",
+   "input": {
+    "query": "SELECT SUM(p.written_premium) AS written_premium_2022_policy_basis, COUNT(*) AS txn_rows, COUNT(DISTINCT t.term_id) AS terms\nFROM premium_txn p JOIN policy_term t ON p.term_id = t.term_id\nWHERE t.inception_date >= DATE '2022-01-01' AND t.inception_date < DATE '2023-01-01'\n  AND p.booked_date <= DATE '2025-12-31'"
+   },
+   "output": "written_premium_2022_policy_basis,txn_rows,terms\n20136044.70,40612,34188",
+   "error": false
+  }
+ ],
+ "usage": {
+  "input": 663,
+  "output": 588,
+  "cache_read": 10626,
+  "cache_write": 0
+ },
+ "effort": "medium",
+ "prompt_version": "v1"
+}

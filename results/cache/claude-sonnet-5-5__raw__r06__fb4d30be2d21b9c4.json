@@ -1,0 +1,42 @@
+{
+ "model": "claude-sonnet-5-5",
+ "condition": "raw",
+ "qid": "r06",
+ "question": "What share of 2025 quotes for drivers aged 17-24 converted into policies?",
+ "final_text": "About 12.6% of 2025 quotes for drivers aged 17-24 converted. Of 14,645 quotes, 1,841 were bound to a policy term (1,841 / 14,645 = 0.1257).\n\nI counted a quote as converted when it has a bound term ID. All 1,841 of those IDs are distinct and match a real policy term, so no quote is double-counted.\n\nANSWER: 0.1257",
+ "stop_reason": "end_turn",
+ "tool_calls": [
+  {
+   "tool": "run_sql",
+   "input": {
+    "query": "select driver_age_band, count(*), count(bound_term_id) from quote where year(quote_date)=2025 group by 1 order by 1"
+   },
+   "output": "driver_age_band,count_star(),count(bound_term_id)\n17-24,14645,1841\n25-39,52775,6758\n40-59,56122,7006\n60+,23490,3048",
+   "error": false
+  },
+  {
+   "tool": "run_sql",
+   "input": {
+    "query": "select count(*), count(distinct q.bound_term_id), count(t.term_id) from quote q left join policy_term t on t.term_id=q.bound_term_id where year(quote_date)=2025 and driver_age_band='17-24' and q.bound_term_id is not null"
+   },
+   "output": "error: Binder Error: Ambiguous reference to column name \"driver_age_band\" (use: \"q.driver_age_band\" or \"t.driver_age_band\")\n\nLINE 1: ... on t.term_id=q.bound_term_id where year(quote_date)=2025 and driver_age_band='17-24' and q.bound_term_id is not null\n                                                                         ^",
+   "error": true
+  },
+  {
+   "tool": "run_sql",
+   "input": {
+    "query": "select count(*), count(distinct q.bound_term_id), count(t.term_id) from quote q left join policy_term t on t.term_id=q.bound_term_id where year(quote_date)=2025 and q.driver_age_band='17-24' and q.bound_term_id is not null"
+   },
+   "output": "count_star(),count(DISTINCT q.bound_term_id),count(t.term_id)\n1841,1841,1841",
+   "error": false
+  }
+ ],
+ "usage": {
+  "input": 1689,
+  "output": 549,
+  "cache_read": 8120,
+  "cache_write": 0
+ },
+ "effort": "medium",
+ "prompt_version": "v1"
+}

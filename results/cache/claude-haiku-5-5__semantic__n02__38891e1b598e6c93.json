@@ -1,0 +1,38 @@
+{
+ "model": "claude-haiku-5-5",
+ "condition": "semantic",
+ "qid": "n02",
+ "question": "What is the average reported cost per reported windscreen claim in accident year 2024, counting nil claims?",
+ "final_text": "In accident year 2024, windscreen claims had reported loss of \u00a3550,376.77 across 1,069 reported claims (nil claims included in the count). That gives an average reported cost of \u00a3514.85 per claim.\n\nANSWER: 514.85",
+ "stop_reason": "end_turn",
+ "tool_calls": [
+  {
+   "tool": "query_metrics",
+   "input": {
+    "metrics": [
+     "reported_loss",
+     "reported_claim_count",
+     "severity_reported"
+    ],
+    "basis": "accident",
+    "as_of": "2025-12-31",
+    "filters": {
+     "peril": "WINDSCREEN"
+    },
+    "grain": "year",
+    "period_from": "2024-01-01",
+    "period_to": "2024-12-31"
+   },
+   "output": "period,reported_loss,reported_claim_count,severity_reported\n2024,550376.77,1069.00,514.85",
+   "error": false
+  }
+ ],
+ "usage": {
+  "input": 630,
+  "output": 473,
+  "cache_read": 7364,
+  "cache_write": 0
+ },
+ "effort": "medium",
+ "prompt_version": "v1"
+}

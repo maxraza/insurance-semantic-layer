@@ -1,0 +1,26 @@
+{
+ "model": "claude-sonnet-5-5",
+ "condition": "docs",
+ "qid": "c01",
+ "question": "How many quotes did we issue in 2024?",
+ "final_text": "We issued 140,274 quotes in 2024. That is the count of rows in the quote table with a quote date from 1 January to 31 December 2024, across all channels.\n\nANSWER: 140274",
+ "stop_reason": "end_turn",
+ "tool_calls": [
+  {
+   "tool": "run_sql",
+   "input": {
+    "query": "select count(*) from quote where quote_date between '2024-01-01' and '2024-12-31'"
+   },
+   "output": "count_star()\n140274",
+   "error": false
+  }
+ ],
+ "usage": {
+  "input": 270,
+  "output": 142,
+  "cache_read": 5313,
+  "cache_write": 5313
+ },
+ "effort": "medium",
+ "prompt_version": "v1"
+}

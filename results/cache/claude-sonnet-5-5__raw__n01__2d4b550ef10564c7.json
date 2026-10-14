@@ -1,0 +1,42 @@
+{
+ "model": "claude-sonnet-5-5",
+ "condition": "raw",
+ "qid": "n01",
+ "question": "How many accident-year 2024 claims have had at least one indemnity payment?",
+ "final_text": "3,725 claims with an accident date in 2024 have had at least one indemnity payment. These are claims with at least one PAYMENT transaction of cost type INDEMNITY dated on or before 31 December 2025. That is out of 4,396 claims with a 2024 accident date. All of those payments have positive amounts, so none is a reversal.\n\nANSWER: 3725",
+ "stop_reason": "end_turn",
+ "tool_calls": [
+  {
+   "tool": "run_sql",
+   "input": {
+    "query": "select txn_type, cost_type, count(*), sum(amount) from claim_txn group by all"
+   },
+   "output": "txn_type,cost_type,count_star(),sum(amount)\nPAYMENT,ALAE,5482,4041773.75\nRECOVERY,INDEMNITY,1151,-2278660.54\nPAYMENT,INDEMNITY,34398,78097079.75\nRESERVE,INDEMNITY,79216,15020532.03",
+   "error": false
+  },
+  {
+   "tool": "run_sql",
+   "input": {
+    "query": "select count(*) from claim where year(accident_date)=2024"
+   },
+   "output": "count_star()\n4396",
+   "error": false
+  },
+  {
+   "tool": "run_sql",
+   "input": {
+    "query": "select count(distinct c.claim_id), count(distinct case when t.amount>0 then c.claim_id end) from claim c join claim_txn t on t.claim_id=c.claim_id where year(c.accident_date)=2024 and t.txn_type='PAYMENT' and t.cost_type='INDEMNITY' and t.txn_date<='2025-12-31'"
+   },
+   "output": "count(DISTINCT c.claim_id),count(DISTINCT CASE  WHEN ((t.amount > 0)) THEN (c.claim_id) ELSE NULL END)\n3725,3725",
+   "error": false
+  }
+ ],
+ "usage": {
+  "input": 1198,
+  "output": 440,
+  "cache_read": 6090,
+  "cache_write": 0
+ },
+ "effort": "medium",
+ "prompt_version": "v1"
+}

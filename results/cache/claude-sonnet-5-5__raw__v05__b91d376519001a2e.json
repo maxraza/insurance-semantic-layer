@@ -1,0 +1,34 @@
+{
+ "model": "claude-sonnet-5-5",
+ "condition": "raw",
+ "qid": "v05",
+ "question": "As at 30 September 2025, how many claims were open?",
+ "final_text": "As at 30 September 2025, 1,542 claims were open.\n\nI counted claims reported on or before 30 September 2025 that either had no closed date or were closed after that date. The claim transactions have no reopen type, so I took the closed date as final.\n\nANSWER: 1542",
+ "stop_reason": "end_turn",
+ "tool_calls": [
+  {
+   "tool": "run_sql",
+   "input": {
+    "query": "select txn_type, cost_type, count(*), min(txn_date), max(txn_date) from claim_txn group by all;"
+   },
+   "output": "txn_type,cost_type,count_star(),min(txn_date),max(txn_date)\nPAYMENT,ALAE,5482,2019-04-02,2025-12-31\nRECOVERY,INDEMNITY,1151,2019-07-11,2025-12-31\nPAYMENT,INDEMNITY,34398,2019-02-22,2025-12-31\nRESERVE,INDEMNITY,79216,2019-02-04,2025-12-31",
+   "error": false
+  },
+  {
+   "tool": "run_sql",
+   "input": {
+    "query": "select count(*), count(closed_date), sum(case when report_date<='2025-09-30' and (closed_date is null or closed_date>'2025-09-30') then 1 end), sum(case when closed_date<report_date then 1 end), max(report_date), max(closed_date) from claim;"
+   },
+   "output": "count_star(),count(closed_date),sum(CASE  WHEN (((report_date <= '2025-09-30') AND ((closed_date IS NULL) OR (closed_date > '2025-09-30')))) THEN (1) ELSE NULL END),sum(CASE  WHEN ((closed_date < report_date)) THEN (1) ELSE NULL END),max(report_date),max(closed_date)\n23549,22003,1542,None,2025-12-31,2025-12-31",
+   "error": false
+  }
+ ],
+ "usage": {
+  "input": 853,
+  "output": 404,
+  "cache_read": 4060,
+  "cache_write": 0
+ },
+ "effort": "medium",
+ "prompt_version": "v1"
+}

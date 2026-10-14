@@ -1,0 +1,50 @@
+{
+ "model": "claude-sonnet-5-5",
+ "condition": "raw",
+ "qid": "r03",
+ "question": "What was the price comparison website channel's accident-year 2024 reported loss ratio?",
+ "final_text": "The PCW channel's accident-year 2024 reported loss ratio is about **0.927**.\n\n- **Reported incurred:** \u00a36,403,770. This is the sum of all PCW claim transactions for accidents in 2024: indemnity and ALAE payments, plus movements in case reserves, less recoveries. It excludes IBNR.\n- **Earned premium:** \u00a36,910,064. This is PCW written premium, including MTAs and cancellations. I earned each transaction evenly over its effective-to-cover-end period and counted only the part falling in calendar 2024.\n- **Ratio:** 6,403,770 \u00f7 6,910,064 = 0.9267.\n\nANSWER: 0.927",
+ "stop_reason": "end_turn",
+ "tool_calls": [
+  {
+   "tool": "run_sql",
+   "input": {
+    "query": "select 'ch' k, channel v, count(*) n from policy_term group by 1,2 union all select 'ptx', txn_type, count(*) from premium_txn group by 1,2 union all select 'ctx', txn_type||'/'||cost_type, count(*) from claim_txn group by 1,2"
+   },
+   "output": "k,v,n\nch,PCW,67272\nch,BROKER,64936\nch,DIRECT,78111\nptx,RENEWAL,96764\nptx,CANCEL,13081\nptx,NEW,113555\nptx,MTA,22310\nctx,PAYMENT/INDEMNITY,34398\nctx,RESERVE/INDEMNITY,79216\nctx,PAYMENT/ALAE,5482\nctx,RECOVERY/INDEMNITY,1151",
+   "error": false
+  },
+  {
+   "tool": "run_sql",
+   "input": {
+    "query": "select c.claim_id, c.closed_date, t.txn_date,t.txn_type,t.cost_type,t.amount from claim c join claim_txn t using(claim_id) where c.claim_id in (select claim_id from claim_txn group by 1 having count(*)>=5 limit 3) order by 1,3"
+   },
+   "output": "claim_id,closed_date,txn_date,txn_type,cost_type,amount\n1,2020-01-03,2019-11-13,RESERVE,INDEMNITY,1511.36\n1,2020-01-03,2019-11-23,PAYMENT,INDEMNITY,40.80\n1,2020-01-03,2019-11-23,RESERVE,INDEMNITY,-40.80\n1,2020-01-03,2019-11-28,RESERVE,INDEMNITY,-18.26\n1,2020-01-03,2019-11-29,PAYMENT,INDEMNITY,1339.91\n1,2020-01-03,2019-11-29,RESERVE,INDEMNITY,-1339.91\n1,2020-01-03,2020-01-03,PAYMENT,INDEMNITY,355.89\n1,2020-01-03,2020-01-03,RESERVE,INDEMNITY,-112.39\n1,2020-01-03,2020-01-03,PAYMENT,ALAE,194.55\n27,2019-06-30,2019-05-10,RESERVE,INDEMNITY,882.96\n27,2019-06-30,2019-06-04,PAYMENT,INDEMNITY,458.60\n27,2019-06-30,2019-06-04,RESERVE,INDEMNITY,-458.60\n27,2019-06-30,2019-06-19,RESERVE,INDEMNITY,106.64\n27,2019-06-30,2019-06-20,PAYMENT,INDEMNITY,138.30\n27,2019-06-30,2019-06-20,RESERVE,INDEMNITY,-138.30\n27,2019-06-30,2019-06-30,PAYMENT,INDEMNITY,393.91\n27,2019-06-30,2019-06-30,RESERVE,INDEMNITY,-392.70\n27,2019-06-30,2019-06-30,PAYMENT,ALAE,141.25\n27,2019-06-30,2019-09-08,RECOVERY,INDEMNITY,-597.62\n56,2019-03-28,2019-02-10,RESERVE,INDEMNITY,1719.58\n56,2019-03-28,2019-03-09,PAYMENT,INDEMNITY,755.76\n56,2019-03-28,2019-03-09,RESERVE,INDEMNITY,-755.76\n56,2019-03-28,2019-03-27,RESERVE,INDEMNITY,524.86\n56,2019-03-28,2019-03-28,PAYMENT,INDEMNITY,1306.58\n56,2019-03-28,2019-03-28,RESERVE,INDEMNITY,-1306.58\n56,2019-03-28,2019-03-28,RESERVE,INDEMNITY,-182.10",
+   "error": false
+  },
+  {
+   "tool": "run_sql",
+   "input": {
+    "query": "select txn_type, min(written_premium), max(written_premium), min(exposure_units), max(exposure_units), min(effective_date-booked_date), sum(case when cover_end_date<=effective_date then 1 else 0 end) from premium_txn group by 1"
+   },
+   "output": "txn_type,min(written_premium),max(written_premium),min(exposure_units),max(exposure_units),min((effective_date - booked_date)),sum(CASE  WHEN ((cover_end_date <= effective_date)) THEN (1) ELSE 0 END)\nRENEWAL,249.83,4058.78,1.000,1.000,1,0\nCANCEL,-3105.45,-6.31,-1.000,-1.000,-5,0\nMTA,-328.34,611.67,0.000,0.000,-3,0\nNEW,188.75,3902.59,1.000,1.000,0,0",
+   "error": false
+  },
+  {
+   "tool": "run_sql",
+   "input": {
+    "query": "with ep as (select sum(p.written_premium * greatest(0, least(p.cover_end_date, date '2025-01-01') - greatest(p.effective_date, date '2024-01-01'))::double / (p.cover_end_date-p.effective_date)) e from premium_txn p join policy_term t using(term_id) where t.channel='PCW' and p.cover_end_date>p.effective_date),\ncl as (select sum(x.amount) inc, sum(case when x.txn_type<>'RESERVE' then x.amount end) paid_net from claim c join claim_txn x using(claim_id) join policy_term t on t.term_id=c.term_id where t.channel='PCW' and year(c.accident_date)=2024 and x.txn_date<=date '2025-12-31')\nselect e, inc, paid_net, inc/e from ep, cl"
+   },
+   "output": "e,inc,paid_net,(inc / e)\n6910063.79,6403769.78,4339761.96,0.926731",
+   "error": false
+  }
+ ],
+ "usage": {
+  "input": 5399,
+  "output": 1475,
+  "cache_read": 8120,
+  "cache_write": 0
+ },
+ "effort": "medium",
+ "prompt_version": "v1"
+}

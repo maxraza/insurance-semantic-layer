@@ -1,0 +1,50 @@
+{
+ "model": "claude-haiku-5-5",
+ "condition": "raw",
+ "qid": "e01",
+ "question": "What was earned premium in calendar year 2024?",
+ "final_text": "Earned premium for calendar year 2024 is **\u00a323,748,557.88**.\n\nMethod: I spread each premium transaction (NEW, RENEWAL, MTA and CANCEL) evenly over its cover period (effective date to cover end date). I then took the share of each period falling in 1 Jan to 31 Dec 2024 and summed those shares. Cancellations are negative and reverse the unearned part of the original premium, so they are included. There are no zero-length cover periods, so no transactions were dropped.\n\nFor context, 2024 written premium by effective date is about \u00a325.6m (net of cancellations), so earned sitting below written is consistent with a growing book.\n\nANSWER: 23748557.88",
+ "stop_reason": "end_turn",
+ "tool_calls": [
+  {
+   "tool": "run_sql",
+   "input": {
+    "query": "SELECT txn_type, COUNT(*) n, SUM(written_premium) wp, SUM(exposure_units) eu, MIN(effective_date) mn, MAX(effective_date) mx, MIN(cover_end_date) ce_min, MAX(cover_end_date) ce_max, SUM(CASE WHEN cover_end_date<effective_date THEN 1 ELSE 0 END) bad FROM premium_txn GROUP BY txn_type"
+   },
+   "output": "txn_type,n,wp,eu,mn,mx,ce_min,ce_max,bad\nRENEWAL,96764,66470703.32,96764.000,2020-01-01,2026-01-20,2021-01-01,2027-01-20,0\nCANCEL,13081,-4423904.86,-13081.000,2019-01-28,2025-12-31,2020-01-03,2026-12-07,0\nNEW,113555,74247233.10,113555.000,2019-01-01,2026-01-14,2020-01-01,2027-01-14,0\nMTA,22310,466631.74,0.000,2019-02-05,2025-12-31,2020-01-01,2026-12-07,0",
+   "error": false
+  },
+  {
+   "tool": "run_sql",
+   "input": {
+    "query": "SELECT * FROM premium_txn LIMIT 15"
+   },
+   "output": "premium_txn_id,term_id,txn_type,booked_date,effective_date,cover_end_date,written_premium,exposure_units\n1,1,NEW,2019-01-01,2019-01-13,2020-01-13,301.57,1.000\n2,2,NEW,2019-01-01,2019-01-03,2020-01-03,1071.49,1.000\n3,3,NEW,2019-01-01,2019-01-07,2020-01-07,418.20,1.000\n4,3,MTA,2019-03-15,2019-03-13,2020-01-07,-20.62,0.000\n5,4,NEW,2019-01-01,2019-01-11,2020-01-11,337.96,1.000\n6,5,NEW,2019-01-01,2019-01-01,2020-01-01,356.50,1.000\n7,6,NEW,2019-01-01,2019-01-06,2020-01-06,437.02,1.000\n8,7,NEW,2019-01-01,2019-01-03,2020-01-03,346.29,1.000\n9,7,CANCEL,2019-10-05,2019-10-01,2020-01-03,-89.18,-1.000\n10,8,NEW,2019-01-01,2019-01-05,2020-01-05,560.53,1.000\n11,9,NEW,2019-01-01,2019-01-08,2020-01-08,315.58,1.000\n12,10,NEW,2019-01-01,2019-01-15,2020-01-15,1879.14,1.000\n13,11,NEW,2019-01-01,2019-01-09,2020-01-09,383.50,1.000\n14,12,NEW,2019-01-01,2019-01-01,2020-01-01,619.64,1.000\n15,13,NEW,2019-01-01,2019-01-04,2020-01-04,523.28,1.000",
+   "error": false
+  },
+  {
+   "tool": "run_sql",
+   "input": {
+    "query": "SELECT ROUND(SUM(CASE WHEN cover_end_date<=effective_date THEN 0 ELSE written_premium * GREATEST(0, DATE_DIFF('day', GREATEST(effective_date, DATE '2024-01-01'), LEAST(cover_end_date, DATE '2025-01-01'))) * 1.0 / DATE_DIFF('day', effective_date, cover_end_date) END),2) AS earned_2024, SUM(CASE WHEN cover_end_date<=effective_date THEN 1 ELSE 0 END) zero_len, SUM(written_premium) AS wp_all FROM premium_txn WHERE effective_date < DATE '2025-01-01' AND cover_end_date > DATE '2024-01-01'"
+   },
+   "output": "earned_2024,zero_len,wp_all\n23748557.88,0,48059046.36",
+   "error": false
+  },
+  {
+   "tool": "run_sql",
+   "input": {
+    "query": "SELECT EXTRACT(year FROM effective_date) yr, txn_type, ROUND(SUM(written_premium),0) wp, COUNT(*) n FROM premium_txn GROUP BY 1,2 ORDER BY 1,2"
+   },
+   "output": "yr,txn_type,wp,n\n2019,CANCEL,-197331,505\n2019,MTA,20121,879\n2019,NEW,8012525,13496\n2020,CANCEL,-403734,1236\n2020,MTA,43260,2082\n2020,NEW,8716776,14659\n2020,RENEWAL,4693136,7383\n2021,CANCEL,-522726,1700\n2021,MTA,55192,3004\n2021,NEW,8924132,15227\n2021,RENEWAL,8326384,13112\n2022,CANCEL,-672458,2220\n2022,MTA,70978,3754\n2022,NEW,9735823,16177\n2022,RENEWAL,11024688,18011\n2023,CANCEL,-767622,2461\n2023,MTA,80122,4110\n2023,NEW,11341579,17028\n2023,RENEWAL,11673956,17369\n2024,CANCEL,-854740,2351\n2024,MTA,90884,4040\n2024,NEW,13322077,17939\n2024,RENEWAL,13009691,17411\n2025,CANCEL,-1005293,2608\n2025,MTA,106075,4441\n2025,NEW,13905003,18639\n2025,RENEWAL,17137931,22667\n2026,NEW,289318,390\n2026,RENEWAL,604917,811",
+   "error": false
+  }
+ ],
+ "usage": {
+  "input": 6552,
+  "output": 1861,
+  "cache_read": 8120,
+  "cache_write": 0
+ },
+ "effort": "medium",
+ "prompt_version": "v1"
+}

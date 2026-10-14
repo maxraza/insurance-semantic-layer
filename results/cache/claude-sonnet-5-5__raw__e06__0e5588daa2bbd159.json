@@ -1,0 +1,42 @@
+{
+ "model": "claude-sonnet-5-5",
+ "condition": "raw",
+ "qid": "e06",
+ "question": "As at 31 March 2023, how much premium had been earned so far in calendar year 2023?",
+ "final_text": "Earned premium for 1 January to 31 March 2023, as at 31 March 2023, was about \u00a35,060,696.\n\nI earned each premium transaction evenly (pro rata by day) over its cover period, from effective date to cover end date. I included only transactions booked on or before 31 March 2023. That covers new business, renewals, mid-term adjustments and cancellations. I then counted the share of each transaction's cover that falls between 1 January and 31 March 2023.\n\nANSWER: 5060695.55",
+ "stop_reason": "end_turn",
+ "tool_calls": [
+  {
+   "tool": "run_sql",
+   "input": {
+    "query": "select txn_type, count(*), sum(written_premium), sum(exposure_units), min(effective_date), max(cover_end_date), min(booked_date), max(booked_date) from premium_txn group by 1"
+   },
+   "output": "txn_type,count_star(),sum(written_premium),sum(exposure_units),min(effective_date),max(cover_end_date),min(booked_date),max(booked_date)\nRENEWAL,96764,66470703.32,96764.000,2020-01-01,2027-01-20,2019-12-15,2025-12-31\nMTA,22310,466631.74,0.000,2019-02-05,2026-12-07,2019-02-08,2025-12-31\nCANCEL,13081,-4423904.86,-13081.000,2019-01-28,2026-12-07,2019-02-02,2025-12-31\nNEW,113555,74247233.10,113555.000,2019-01-01,2027-01-14,2019-01-01,2025-12-31",
+   "error": false
+  },
+  {
+   "tool": "run_sql",
+   "input": {
+    "query": "select * from premium_txn order by term_id, effective_date limit 12"
+   },
+   "output": "premium_txn_id,term_id,txn_type,booked_date,effective_date,cover_end_date,written_premium,exposure_units\n1,1,NEW,2019-01-01,2019-01-13,2020-01-13,301.57,1.000\n2,2,NEW,2019-01-01,2019-01-03,2020-01-03,1071.49,1.000\n3,3,NEW,2019-01-01,2019-01-07,2020-01-07,418.20,1.000\n4,3,MTA,2019-03-15,2019-03-13,2020-01-07,-20.62,0.000\n5,4,NEW,2019-01-01,2019-01-11,2020-01-11,337.96,1.000\n6,5,NEW,2019-01-01,2019-01-01,2020-01-01,356.50,1.000\n7,6,NEW,2019-01-01,2019-01-06,2020-01-06,437.02,1.000\n8,7,NEW,2019-01-01,2019-01-03,2020-01-03,346.29,1.000\n9,7,CANCEL,2019-10-05,2019-10-01,2020-01-03,-89.18,-1.000\n10,8,NEW,2019-01-01,2019-01-05,2020-01-05,560.53,1.000\n11,9,NEW,2019-01-01,2019-01-08,2020-01-08,315.58,1.000\n12,10,NEW,2019-01-01,2019-01-15,2020-01-15,1879.14,1.000",
+   "error": false
+  },
+  {
+   "tool": "run_sql",
+   "input": {
+    "query": "select sum(written_premium * greatest(0, datediff('day', greatest(effective_date, date '2023-01-01'), least(cover_end_date, date '2023-04-01')))::double / datediff('day', effective_date, cover_end_date)) from premium_txn where booked_date <= date '2023-03-31' and datediff('day', effective_date, cover_end_date)>0"
+   },
+   "output": "sum(((written_premium * CAST(greatest(0, datediff('day', greatest(effective_date, CAST('2023-01-01' AS \"DATE\")), least(cover_end_date, CAST('2023-04-01' AS \"DATE\")))) AS \"DOUBLE\")) / datediff('day', effective_date, cover_end_date)))\n5060695.55",
+   "error": false
+  }
+ ],
+ "usage": {
+  "input": 2776,
+  "output": 672,
+  "cache_read": 6090,
+  "cache_write": 0
+ },
+ "effort": "medium",
+ "prompt_version": "v1"
+}

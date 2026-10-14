@@ -1,0 +1,34 @@
+{
+ "model": "claude-haiku-5-5",
+ "condition": "docs",
+ "qid": "t01",
+ "question": "What was our policy-count renewal retention rate for renewals due in 2025?",
+ "final_text": "The 2025 policy-count retention rate is **0.689** (22,667 accepted \u00f7 32,909 matured renewals due).\n\n- **Denominator:** 32,909 renewal offers with a due date in 2025. Every one has matured by 31 December 2025, so none are excluded as pending.\n- **Numerator:** 22,667 of those had a renewed term bound by the valuation date. No renewed term was bound after its due date or after 31 December 2025.\n\nANSWER: 0.689",
+ "stop_reason": "end_turn",
+ "tool_calls": [
+  {
+   "tool": "run_sql",
+   "input": {
+    "query": "\nSELECT\n  COUNT(*) AS renewals_due,\n  SUM(CASE WHEN o.renewed_term_id IS NOT NULL AND t.bound_date <= DATE '2025-12-31' THEN 1 ELSE 0 END) AS renewals_accepted,\n  SUM(CASE WHEN o.renewed_term_id IS NOT NULL THEN 1 ELSE 0 END) AS accepted_any_date,\n  SUM(CASE WHEN o.renewed_term_id IS NOT NULL AND t.bound_date > o.due_date THEN 1 ELSE 0 END) AS bound_after_due,\n  SUM(CASE WHEN o.renewed_term_id IS NOT NULL AND t.bound_date > DATE '2025-12-31' THEN 1 ELSE 0 END) AS bound_after_asof\nFROM renewal_offer o\nLEFT JOIN policy_term t ON t.term_id = o.renewed_term_id\nWHERE o.due_date >= DATE '2025-01-01' AND o.due_date <= DATE '2025-12-31'\n\"\"\"\n"
+   },
+   "output": "error: Parser Error: unterminated quoted identifier at or near \"\"\"\"\n\"\n\nLINE 11: \"\"\"\n         ^",
+   "error": true
+  },
+  {
+   "tool": "run_sql",
+   "input": {
+    "query": "\nSELECT\n  COUNT(*) AS renewals_due,\n  SUM(CASE WHEN o.renewed_term_id IS NOT NULL AND t.bound_date <= DATE '2025-12-31' THEN 1 ELSE 0 END) AS renewals_accepted,\n  SUM(CASE WHEN o.renewed_term_id IS NOT NULL THEN 1 ELSE 0 END) AS accepted_any_date,\n  SUM(CASE WHEN o.renewed_term_id IS NOT NULL AND t.bound_date > o.due_date THEN 1 ELSE 0 END) AS bound_after_due,\n  SUM(CASE WHEN o.renewed_term_id IS NOT NULL AND t.bound_date > DATE '2025-12-31' THEN 1 ELSE 0 END) AS bound_after_asof\nFROM renewal_offer o\nLEFT JOIN policy_term t ON t.term_id = o.renewed_term_id\nWHERE o.due_date >= DATE '2025-01-01' AND o.due_date <= DATE '2025-12-31'\n"
+   },
+   "output": "renewals_due,renewals_accepted,accepted_any_date,bound_after_due,bound_after_asof\n32909,22667,22667,0,0",
+   "error": false
+  }
+ ],
+ "usage": {
+  "input": 2226,
+  "output": 1676,
+  "cache_read": 15939,
+  "cache_write": 0
+ },
+ "effort": "medium",
+ "prompt_version": "v1"
+}

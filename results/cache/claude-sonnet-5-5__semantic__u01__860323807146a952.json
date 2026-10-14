@@ -1,0 +1,55 @@
+{
+ "model": "claude-sonnet-5-5",
+ "condition": "semantic",
+ "qid": "u01",
+ "question": "What was the accident-year 2024 loss ratio for windscreen claims?",
+ "final_text": "I can't give you this figure, because the data doesn't support it. Earned premium isn't recorded by peril, so a windscreen-only loss ratio has no denominator. The loss ratio metrics (paid, reported and ultimate) can't be split by peril either. IBNR is booked as a single bulk figure by accident year, so there is no windscreen share of it.\n\nThe data can give you windscreen reported loss, paid loss, claim counts and severity for accident year 2024. A windscreen loss ratio would need premium allocated to windscreen cover, and that allocation isn't in the data.\n\nANSWER: UNANSWERABLE",
+ "stop_reason": "end_turn",
+ "tool_calls": [
+  {
+   "tool": "query_metrics",
+   "input": {
+    "metrics": [
+     "reported_loss",
+     "earned_premium"
+    ],
+    "basis": "accident",
+    "as_of": "2025-12-31",
+    "grain": "year",
+    "period_from": "2024-01-01",
+    "period_to": "2024-12-31",
+    "filters": {
+     "peril": "WINDSCREEN"
+    }
+   },
+   "output": "error: 'earned_premium' can't be split by 'peril' (not available on every measure it uses). Allowed: business_type, channel, driver_age_band, region, vehicle_group",
+   "error": true
+  },
+  {
+   "tool": "query_metrics",
+   "input": {
+    "metrics": [
+     "loss_ratio_reported"
+    ],
+    "basis": "accident",
+    "as_of": "2025-12-31",
+    "grain": "year",
+    "period_from": "2024-01-01",
+    "period_to": "2024-12-31",
+    "filters": {
+     "peril": "WINDSCREEN"
+    }
+   },
+   "output": "error: 'loss_ratio_reported' can't be split by 'peril' (not available on every measure it uses). Allowed: business_type, channel, driver_age_band, region, vehicle_group",
+   "error": true
+  }
+ ],
+ "usage": {
+  "input": 1555,
+  "output": 840,
+  "cache_read": 11046,
+  "cache_write": 0
+ },
+ "effort": "medium",
+ "prompt_version": "v1"
+}

@@ -1,0 +1,50 @@
+{
+ "model": "claude-haiku-5-5",
+ "condition": "docs",
+ "qid": "l01",
+ "question": "What is the accident-year 2024 ultimate loss ratio (reported loss plus booked IBNR, excluding ALAE) at 31 December 2025?",
+ "final_text": "**Accident-year 2024 ultimate loss ratio at 31 December 2025: about 0.819**\n\n- **Reported loss (accident basis):** \u00a318,827,415. This is indemnity payments net of recoveries plus case reserves, for claims with accident date in 2024 and transactions booked by 31 Dec 2025. ALAE is excluded.\n- **IBNR:** \u00a3611,436, from the 31 Dec 2025 valuation for accident year 2024.\n- **Earned premium (accident basis):** \u00a323,748,558. This is written premium earned pro rata over each transaction's cover period within calendar 2024, counting only transactions booked by 31 Dec 2025.\n\nRatio = (18,827,415 + 611,436) / 23,748,558 = 0.818528.\n\nANSWER: 0.818528",
+ "stop_reason": "end_turn",
+ "tool_calls": [
+  {
+   "tool": "run_sql",
+   "input": {
+    "query": "SELECT txn_type, cost_type, COUNT(*), SUM(amount), MIN(amount), MAX(amount) FROM claim_txn GROUP BY 1,2 ORDER BY 1,2;"
+   },
+   "output": "txn_type,cost_type,count_star(),sum(amount),min(amount),max(amount)\nPAYMENT,ALAE,5482,4041773.75,5.38,129243.82\nPAYMENT,INDEMNITY,34398,78097079.75,0.10,1214443.66\nRECOVERY,INDEMNITY,1151,-2278660.54,-24511.92,-26.63\nRESERVE,INDEMNITY,79216,15020532.03,-1214443.66,1529370.74",
+   "error": false
+  },
+  {
+   "tool": "run_sql",
+   "input": {
+    "query": "SELECT valuation_date, accident_year, ibnr FROM ibnr_valuation WHERE accident_year=2024 ORDER BY valuation_date;"
+   },
+   "output": "valuation_date,accident_year,ibnr\n2024-03-31,2024,1564164.64\n2024-06-30,2024,2440226.21\n2024-09-30,2024,3427063.37\n2024-12-31,2024,3882380.39\n2025-03-31,2024,2352791.90\n2025-06-30,2024,1576668.45\n2025-09-30,2024,1008199.39\n2025-12-31,2024,611435.82",
+   "error": false
+  },
+  {
+   "tool": "run_sql",
+   "input": {
+    "query": "SELECT premium_txn_id, term_id, txn_type, booked_date, effective_date, cover_end_date, written_premium, exposure_units FROM premium_txn LIMIT 15;"
+   },
+   "output": "premium_txn_id,term_id,txn_type,booked_date,effective_date,cover_end_date,written_premium,exposure_units\n1,1,NEW,2019-01-01,2019-01-13,2020-01-13,301.57,1.000\n2,2,NEW,2019-01-01,2019-01-03,2020-01-03,1071.49,1.000\n3,3,NEW,2019-01-01,2019-01-07,2020-01-07,418.20,1.000\n4,3,MTA,2019-03-15,2019-03-13,2020-01-07,-20.62,0.000\n5,4,NEW,2019-01-01,2019-01-11,2020-01-11,337.96,1.000\n6,5,NEW,2019-01-01,2019-01-01,2020-01-01,356.50,1.000\n7,6,NEW,2019-01-01,2019-01-06,2020-01-06,437.02,1.000\n8,7,NEW,2019-01-01,2019-01-03,2020-01-03,346.29,1.000\n9,7,CANCEL,2019-10-05,2019-10-01,2020-01-03,-89.18,-1.000\n10,8,NEW,2019-01-01,2019-01-05,2020-01-05,560.53,1.000\n11,9,NEW,2019-01-01,2019-01-08,2020-01-08,315.58,1.000\n12,10,NEW,2019-01-01,2019-01-15,2020-01-15,1879.14,1.000\n13,11,NEW,2019-01-01,2019-01-09,2020-01-09,383.50,1.000\n14,12,NEW,2019-01-01,2019-01-01,2020-01-01,619.64,1.000\n15,13,NEW,2019-01-01,2019-01-04,2020-01-04,523.28,1.000",
+   "error": false
+  },
+  {
+   "tool": "run_sql",
+   "input": {
+    "query": "\nWITH rl AS (\n  SELECT SUM(t.amount) AS reported_loss\n  FROM claim_txn t JOIN claim c ON c.claim_id=t.claim_id\n  WHERE c.accident_date >= DATE '2024-01-01' AND c.accident_date < DATE '2025-01-01'\n    AND t.cost_type='INDEMNITY' AND t.txn_date <= DATE '2025-12-31'\n),\nep AS (\n  SELECT SUM(p.written_premium * (\n    GREATEST(0, DATE_DIFF('day', GREATEST(p.effective_date, DATE '2024-01-01'), LEAST(p.cover_end_date, DATE '2025-01-01'))))\n    / NULLIF(DATE_DIFF('day', p.effective_date, p.cover_end_date),0)) AS earned_premium\n  FROM premium_txn p\n  WHERE p.booked_date <= DATE '2025-12-31'\n),\nib AS (\n  SELECT ibnr FROM ibnr_valuation WHERE accident_year=2024 AND valuation_date=DATE '2025-12-31'\n)\nSELECT rl.reported_loss, ib.ibnr, ep.earned_premium,\n       (rl.reported_loss + ib.ibnr)/ep.earned_premium AS lr_ultimate\nFROM rl, ib, ep;\n"
+   },
+   "output": "reported_loss,ibnr,earned_premium,lr_ultimate\n18827414.86,611435.82,23748557.88,0.818528",
+   "error": false
+  }
+ ],
+ "usage": {
+  "input": 5370,
+  "output": 2408,
+  "cache_read": 15939,
+  "cache_write": 0
+ },
+ "effort": "medium",
+ "prompt_version": "v1"
+}

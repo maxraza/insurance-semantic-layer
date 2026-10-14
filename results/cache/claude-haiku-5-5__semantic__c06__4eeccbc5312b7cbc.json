@@ -1,0 +1,33 @@
+{
+ "model": "claude-haiku-5-5",
+ "condition": "semantic",
+ "qid": "c06",
+ "question": "What were our total expenses in 2024?",
+ "final_text": "Total expenses for 2024 were \u00a33,365,613.78 (calendar basis, valued at 31 December 2025, covering acquisition, commission and admin costs).\n\nANSWER: 3365613.78",
+ "stop_reason": "end_turn",
+ "tool_calls": [
+  {
+   "tool": "query_metrics",
+   "input": {
+    "metrics": [
+     "expenses"
+    ],
+    "basis": "calendar",
+    "as_of": "2025-12-31",
+    "period_from": "2024-01-01",
+    "period_to": "2024-12-31",
+    "grain": "year"
+   },
+   "output": "period,expenses\n2024,3365613.78",
+   "error": false
+  }
+ ],
+ "usage": {
+  "input": 381,
+  "output": 254,
+  "cache_read": 7364,
+  "cache_write": 0
+ },
+ "effort": "medium",
+ "prompt_version": "v1"
+}

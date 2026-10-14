@@ -1,0 +1,58 @@
+{
+ "model": "claude-haiku-5-5",
+ "condition": "raw",
+ "qid": "r07",
+ "question": "What was the accident-year 2023 claim frequency for vehicle group E?",
+ "final_text": "The accident-year 2023 claim frequency for vehicle group E is about 0.164 claims per earned policy-year.\n\n- **Claims:** 547 claims with accident date in 2023 on vehicle group E terms.\n- **Exposure:** 3,343.74 earned policy-years in 2023. I pro-rated each term by the days it was in force in 2023, using the cancel date where present.\n- **Frequency:** 547 / 3,343.74 = 0.1636.\n\nI did not use the premium_txn exposure units. Summing them over overlapping terms gives about 6,635, which double-counts terms and does not pro-rate for the part of the year in force, so it is not a valid earned-exposure base.\n\nANSWER: 0.1636",
+ "stop_reason": "end_turn",
+ "tool_calls": [
+  {
+   "tool": "run_sql",
+   "input": {
+    "query": "SELECT vehicle_group, COUNT(*) AS terms, MIN(inception_date), MAX(inception_date), (SELECT COUNT(*) FROM claim) AS claims, (SELECT COUNT(*) FROM premium_txn) AS txns FROM policy_term GROUP BY vehicle_group ORDER BY vehicle_group"
+   },
+   "output": "vehicle_group,terms,min(inception_date),max(inception_date),claims,txns\nA,37838,2019-01-03,2026-01-19,23549,245710\nB,57133,2019-01-01,2026-01-20,23549,245710\nC,57044,2019-01-01,2026-01-20,23549,245710\nD,37587,2019-01-01,2026-01-20,23549,245710\nE,20717,2019-01-03,2026-01-19,23549,245710",
+   "error": false
+  },
+  {
+   "tool": "run_sql",
+   "input": {
+    "query": "SELECT txn_type, COUNT(*), SUM(exposure_units), MIN(effective_date), MAX(cover_end_date) FROM premium_txn GROUP BY txn_type"
+   },
+   "output": "txn_type,count_star(),sum(exposure_units),min(effective_date),max(cover_end_date)\nMTA,22310,0.000000,2019-02-05,2026-12-07\nRENEWAL,96764,96764.000000,2020-01-01,2027-01-20\nCANCEL,13081,-6630.491786,2019-01-28,2026-12-07\nNEW,113555,113555.000000,2019-01-01,2027-01-14",
+   "error": false
+  },
+  {
+   "tool": "run_sql",
+   "input": {
+    "query": "\nWITH t AS (\n  SELECT term_id, vehicle_group, inception_date, expiry_date, cancel_date,\n    LEAST(COALESCE(cancel_date, expiry_date), expiry_date) AS end_eff\n  FROM policy_term WHERE vehicle_group='E'\n),\ne AS (\n  SELECT term_id, vehicle_group,\n    GREATEST(0, DATE_DIFF('day', GREATEST(inception_date, DATE '2023-01-01'), LEAST(end_eff, DATE '2024-01-01'))) * 1.0\n    / NULLIF(DATE_DIFF('day', inception_date, expiry_date),0) AS earned\n  FROM t\n)\nSELECT\n  (SELECT COUNT(*) FROM claim c JOIN policy_term p ON c.term_id=p.term_id WHERE p.vehicle_group='E' AND c.accident_date BETWEEN DATE '2023-01-01' AND DATE '2023-12-31') AS claims_ay2023,\n  (SELECT SUM(earned) FROM e) AS earned_exposure,\n  (SELECT COUNT(*) FROM e WHERE earned IS NULL) AS null_earned,\n  (SELECT SUM(exposure_units) FROM premium_txn p JOIN policy_term t ON p.term_id=t.term_id WHERE t.vehicle_group='E' AND p.txn_type IN ('NEW','RENEWAL','CANCEL') AND p.effective_date <= DATE '2023-12-31' AND p.cover_end_date >= DATE '2023-01-01') AS txn_exposure_overlap\n"
+   },
+   "output": "claims_ay2023,earned_exposure,null_earned,txn_exposure_overlap\n547,3343.74,0,6634.588297",
+   "error": false
+  },
+  {
+   "tool": "run_sql",
+   "input": {
+    "query": "\nSELECT DATE_DIFF('day', inception_date, expiry_date) AS len, COUNT(*) n, SUM(CASE WHEN cancel_date IS NOT NULL THEN 1 ELSE 0 END) cancelled\nFROM policy_term WHERE vehicle_group='E' AND inception_date <= DATE '2023-12-31' AND expiry_date >= DATE '2023-01-01'\nGROUP BY len ORDER BY n DESC LIMIT 10;\n"
+   },
+   "output": "len,n,cancelled\n365,4079,265\n366,2744,198",
+   "error": false
+  },
+  {
+   "tool": "run_sql",
+   "input": {
+    "query": "\nSELECT COUNT(*) AS terms_overlap_2023, SUM(DATE_DIFF('day', GREATEST(inception_date, DATE '2023-01-01'), LEAST(COALESCE(cancel_date, expiry_date), expiry_date, DATE '2024-01-01'))) AS days_in_2023, AVG(DATE_DIFF('day', inception_date, expiry_date)) avg_len\nFROM policy_term WHERE vehicle_group='E' AND inception_date <= DATE '2023-12-31' AND expiry_date >= DATE '2023-01-01';\n"
+   },
+   "output": "terms_overlap_2023,days_in_2023,avg_len\n6823,1206842,365.40",
+   "error": false
+  }
+ ],
+ "usage": {
+  "input": 5654,
+  "output": 3291,
+  "cache_read": 6159,
+  "cache_write": 2053
+ },
+ "effort": "medium",
+ "prompt_version": "v1"
+}

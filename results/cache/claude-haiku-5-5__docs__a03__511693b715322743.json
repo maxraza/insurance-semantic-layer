@@ -1,0 +1,26 @@
+{
+ "model": "claude-haiku-5-5",
+ "condition": "docs",
+ "qid": "a03",
+ "question": "What was our expense ratio for 2024?",
+ "final_text": "Our calendar-basis expense ratio for 2024 was **0.1417**, or about 14.2%.\n\n- **Expenses (2024, by month incurred):** \u00a33,365,613.78\n- **Earned premium (calendar 2024):** \u00a323,748,557.88, from each transaction's written premium earned pro rata daily over its cover period, limited to 2024.\n\nThis uses the statutory-style basis (expenses / earned premium), as the glossary defines it. On the trade basis (expenses / written premium), the ratio would be different; I did not compute it.\n\nANSWER: 0.1417",
+ "stop_reason": "end_turn",
+ "tool_calls": [
+  {
+   "tool": "run_sql",
+   "input": {
+    "query": "\nWITH exp AS (\n  SELECT SUM(amount) AS expenses\n  FROM expense\n  WHERE expense_month >= DATE '2024-01-01' AND expense_month < DATE '2025-01-01'\n),\nep AS (\n  SELECT SUM(\n    CASE WHEN cover_end_date <= effective_date THEN 0\n    ELSE written_premium *\n      GREATEST(0, DATE_DIFF('day', GREATEST(effective_date, DATE '2024-01-01'), LEAST(cover_end_date, DATE '2025-01-01')))\n      / DATE_DIFF('day', effective_date, cover_end_date)\n    END) AS earned_premium\n  FROM premium_txn\n  WHERE effective_date < DATE '2025-01-01' AND cover_end_date > DATE '2024-01-01'\n)\nSELECT exp.expenses, ep.earned_premium, exp.expenses / ep.earned_premium AS expense_ratio\nFROM exp, ep\n"
+   },
+   "output": "expenses,earned_premium,expense_ratio\n3365613.78,23748557.88,0.141719",
+   "error": false
+  }
+ ],
+ "usage": {
+  "input": 969,
+  "output": 995,
+  "cache_read": 10824,
+  "cache_write": 0
+ },
+ "effort": "medium",
+ "prompt_version": "v1"
+}

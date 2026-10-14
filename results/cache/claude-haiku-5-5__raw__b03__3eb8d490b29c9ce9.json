@@ -1,0 +1,66 @@
+{
+ "model": "claude-haiku-5-5",
+ "condition": "raw",
+ "qid": "b03",
+ "question": "What is the policy-year (underwriting-year) 2023 reported loss ratio as at 31 December 2025?",
+ "final_text": "**Policy-year 2023 reported loss ratio: 0.891** (as at 31 December 2025)\n\nMethod:\n- **Scope:** all 34,397 policy terms with inception dates in 2023. Claims are attached through their term.\n- **Earned premium: \u00a322,291,250.32.** This is net written premium (NEW + RENEWAL + MTA + CANCEL). Every 2023 term is annual and expired by 31 Dec 2025. For the 2,410 cancelled terms, net premium is already pro-rated to the cancel date (average ratio 0.511 against 0.505 elapsed time), so it equals earned.\n- **Reported incurred: \u00a319,856,625.95.** This is all claim transactions (indemnity and ALAE payments, reserves and recoveries), which gives paid plus case outstanding. IBNR is excluded, as \"reported\" implies.\n- **Ratio:** 19,856,625.95 / 22,291,250.32 = 0.8908.\n\nANSWER: 0.891",
+ "stop_reason": "end_turn",
+ "tool_calls": [
+  {
+   "tool": "run_sql",
+   "input": {
+    "query": "SELECT 'premium_txn' t, txn_type, count(*) n, sum(written_premium) s, min(booked_date), max(booked_date) FROM premium_txn GROUP BY txn_type\nUNION ALL SELECT 'claim_txn', txn_type || '/' || cost_type, count(*), sum(amount), min(txn_date), max(txn_date) FROM claim_txn GROUP BY txn_type, cost_type\nUNION ALL SELECT 'policy_term_2023', channel, count(*), NULL, min(inception_date), max(inception_date) FROM policy_term WHERE inception_date BETWEEN '2023-01-01' AND '2023-12-31' GROUP BY channel"
+   },
+   "output": "t,txn_type,n,s,min(booked_date),max(booked_date)\npremium_txn,CANCEL,13081,-4423904.86,2019-02-02,2025-12-31\npremium_txn,NEW,113555,74247233.10,2019-01-01,2025-12-31\npremium_txn,MTA,22310,466631.74,2019-02-08,2025-12-31\npremium_txn,RENEWAL,96764,66470703.32,2019-12-15,2025-12-31\nclaim_txn,PAYMENT/ALAE,5482,4041773.75,2019-04-02,2025-12-31\nclaim_txn,RECOVERY/INDEMNITY,1151,-2278660.54,2019-07-11,2025-12-31\nclaim_txn,PAYMENT/INDEMNITY,34398,78097079.75,2019-02-22,2025-12-31\nclaim_txn,RESERVE/INDEMNITY,79216,15020532.03,2019-02-04,2025-12-31\npolicy_term_2023,PCW,10608,None,2023-01-01,2023-12-31\npolicy_term_2023,BROKER,10908,None,2023-01-01,2023-12-31\npolicy_term_2023,DIRECT,12881,None,2023-01-01,2023-12-31",
+   "error": false
+  },
+  {
+   "tool": "run_sql",
+   "input": {
+    "query": "SELECT * FROM premium_txn LIMIT 15"
+   },
+   "output": "premium_txn_id,term_id,txn_type,booked_date,effective_date,cover_end_date,written_premium,exposure_units\n1,1,NEW,2019-01-01,2019-01-13,2020-01-13,301.57,1.000\n2,2,NEW,2019-01-01,2019-01-03,2020-01-03,1071.49,1.000\n3,3,NEW,2019-01-01,2019-01-07,2020-01-07,418.20,1.000\n4,3,MTA,2019-03-15,2019-03-13,2020-01-07,-20.62,0.000\n5,4,NEW,2019-01-01,2019-01-11,2020-01-11,337.96,1.000\n6,5,NEW,2019-01-01,2019-01-01,2020-01-01,356.50,1.000\n7,6,NEW,2019-01-01,2019-01-06,2020-01-06,437.02,1.000\n8,7,NEW,2019-01-01,2019-01-03,2020-01-03,346.29,1.000\n9,7,CANCEL,2019-10-05,2019-10-01,2020-01-03,-89.18,-1.000\n10,8,NEW,2019-01-01,2019-01-05,2020-01-05,560.53,1.000\n11,9,NEW,2019-01-01,2019-01-08,2020-01-08,315.58,1.000\n12,10,NEW,2019-01-01,2019-01-15,2020-01-15,1879.14,1.000\n13,11,NEW,2019-01-01,2019-01-09,2020-01-09,383.50,1.000\n14,12,NEW,2019-01-01,2019-01-01,2020-01-01,619.64,1.000\n15,13,NEW,2019-01-01,2019-01-04,2020-01-04,523.28,1.000",
+   "error": false
+  },
+  {
+   "tool": "run_sql",
+   "input": {
+    "query": "SELECT * FROM claim_txn ORDER BY claim_id, txn_date LIMIT 30"
+   },
+   "output": "claim_txn_id,claim_id,txn_date,txn_type,cost_type,amount\n1,1,2019-11-13,RESERVE,INDEMNITY,1511.36\n2,1,2019-11-23,PAYMENT,INDEMNITY,40.80\n3,1,2019-11-23,RESERVE,INDEMNITY,-40.80\n4,1,2019-11-28,RESERVE,INDEMNITY,-18.26\n5,1,2019-11-29,PAYMENT,INDEMNITY,1339.91\n6,1,2019-11-29,RESERVE,INDEMNITY,-1339.91\n7,1,2020-01-03,PAYMENT,INDEMNITY,355.89\n8,1,2020-01-03,RESERVE,INDEMNITY,-112.39\n9,1,2020-01-03,PAYMENT,ALAE,194.55\n10,2,2019-11-14,RESERVE,INDEMNITY,96.92\n11,2,2020-02-15,PAYMENT,INDEMNITY,179.10\n12,2,2020-02-15,RESERVE,INDEMNITY,-96.92\n13,2,2020-02-15,PAYMENT,ALAE,24.55\n14,2,2020-04-21,RECOVERY,INDEMNITY,-87.11\n15,3,2019-07-13,RESERVE,INDEMNITY,274.03\n16,3,2019-07-19,PAYMENT,INDEMNITY,337.15\n17,3,2019-07-19,RESERVE,INDEMNITY,-274.03\n18,4,2019-09-16,RESERVE,INDEMNITY,210.37\n19,4,2019-09-22,PAYMENT,INDEMNITY,331.19\n20,4,2019-09-22,RESERVE,INDEMNITY,-210.37\n21,5,2019-10-29,RESERVE,INDEMNITY,330.48\n22,5,2019-11-01,PAYMENT,INDEMNITY,308.81\n23,5,2019-11-01,RESERVE,INDEMNITY,-308.81\n24,5,2019-11-01,RESERVE,INDEMNITY,-21.67\n25,6,2019-11-19,RESERVE,INDEMNITY,7384.21\n26,6,2020-02-04,PAYMENT,INDEMNITY,7047.78\n27,6,2020-02-04,RESERVE,INDEMNITY,-7047.78\n28,6,2020-02-04,RESERVE,INDEMNITY,-336.43\n29,7,2019-10-26,RESERVE,INDEMNITY,6348.87\n30,7,2019-11-17,RESERVE,INDEMNITY,-6348.87",
+   "error": false
+  },
+  {
+   "tool": "run_sql",
+   "input": {
+    "query": "WITH t AS (\n  SELECT term_id, inception_date, expiry_date, cancel_date FROM policy_term\n  WHERE inception_date BETWEEN '2023-01-01' AND '2023-12-31'\n),\nprem AS (\n  SELECT p.term_id, SUM(p.written_premium) wp, SUM(p.exposure_units) ex\n  FROM premium_txn p JOIN t USING (term_id) GROUP BY p.term_id\n),\nclm AS (\n  SELECT c.term_id, SUM(ct.amount) incurred_rep,\n         SUM(CASE WHEN ct.cost_type='INDEMNITY' THEN ct.amount ELSE 0 END) ind,\n         SUM(CASE WHEN ct.cost_type='ALAE' THEN ct.amount ELSE 0 END) alae\n  FROM claim c JOIN claim_txn ct USING (claim_id) JOIN t USING (term_id) GROUP BY c.term_id\n)\nSELECT\n  (SELECT count(*) FROM t) n_terms,\n  (SELECT count(*) FROM t WHERE cancel_date IS NOT NULL) n_cancel,\n  (SELECT count(*) FROM t WHERE expiry_date > DATE '2025-12-31') n_unexpired,\n  (SELECT count(*) FROM t WHERE date_diff('day', inception_date, expiry_date) NOT BETWEEN 364 AND 366) n_nonannual,\n  (SELECT count(*) FROM prem) n_terms_with_prem,\n  (SELECT SUM(wp) FROM prem) net_written,\n  (SELECT SUM(incurred_rep) FROM clm) incurred_all,\n  (SELECT SUM(ind) FROM clm) ind_part,\n  (SELECT SUM(alae) FROM clm) alae_part,\n  (SELECT SUM(wp) FROM prem WHERE term_id NOT IN (SELECT term_id FROM t WHERE cancel_date IS NOT NULL)) wp_noncancel,\n  (SELECT SUM(ex) FROM prem) exposure_net\n\""
+   },
+   "output": "error: Parser Error: unterminated quoted identifier at or near \"\"\"\n\nLINE 27: \"\n         ^",
+   "error": true
+  },
+  {
+   "tool": "run_sql",
+   "input": {
+    "query": "WITH t AS (\n  SELECT term_id, inception_date, expiry_date, cancel_date FROM policy_term\n  WHERE inception_date BETWEEN '2023-01-01' AND '2023-12-31'\n),\nprem AS (\n  SELECT p.term_id, SUM(p.written_premium) wp, SUM(p.exposure_units) ex\n  FROM premium_txn p JOIN t USING (term_id) GROUP BY p.term_id\n),\nclm AS (\n  SELECT c.term_id, SUM(ct.amount) incurred_rep,\n         SUM(CASE WHEN ct.cost_type='INDEMNITY' THEN ct.amount ELSE 0 END) ind,\n         SUM(CASE WHEN ct.cost_type='ALAE' THEN ct.amount ELSE 0 END) alae\n  FROM claim c JOIN claim_txn ct USING (claim_id) JOIN t USING (term_id) GROUP BY c.term_id\n)\nSELECT\n  (SELECT count(*) FROM t) n_terms,\n  (SELECT count(*) FROM t WHERE cancel_date IS NOT NULL) n_cancel,\n  (SELECT count(*) FROM t WHERE expiry_date > DATE '2025-12-31') n_unexpired,\n  (SELECT count(*) FROM t WHERE date_diff('day', inception_date, expiry_date) NOT BETWEEN 364 AND 366) n_nonannual,\n  (SELECT count(*) FROM prem) n_terms_with_prem,\n  (SELECT SUM(wp) FROM prem) net_written,\n  (SELECT SUM(incurred_rep) FROM clm) incurred_all,\n  (SELECT SUM(ind) FROM clm) ind_part,\n  (SELECT SUM(alae) FROM clm) alae_part,\n  (SELECT SUM(wp) FROM prem WHERE term_id NOT IN (SELECT term_id FROM t WHERE cancel_date IS NOT NULL)) wp_noncancel,\n  (SELECT SUM(ex) FROM prem) exposure_net"
+   },
+   "output": "n_terms,n_cancel,n_unexpired,n_nonannual,n_terms_with_prem,net_written,incurred_all,ind_part,alae_part,wp_noncancel,exposure_net\n34397,2410,0,0,34397,22291250.32,19856625.95,19011665.01,844960.94,21474594.94,31987.000",
+   "error": false
+  },
+  {
+   "tool": "run_sql",
+   "input": {
+    "query": "WITH t AS (SELECT term_id, inception_date, expiry_date, cancel_date, written_premium FROM policy_term JOIN (SELECT term_id AS tid, 1 AS x FROM policy_term WHERE 1=0) ON 1=0)\nSELECT count(*) n, sum(CASE WHEN net_ex < 0.5 THEN 1 ELSE 0 END) zero_exposure_after_cancel,\n       round(avg(net_wp/ NULLIF(full_wp,0)),3) avg_ratio, round(avg(days_frac),3) avg_days_frac,\n       round(sum(net_wp),2) net_wp_cancelled\nFROM (\n  SELECT pt.term_id, SUM(p.exposure_units) net_ex, SUM(p.written_premium) net_wp,\n         MAX(CASE WHEN p.txn_type='NEW' THEN p.written_premium END) full_wp,\n         date_diff('day', pt.inception_date, pt.cancel_date)*1.0/date_diff('day', pt.inception_date, pt.expiry_date) days_frac\n  FROM policy_term pt JOIN premium_txn p USING (term_id)\n  WHERE pt.inception_date BETWEEN '2023-01-01' AND '2023-12-31' AND pt.cancel_date IS NOT NULL\n  GROUP BY pt.term_id, pt.inception_date, pt.cancel_date, pt.expiry_date\n) q"
+   },
+   "output": "n,zero_exposure_after_cancel,avg_ratio,avg_days_frac,net_wp_cancelled\n2410,2410,0.511,0.505,816655.38",
+   "error": false
+  }
+ ],
+ "usage": {
+  "input": 22834,
+  "output": 5801,
+  "cache_read": 10150,
+  "cache_write": 0
+ },
+ "effort": "medium",
+ "prompt_version": "v1"
+}

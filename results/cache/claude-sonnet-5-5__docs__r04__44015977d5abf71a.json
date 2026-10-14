@@ -1,0 +1,26 @@
+{
+ "model": "claude-sonnet-5-5",
+ "condition": "docs",
+ "qid": "r04",
+ "question": "What is the average reported cost per reported claim for own-damage claims in accident year 2024?",
+ "final_text": "The average reported cost per reported claim for own-damage claims in accident year 2024 is about \u00a33,054.96, as at 31 December 2025.\n\n- **Claims:** 1,676 own-damage claims with an accident date in 2024 and a report date on or before 31 December 2025. This count includes nil claims.\n- **Reported loss:** \u00a35,120,112.18. This is indemnity payments net of recoveries plus case reserves, and it excludes ALAE and IBNR.\n- **Calculation:** \u00a35,120,112.18 \u00f7 1,676 = \u00a33,054.96.\n\nI summed all indemnity transaction amounts to get reported loss. That assumes recoveries are stored as negative amounts. I did not check this.\n\nANSWER: 3054.96",
+ "stop_reason": "end_turn",
+ "tool_calls": [
+  {
+   "tool": "run_sql",
+   "input": {
+    "query": "with c as (select claim_id from claim where peril='OWN_DAMAGE' and accident_date between '2024-01-01' and '2024-12-31' and report_date<='2025-12-31')\nselect (select count(*) from c) n, (select sum(amount) from claim_txn t join c using(claim_id) where txn_date<='2025-12-31' and cost_type='INDEMNITY') loss"
+   },
+   "output": "n,loss\n1676,5120112.18",
+   "error": false
+  }
+ ],
+ "usage": {
+  "input": 470,
+  "output": 673,
+  "cache_read": 10626,
+  "cache_write": 0
+ },
+ "effort": "medium",
+ "prompt_version": "v1"
+}

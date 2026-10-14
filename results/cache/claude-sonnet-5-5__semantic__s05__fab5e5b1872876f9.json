@@ -1,0 +1,36 @@
+{
+ "model": "claude-sonnet-5-5",
+ "condition": "semantic",
+ "qid": "s05",
+ "question": "What were case reserves outstanding on bodily-injury claims at 31 December 2025?",
+ "final_text": "Case reserves outstanding on bodily-injury claims at 31 December 2025 were \u00a311,574,541.29. This is the calendar-basis figure for 2025, valued at 31 December 2025.\n\nANSWER: 11574541.29",
+ "stop_reason": "end_turn",
+ "tool_calls": [
+  {
+   "tool": "query_metrics",
+   "input": {
+    "metrics": [
+     "case_reserve"
+    ],
+    "basis": "calendar",
+    "as_of": "2025-12-31",
+    "filters": {
+     "peril": "BODILY_INJURY"
+    },
+    "grain": "year",
+    "period_from": "2025-01-01",
+    "period_to": "2025-12-31"
+   },
+   "output": "period,case_reserve\n2025,11574541.29",
+   "error": false
+  }
+ ],
+ "usage": {
+  "input": 455,
+  "output": 305,
+  "cache_read": 7364,
+  "cache_write": 0
+ },
+ "effort": "medium",
+ "prompt_version": "v1"
+}

@@ -1,0 +1,26 @@
+{
+ "model": "claude-sonnet-5-5",
+ "condition": "docs",
+ "qid": "n01",
+ "question": "How many accident-year 2024 claims have had at least one indemnity payment?",
+ "final_text": "As at 31 December 2025, 3,725 claims with a 2024 accident date have had at least one indemnity payment. I counted distinct claims with an indemnity payment transaction (payment type, indemnity cost type) dated on or before that date. Nil claims and claims with only ALAE or reserve movements are excluded.\n\nANSWER: 3725",
+ "stop_reason": "end_turn",
+ "tool_calls": [
+  {
+   "tool": "run_sql",
+   "input": {
+    "query": "select count(distinct c.claim_id) from claim c join claim_txn t on t.claim_id=c.claim_id where c.accident_date between '2024-01-01' and '2024-12-31' and t.txn_type='PAYMENT' and t.cost_type='INDEMNITY' and t.txn_date<='2025-12-31' and c.report_date<='2025-12-31'"
+   },
+   "output": "count(DISTINCT c.claim_id)\n3725",
+   "error": false
+  }
+ ],
+ "usage": {
+  "input": 468,
+  "output": 360,
+  "cache_read": 10626,
+  "cache_write": 0
+ },
+ "effort": "medium",
+ "prompt_version": "v1"
+}

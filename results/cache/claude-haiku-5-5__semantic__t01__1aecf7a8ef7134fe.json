@@ -1,0 +1,35 @@
+{
+ "model": "claude-haiku-5-5",
+ "condition": "semantic",
+ "qid": "t01",
+ "question": "What was our policy-count renewal retention rate for renewals due in 2025?",
+ "final_text": "Our policy-count renewal retention rate for renewals due in 2025 was **0.689** (68.9%).\n\nOf the 32,909 renewal invitations that matured in 2025, 22,667 were accepted (22,667 / 32,909 = 0.6888). The figure is on a calendar basis as at 31 December 2025, and only matured invitations are counted, so pending ones are excluded.\n\nANSWER: 0.689",
+ "stop_reason": "end_turn",
+ "tool_calls": [
+  {
+   "tool": "query_metrics",
+   "input": {
+    "metrics": [
+     "retention_rate",
+     "renewals_accepted",
+     "renewals_due"
+    ],
+    "basis": "calendar",
+    "as_of": "2025-12-31",
+    "grain": "year",
+    "period_from": "2025-01-01",
+    "period_to": "2025-12-31"
+   },
+   "output": "period,retention_rate,renewals_accepted,renewals_due\n2025,0.688778,22667.00,32909.00",
+   "error": false
+  }
+ ],
+ "usage": {
+  "input": 579,
+  "output": 524,
+  "cache_read": 7364,
+  "cache_write": 0
+ },
+ "effort": "medium",
+ "prompt_version": "v1"
+}

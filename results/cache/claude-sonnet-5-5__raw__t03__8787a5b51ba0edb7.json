@@ -1,0 +1,42 @@
+{
+ "model": "claude-sonnet-5-5",
+ "condition": "raw",
+ "qid": "t03",
+ "question": "What was the renewal retention rate for customers acquired through price comparison websites, for renewals due in 2024?",
+ "final_text": "PCW-acquired customers had a renewal retention rate of about 40.9% for renewals due in 2024. Of 9,847 renewal offers with a due date in 2024, 4,028 were renewed (a renewed term was recorded).\n\nThe policy's acquisition channel and the expiring term's channel agree for every offer, so the PCW grouping is unambiguous.\n\nANSWER: 0.409",
+ "stop_reason": "end_turn",
+ "tool_calls": [
+  {
+   "tool": "run_sql",
+   "input": {
+    "query": "select channel, count(*) n, count(renewed_term_id) r from renewal_offer o join policy_term t on t.term_id=o.expiring_term_id where due_date between '2024-01-01' and '2024-12-31' group by 1"
+   },
+   "output": "channel,n,r\nBROKER,10138,6103\nDIRECT,12002,7280\nPCW,9847,4028",
+   "error": false
+  },
+  {
+   "tool": "run_sql",
+   "input": {
+    "query": "select distinct channel from policy"
+   },
+   "output": "channel\nPCW\nBROKER\nDIRECT",
+   "error": false
+  },
+  {
+   "tool": "run_sql",
+   "input": {
+    "query": "select p.channel, t.channel tc, count(*) n, count(renewed_term_id) r from renewal_offer o join policy_term t on t.term_id=o.expiring_term_id join policy p using(policy_id) where due_date between '2024-01-01' and '2024-12-31' group by 1,2"
+   },
+   "output": "channel,tc,n,r\nBROKER,BROKER,10138,6103\nDIRECT,DIRECT,12002,7280\nPCW,PCW,9847,4028",
+   "error": false
+  }
+ ],
+ "usage": {
+  "input": 1176,
+  "output": 510,
+  "cache_read": 6090,
+  "cache_write": 0
+ },
+ "effort": "medium",
+ "prompt_version": "v1"
+}

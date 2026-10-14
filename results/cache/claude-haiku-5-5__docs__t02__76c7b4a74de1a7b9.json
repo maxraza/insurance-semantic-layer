@@ -1,0 +1,34 @@
+{
+ "model": "claude-haiku-5-5",
+ "condition": "docs",
+ "qid": "t02",
+ "question": "As at 30 September 2025, what is the year-to-date renewal retention rate for 2025?",
+ "final_text": "The year-to-date 2025 renewal retention rate as at 30 September 2025 is about 0.679 (16,278 accepted out of 23,991 matured renewal invitations).\n\n- **Scope:** Invitations with a due date from 1 January to 30 September 2025. Due date on or before 30 September means the invitation has matured.\n- **Accepted:** Invitations whose renewed term was bound on or before 30 September 2025. No accepted renewals were bound after that date.\n- **Basis:** Calendar, policy-count, per the glossary definition of retention_rate.\n\nANSWER: 0.678504",
+ "stop_reason": "end_turn",
+ "tool_calls": [
+  {
+   "tool": "run_sql",
+   "input": {
+    "query": "\nSELECT\n  COUNT(*) AS due_matured,\n  SUM(CASE WHEN o.renewed_term_id IS NOT NULL AND t.bound_date <= DATE '2025-09-30' THEN 1 ELSE 0 END) AS accepted,\n  SUM(CASE WHEN o.renewed_term_id IS NOT NULL AND t.bound_date > DATE '2025-09-30' THEN 1 ELSE 0 END) AS accepted_after_asat,\n  SUM(CASE WHEN o.offer_date > DATE '2025-09-30' THEN 1 ELSE 0 END) AS offered_after_asat\nFROM renewal_offer o\nLEFT JOIN policy_term t ON t.term_id = o.renewed_term_id\nWHERE o.due_date >= DATE '2025-01-01' AND o.due_date <= DATE '2025-09-30'\n"
+   },
+   "output": "due_matured,accepted,accepted_after_asat,offered_after_asat\n23991,16278,0,0",
+   "error": false
+  },
+  {
+   "tool": "run_sql",
+   "input": {
+    "query": "SELECT 16278.0/23991.0 AS retention_rate"
+   },
+   "output": "retention_rate\n0.678504",
+   "error": false
+  }
+ ],
+ "usage": {
+  "input": 1868,
+  "output": 1051,
+  "cache_read": 15939,
+  "cache_write": 0
+ },
+ "effort": "medium",
+ "prompt_version": "v1"
+}

@@ -1,0 +1,34 @@
+{
+ "model": "claude-haiku-5-5",
+ "condition": "raw",
+ "qid": "c05",
+ "question": "How many claims were reported to us during calendar year 2025?",
+ "final_text": "**4,677 claims** were reported in calendar year 2025 (report_date from 1 Jan to 31 Dec 2025).\n\nThe claim table has 23,549 rows with no missing or duplicate claim IDs, and report_date is populated for every row, so the count is complete.\n\nANSWER: 4677",
+ "stop_reason": "end_turn",
+ "tool_calls": [
+  {
+   "tool": "run_sql",
+   "input": {
+    "query": "SELECT COUNT(*) AS claims_reported_2025 FROM claim WHERE report_date >= DATE '2025-01-01' AND report_date <= DATE '2025-12-31'"
+   },
+   "output": "claims_reported_2025\n4677",
+   "error": false
+  },
+  {
+   "tool": "run_sql",
+   "input": {
+    "query": "SELECT COUNT(*) AS total, COUNT(report_date) AS with_report_date, MIN(report_date), MAX(report_date), COUNT(DISTINCT claim_id) FROM claim"
+   },
+   "output": "total,with_report_date,min(report_date),max(report_date),count(DISTINCT claim_id)\n23549,23549,2019-02-04,2025-12-31,23549",
+   "error": false
+  }
+ ],
+ "usage": {
+  "input": 538,
+  "output": 406,
+  "cache_read": 4060,
+  "cache_write": 0
+ },
+ "effort": "medium",
+ "prompt_version": "v1"
+}

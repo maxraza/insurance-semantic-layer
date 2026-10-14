@@ -1,0 +1,34 @@
+{
+ "model": "claude-sonnet-5-5",
+ "condition": "raw",
+ "qid": "v04",
+ "question": "By how much did accident-year 2022 reported loss (paid plus case) develop between the 31 December 2022 and 31 December 2025 valuations?",
+ "final_text": "Accident-year 2022 reported loss (paid plus case) rose by about \u00a33.13m between the two valuations.\n\n| Valuation | Paid indemnity | Paid ALAE | Case reserve | Reported |\n|---|---|---|---|---|\n| 31 Dec 2022 | \u00a37,809,727 | \u00a3166,068 | \u00a35,247,946 | \u00a313,223,742 |\n| 31 Dec 2025 | \u00a314,751,797 | \u00a3836,833 | \u00a3766,711 | \u00a316,355,341 |\n\nThe increase is \u00a316,355,341 \u2212 \u00a313,223,742 = \u00a33,131,599.\n\n- **Basis:** I took claims by accident date in 2022 and included only transactions dated on or before each valuation date. Paid is the sum of payments, and case is the sum of reserve transactions.\n- **Recoveries:** I excluded them to keep the figure gross. Including them would lower the increase by about \u00a3268k, since recoveries went from \u2212\u00a3175k to \u2212\u00a3444k.\n\nANSWER: 3131599.46",
+ "stop_reason": "end_turn",
+ "tool_calls": [
+  {
+   "tool": "run_sql",
+   "input": {
+    "query": "select txn_type, cost_type, count(*), sum(amount), min(amount), max(amount) from claim_txn group by all order by all"
+   },
+   "output": "txn_type,cost_type,count_star(),sum(amount),min(amount),max(amount)\nPAYMENT,ALAE,5482,4041773.75,5.38,129243.82\nPAYMENT,INDEMNITY,34398,78097079.75,0.10,1214443.66\nRECOVERY,INDEMNITY,1151,-2278660.54,-24511.92,-26.63\nRESERVE,INDEMNITY,79216,15020532.03,-1214443.66,1529370.74",
+   "error": false
+  },
+  {
+   "tool": "run_sql",
+   "input": {
+    "query": "select v, txn_type, cost_type, sum(amount) from (select date '2022-12-31' v union all select date '2025-12-31') v join claim c on year(c.accident_date)=2022 join claim_txn t on t.claim_id=c.claim_id and t.txn_date<=v group by all order by all"
+   },
+   "output": "v,txn_type,cost_type,sum(amount)\n2022-12-31,PAYMENT,ALAE,166068.21\n2022-12-31,PAYMENT,INDEMNITY,7809727.48\n2022-12-31,RECOVERY,INDEMNITY,-175242.10\n2022-12-31,RESERVE,INDEMNITY,5247945.92\n2025-12-31,PAYMENT,ALAE,836833.26\n2025-12-31,PAYMENT,INDEMNITY,14751796.79\n2025-12-31,RECOVERY,INDEMNITY,-443525.67\n2025-12-31,RESERVE,INDEMNITY,766711.02",
+   "error": false
+  }
+ ],
+ "usage": {
+  "input": 1580,
+  "output": 1004,
+  "cache_read": 6090,
+  "cache_write": 0
+ },
+ "effort": "medium",
+ "prompt_version": "v1"
+}

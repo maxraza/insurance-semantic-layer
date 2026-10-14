@@ -1,0 +1,66 @@
+{
+ "model": "claude-haiku-5-5",
+ "condition": "raw",
+ "qid": "v01",
+ "question": "What was the accident-year 2023 reported loss ratio as it stood at 31 December 2023?",
+ "final_text": "**Accident-year 2023 reported loss ratio at 31 December 2023: about 0.707**\n\n- **Numerator:** Reported incurred on AY2023 claims (accident date in 2023), using all claim transactions booked on or before 31 Dec 2023. That is paid (indemnity and ALAE) plus outstanding case reserves, net of recoveries. Reserve rows are movements, so summing them gives the outstanding balance. Total: \u00a315,061,254.\n- **Denominator:** Earned premium for calendar 2023 from premium transactions booked on or before 31 Dec 2023, pro-rated daily over each cover period. Total: \u00a321,311,826.\n- **Excluded:** IBNR, since this is a reported (not ultimate) measure.\n\nThe indemnity-only figure is 0.696 (\u00a314,841,148 / \u00a321,311,826). I've used the all-in figure because ALAE is a claim cost; if your convention excludes ALAE, use 0.696.\n\nANSWER: 0.707",
+ "stop_reason": "end_turn",
+ "tool_calls": [
+  {
+   "tool": "run_sql",
+   "input": {
+    "query": "SELECT 'claim' t, COUNT(*) n, MIN(accident_date) mn, MAX(accident_date) mx FROM claim UNION ALL SELECT 'claim_txn', COUNT(*), MIN(txn_date), MAX(txn_date) FROM claim_txn UNION ALL SELECT 'premium_txn', COUNT(*), MIN(booked_date), MAX(booked_date) FROM premium_txn UNION ALL SELECT 'ibnr', COUNT(*), MIN(valuation_date), MAX(valuation_date) FROM ibnr_valuation"
+   },
+   "output": "t,n,mn,mx\nclaim,23549,2019-01-21,2025-12-31\nclaim_txn,120247,2019-02-04,2025-12-31\npremium_txn,245710,2019-01-01,2025-12-31\nibnr,109,2019-12-31,2025-12-31",
+   "error": false
+  },
+  {
+   "tool": "run_sql",
+   "input": {
+    "query": "SELECT txn_type, cost_type, COUNT(*), SUM(amount) FROM claim_txn GROUP BY 1,2 ORDER BY 1,2"
+   },
+   "output": "txn_type,cost_type,count_star(),sum(amount)\nPAYMENT,ALAE,5482,4041773.75\nPAYMENT,INDEMNITY,34398,78097079.75\nRECOVERY,INDEMNITY,1151,-2278660.54\nRESERVE,INDEMNITY,79216,15020532.03",
+   "error": false
+  },
+  {
+   "tool": "run_sql",
+   "input": {
+    "query": "SELECT txn_type, COUNT(*), SUM(written_premium), SUM(exposure_units) FROM premium_txn GROUP BY 1"
+   },
+   "output": "txn_type,count_star(),sum(written_premium),sum(exposure_units)\nCANCEL,13081,-4423904.86,-13081.000\nRENEWAL,96764,66470703.32,96764.000\nMTA,22310,466631.74,0.000\nNEW,113555,74247233.10,113555.000",
+   "error": false
+  },
+  {
+   "tool": "run_sql",
+   "input": {
+    "query": "SELECT c.claim_id, c.accident_date, c.report_date, c.closed_date, t.txn_date, t.txn_type, t.cost_type, t.amount FROM claim c JOIN claim_txn t USING(claim_id) WHERE c.claim_id IN (SELECT claim_id FROM claim WHERE accident_date BETWEEN '2023-01-01' AND '2023-12-31' ORDER BY claim_id LIMIT 4) ORDER BY 1, t.txn_date"
+   },
+   "output": "claim_id,accident_date,report_date,closed_date,txn_date,txn_type,cost_type,amount\n5618,2023-01-01,2023-01-02,2023-01-05,2023-01-02,RESERVE,INDEMNITY,517.30\n5618,2023-01-01,2023-01-02,2023-01-05,2023-01-05,PAYMENT,INDEMNITY,425.32\n5618,2023-01-01,2023-01-02,2023-01-05,2023-01-05,RESERVE,INDEMNITY,-425.32\n5618,2023-01-01,2023-01-02,2023-01-05,2023-01-05,RESERVE,INDEMNITY,-91.98\n5675,2023-01-03,2023-01-15,2023-02-26,2023-01-15,RESERVE,INDEMNITY,1202.51\n5675,2023-01-03,2023-01-15,2023-02-26,2023-02-26,PAYMENT,INDEMNITY,1112.88\n5675,2023-01-03,2023-01-15,2023-02-26,2023-02-26,RESERVE,INDEMNITY,-1112.88\n5675,2023-01-03,2023-01-15,2023-02-26,2023-02-26,RESERVE,INDEMNITY,-89.63\n5689,2023-01-03,2023-01-07,2023-02-22,2023-01-07,RESERVE,INDEMNITY,743.51\n5689,2023-01-03,2023-01-07,2023-02-22,2023-01-23,PAYMENT,INDEMNITY,403.03\n5689,2023-01-03,2023-01-07,2023-02-22,2023-01-23,RESERVE,INDEMNITY,-403.03\n5689,2023-01-03,2023-01-07,2023-02-22,2023-02-21,RESERVE,INDEMNITY,183.01\n5689,2023-01-03,2023-01-07,2023-02-22,2023-02-22,PAYMENT,INDEMNITY,559.27\n5689,2023-01-03,2023-01-07,2023-02-22,2023-02-22,RESERVE,INDEMNITY,-523.49\n5689,2023-01-03,2023-01-07,2023-02-22,2023-02-22,PAYMENT,ALAE,66.74\n5698,2023-01-08,2023-01-09,2023-08-11,2023-01-09,RESERVE,INDEMNITY,2633.37\n5698,2023-01-08,2023-01-09,2023-08-11,2023-06-22,PAYMENT,INDEMNITY,1429.88\n5698,2023-01-08,2023-01-09,2023-08-11,2023-06-22,RESERVE,INDEMNITY,-1429.88\n5698,2023-01-08,2023-01-09,2023-08-11,2023-08-10,RESERVE,INDEMNITY,254.68\n5698,2023-01-08,2023-01-09,2023-08-11,2023-08-11,PAYMENT,INDEMNITY,1536.54\n5698,2023-01-08,2023-01-09,2023-08-11,2023-08-11,RESERVE,INDEMNITY,-1458.17\n5698,2023-01-08,2023-01-09,2023-08-11,2023-08-11,PAYMENT,ALAE,304.37",
+   "error": false
+  },
+  {
+   "tool": "run_sql",
+   "input": {
+    "query": "SELECT p.term_id, p.txn_type, p.booked_date, p.effective_date, p.cover_end_date, p.written_premium, p.exposure_units FROM premium_txn p WHERE term_id IN (SELECT term_id FROM policy_term ORDER BY term_id LIMIT 3) OR term_id IN (SELECT term_id FROM premium_txn WHERE txn_type='CANCEL' LIMIT 2) ORDER BY term_id, booked_date"
+   },
+   "output": "term_id,txn_type,booked_date,effective_date,cover_end_date,written_premium,exposure_units\n1,NEW,2019-01-01,2019-01-13,2020-01-13,301.57,1.000\n2,NEW,2019-01-01,2019-01-03,2020-01-03,1071.49,1.000\n3,NEW,2019-01-01,2019-01-07,2020-01-07,418.20,1.000\n3,MTA,2019-03-15,2019-03-13,2020-01-07,-20.62,0.000\n7,NEW,2019-01-01,2019-01-03,2020-01-03,346.29,1.000\n7,CANCEL,2019-10-05,2019-10-01,2020-01-03,-89.18,-1.000\n24,NEW,2019-01-01,2019-01-14,2020-01-14,398.49,1.000\n24,CANCEL,2019-09-19,2019-09-17,2020-01-14,-129.92,-1.000",
+   "error": false
+  },
+  {
+   "tool": "run_sql",
+   "input": {
+    "query": "\nWITH clm AS (\n  SELECT\n    SUM(CASE WHEN t.cost_type='INDEMNITY' THEN t.amount ELSE 0 END) AS ind_incurred,\n    SUM(t.amount) AS all_incurred\n  FROM claim c JOIN claim_txn t USING(claim_id)\n  WHERE c.accident_date BETWEEN '2023-01-01' AND '2023-12-31'\n    AND t.txn_date <= '2023-12-31'\n),\nep AS (\n  SELECT SUM(p.written_premium * GREATEST(0, DATE_DIFF('day', GREATEST(p.effective_date, DATE '2023-01-01'), LEAST(p.cover_end_date, DATE '2024-01-01'))) * 1.0\n             / NULLIF(DATE_DIFF('day', p.effective_date, p.cover_end_date),0)) AS earned\n  FROM premium_txn p\n  WHERE p.booked_date <= '2023-12-31'\n)\nSELECT clm.*, ep.earned, clm.ind_incurred/ep.earned AS lr_indemnity, clm.all_incurred/ep.earned AS lr_all\nFROM clm, ep\n"
+   },
+   "output": "ind_incurred,all_incurred,earned,lr_indemnity,lr_all\n14841148.31,15061254.47,21311826.07,0.696381,0.706709",
+   "error": false
+  }
+ ],
+ "usage": {
+  "input": 9728,
+  "output": 3497,
+  "cache_read": 8120,
+  "cache_write": 0
+ },
+ "effort": "medium",
+ "prompt_version": "v1"
+}

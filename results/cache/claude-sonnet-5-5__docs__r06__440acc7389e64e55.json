@@ -1,0 +1,26 @@
+{
+ "model": "claude-sonnet-5-5",
+ "condition": "docs",
+ "qid": "r06",
+ "question": "What share of 2025 quotes for drivers aged 17-24 converted into policies?",
+ "final_text": "Of the 14,645 quotes issued in 2025 to drivers aged 17-24, 1,841 were bound as policies. That is a conversion rate of about 12.6%.\n\nI counted a quote as converted when it has a bound term ID, and I did not check that against the policy term table.\n\nANSWER: 0.125708",
+ "stop_reason": "end_turn",
+ "tool_calls": [
+  {
+   "tool": "run_sql",
+   "input": {
+    "query": "select count(*) q, count(bound_term_id) b, count(bound_term_id)*1.0/count(*) r from quote where quote_date between '2025-01-01' and '2025-12-31' and driver_age_band='17-24'"
+   },
+   "output": "q,b,r\n14645,1841,0.125708",
+   "error": false
+  }
+ ],
+ "usage": {
+  "input": 349,
+  "output": 276,
+  "cache_read": 10626,
+  "cache_write": 0
+ },
+ "effort": "medium",
+ "prompt_version": "v1"
+}

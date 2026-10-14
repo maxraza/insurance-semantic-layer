@@ -1,0 +1,34 @@
+{
+ "model": "claude-sonnet-5-5",
+ "condition": "docs",
+ "qid": "r05",
+ "question": "What is the average paid indemnity per paid bodily-injury claim for accident year 2023 (claims with no payment excluded)?",
+ "final_text": "For accident year 2023, bodily-injury claims have paid indemnity of \u00a38,421,627.32 net of recoveries across 248 paid claims, which is about \u00a333,958 per paid claim.\n\nThis uses indemnity transactions dated on or before 31 December 2025 and excludes ALAE. Claims with no payment are excluded from the count. No claim in this group had only recoveries and no payment.\n\nANSWER: 33958.17",
+ "stop_reason": "end_turn",
+ "tool_calls": [
+  {
+   "tool": "run_sql",
+   "input": {
+    "query": "with c as (select claim_id from claim where peril='BODILY_INJURY' and accident_date between '2023-01-01' and '2023-12-31'),\np as (select t.claim_id, sum(case when txn_type in ('PAYMENT','RECOVERY') then amount else 0 end) paid,\n sum(case when txn_type='PAYMENT' then 1 else 0 end) np\n from claim_txn t join c using(claim_id) where cost_type='INDEMNITY' and txn_date<='2025-12-31' group by 1)\nselect sum(paid) loss, count(*) filter (where np>0) n, sum(paid)/count(*) filter (where np>0) sev from p"
+   },
+   "output": "loss,n,sev\n8421627.32,248,33958.17",
+   "error": false
+  },
+  {
+   "tool": "run_sql",
+   "input": {
+    "query": "with c as (select claim_id from claim where peril='BODILY_INJURY' and accident_date between '2023-01-01' and '2023-12-31'),\np as (select t.claim_id, sum(amount) filter (where txn_type in ('PAYMENT','RECOVERY')) paid,\n count(*) filter (where txn_type='PAYMENT') np\n from claim_txn t join c using(claim_id) where cost_type='INDEMNITY' and txn_date<='2025-12-31' group by 1)\nselect sum(paid) filter (where np>0), count(*) filter (where np>0), sum(paid) filter (where np=0) from p"
+   },
+   "output": "sum(paid) FILTER (WHERE (np > 0)),count_star() FILTER (WHERE (np > 0)),sum(paid) FILTER (WHERE (np = 0))\n8421627.32,248,None",
+   "error": false
+  }
+ ],
+ "usage": {
+  "input": 1562,
+  "output": 891,
+  "cache_read": 15939,
+  "cache_write": 0
+ },
+ "effort": "medium",
+ "prompt_version": "v1"
+}

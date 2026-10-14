@@ -1,0 +1,26 @@
+{
+ "model": "claude-haiku-5-5",
+ "condition": "docs",
+ "qid": "a06",
+ "question": "How much premium did we do in 2025?",
+ "final_text": "Written premium booked in calendar 2025 was **\u00a330,274,839.20**, gross of reinsurance.\n\nThis is calendar basis: all premium transactions with a booked date from 1 January to 31 December 2025, including new business, renewals, mid-term adjustments and cancellation returns (net of returns). It covers 48,592 transactions. I did not compute earned premium, which would be lower for 2025 because part of the premium written in 2025 earns in later years.\n\nANSWER: 30274839.20",
+ "stop_reason": "end_turn",
+ "tool_calls": [
+  {
+   "tool": "run_sql",
+   "input": {
+    "query": "SELECT SUM(written_premium) AS written_premium_2025, COUNT(*) AS txn_count FROM premium_txn WHERE booked_date >= DATE '2025-01-01' AND booked_date <= DATE '2025-12-31'"
+   },
+   "output": "written_premium_2025,txn_count\n30274839.20,48592",
+   "error": false
+  }
+ ],
+ "usage": {
+  "input": 485,
+  "output": 551,
+  "cache_read": 10626,
+  "cache_write": 0
+ },
+ "effort": "medium",
+ "prompt_version": "v1"
+}

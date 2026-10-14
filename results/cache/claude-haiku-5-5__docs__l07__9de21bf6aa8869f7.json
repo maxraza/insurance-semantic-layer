@@ -1,0 +1,66 @@
+{
+ "model": "claude-haiku-5-5",
+ "condition": "docs",
+ "qid": "l07",
+ "question": "What was the calendar-year 2024 combined ratio (reported loss, change in IBNR, paid ALAE and expenses, over earned premium)?",
+ "final_text": "The calendar-year 2024 combined ratio is about **1.072** (107.2%).\n\nComponents, all calendar 2024, GBP:\n\n- **Reported loss change:** \u00a320.04m. This is net indemnity paid (\u00a316.19m) plus the change in case reserves (\u00a33.84m).\n- **Change in IBNR:** \u00a31.17m (year-end 2024 total less year-end 2023 total).\n- **Paid ALAE:** \u00a30.89m.\n- **Expenses:** \u00a33.37m, by month incurred.\n- **Earned premium:** \u00a323.75m, earned pro rata daily over each transaction's cover period.\n\nNumerator \u00a325.47m \u00f7 earned premium \u00a323.75m = 1.072.\n\nANSWER: 1.072",
+ "stop_reason": "end_turn",
+ "tool_calls": [
+  {
+   "tool": "run_sql",
+   "input": {
+    "query": "SELECT 'ibnr' t, valuation_date::VARCHAR d, SUM(ibnr) v, COUNT(*) n FROM ibnr_valuation GROUP BY 1,2 ORDER BY 2\nUNION ALL SELECT 'exp_type', expense_type, SUM(amount), COUNT(*) FROM expense WHERE expense_month>='2024-01-01' AND expense_month<'2025-01-01' GROUP BY 1,2\nUNION ALL SELECT 'exp_booked_mismatch', NULL, SUM(CASE WHEN booked_date<expense_month THEN 1 ELSE 0 END), COUNT(*) FROM expense\nUNION ALL SELECT 'txn_type', txn_type||'|'||cost_type, SUM(amount), COUNT(*) FROM claim_txn GROUP BY 1,2\nUNION ALL SELECT 'prem_type', txn_type, SUM(written_premium), COUNT(*) FROM premium_txn GROUP BY 1,2"
+   },
+   "output": "error: Parser Error: syntax error at or near \"UNION\"\n\nLINE 2: UNION ALL SELECT 'exp_type', expense_type, SUM(amount),...\n        ^",
+   "error": true
+  },
+  {
+   "tool": "run_sql",
+   "input": {
+    "query": "SELECT valuation_date, COUNT(*), SUM(ibnr) FROM ibnr_valuation GROUP BY 1 ORDER BY 1"
+   },
+   "output": "valuation_date,count_star(),sum(ibnr)\n2019-12-31,1,450298.72\n2020-03-31,2,1039724.70\n2020-06-30,2,1165995.40\n2020-09-30,2,2057427.52\n2020-12-31,2,2009091.93\n2021-03-31,3,1911913.22\n2021-06-30,3,1810990.33\n2021-09-30,3,1710921.77\n2021-12-31,3,1373810.38\n2022-03-31,4,1771401.06\n2022-06-30,4,815343.77\n2022-09-30,4,2134223.03\n2022-12-31,4,2636192.95\n2023-03-31,5,2776671.33\n2023-06-30,5,3327159.57\n2023-09-30,5,3628601.40\n2023-12-31,5,3390892.84\n2024-03-31,6,4378157.33\n2024-06-30,6,3521252.44\n2024-09-30,6,4508810.27\n2024-12-31,6,4562282.08\n2025-03-31,7,4694735.94\n2025-06-30,7,4866244.04\n2025-09-30,7,5143571.09\n2025-12-31,7,5248275.43",
+   "error": false
+  },
+  {
+   "tool": "run_sql",
+   "input": {
+    "query": "SELECT expense_type, channel, SUM(amount) amt, COUNT(*) n, SUM(CASE WHEN booked_date<expense_month THEN 1 ELSE 0 END) early_booked FROM expense WHERE expense_month>='2024-01-01' AND expense_month<'2025-01-01' GROUP BY 1,2 ORDER BY 1,2"
+   },
+   "output": "expense_type,channel,amt,n,early_booked\nACQUISITION,DIRECT,188274.91,12,0\nACQUISITION,PCW,395666.56,12,0\nADMIN,None,1740329.98,12,0\nCOMMISSION,BROKER,1041342.33,12,0",
+   "error": false
+  },
+  {
+   "tool": "run_sql",
+   "input": {
+    "query": "SELECT txn_type, cost_type, SUM(amount) amt, COUNT(*) n, MIN(txn_date), MAX(txn_date) FROM claim_txn GROUP BY 1,2 ORDER BY 1,2"
+   },
+   "output": "txn_type,cost_type,amt,n,min(txn_date),max(txn_date)\nPAYMENT,ALAE,4041773.75,5482,2019-04-02,2025-12-31\nPAYMENT,INDEMNITY,78097079.75,34398,2019-02-22,2025-12-31\nRECOVERY,INDEMNITY,-2278660.54,1151,2019-07-11,2025-12-31\nRESERVE,INDEMNITY,15020532.03,79216,2019-02-04,2025-12-31",
+   "error": false
+  },
+  {
+   "tool": "run_sql",
+   "input": {
+    "query": "SELECT txn_type, COUNT(*) n, SUM(written_premium) wp, SUM(exposure_units) eu, MIN(effective_date), MAX(cover_end_date), SUM(CASE WHEN effective_date>=cover_end_date THEN 1 ELSE 0 END) zero_len FROM premium_txn GROUP BY 1 ORDER BY 1"
+   },
+   "output": "txn_type,n,wp,eu,min(effective_date),max(cover_end_date),zero_len\nCANCEL,13081,-4423904.86,-6630.491786,2019-01-28,2026-12-07,0\nMTA,22310,466631.74,0.000000,2019-02-05,2026-12-07,0\nNEW,113555,74247233.10,113555.000000,2019-01-01,2027-01-14,0\nRENEWAL,96764,66470703.32,96764.000000,2020-01-01,2027-01-20,0",
+   "error": false
+  },
+  {
+   "tool": "run_sql",
+   "input": {
+    "query": "WITH p AS (\n SELECT SUM(written_premium * GREATEST(0, DATE_DIFF('day', GREATEST(effective_date, DATE '2024-01-01'), LEAST(cover_end_date, DATE '2025-01-01'))) / DATE_DIFF('day', effective_date, cover_end_date)) AS ep\n FROM premium_txn WHERE effective_date < DATE '2025-01-01' AND cover_end_date > DATE '2024-01-01'\n), l AS (\n SELECT SUM(CASE WHEN txn_type IN ('PAYMENT','RECOVERY') AND cost_type='INDEMNITY' THEN amount ELSE 0 END) AS paid_ind_2024,\n        SUM(CASE WHEN txn_type='RESERVE' AND cost_type='INDEMNITY' THEN amount ELSE 0 END) AS res_chg_2024,\n        SUM(CASE WHEN txn_type='PAYMENT' AND cost_type='ALAE' THEN amount ELSE 0 END) AS alae_2024\n FROM claim_txn WHERE txn_date >= DATE '2024-01-01' AND txn_date < DATE '2025-01-01'\n), i AS (\n SELECT SUM(CASE WHEN valuation_date='2024-12-31' THEN ibnr ELSE 0 END) - SUM(CASE WHEN valuation_date='2023-12-31' THEN ibnr ELSE 0 END) AS ibnr_chg\n FROM ibnr_valuation WHERE valuation_date IN ('2023-12-31','2024-12-31')\n), e AS (\n SELECT SUM(amount) AS exp_2024 FROM expense WHERE expense_month >= DATE '2024-01-01' AND expense_month < DATE '2025-01-01'\n)\nSELECT p.ep, l.paid_ind_2024, l.res_chg_2024, l.alae_2024, i.ibnr_chg, e.exp_2024,\n (l.paid_ind_2024 + l.res_chg_2024 + i.ibnr_chg + l.alae_2024 + e.exp_2024) / p.ep AS combined_ratio\nFROM p, l, i, e"
+   },
+   "output": "ep,paid_ind_2024,res_chg_2024,alae_2024,ibnr_chg,exp_2024,combined_ratio\n23748557.88,16194523.55,3842953.89,894253.51,1171389.24,3365613.78,1.07243",
+   "error": false
+  }
+ ],
+ "usage": {
+  "input": 8789,
+  "output": 3288,
+  "cache_read": 21648,
+  "cache_write": 0
+ },
+ "effort": "medium",
+ "prompt_version": "v1"
+}

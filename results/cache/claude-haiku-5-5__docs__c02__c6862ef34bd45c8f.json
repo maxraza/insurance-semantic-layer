@@ -1,0 +1,34 @@
+{
+ "model": "claude-haiku-5-5",
+ "condition": "docs",
+ "qid": "c02",
+ "question": "How many quotes came through price comparison websites in 2025?",
+ "final_text": "There were 99,720 quotes issued through price comparison websites in 2025 (quote dates 1 January to 31 December 2025, channel = PCW). The channel values are clean (PCW, DIRECT, BROKER), so no filtering issues.\n\nANSWER: 99720",
+ "stop_reason": "end_turn",
+ "tool_calls": [
+  {
+   "tool": "run_sql",
+   "input": {
+    "query": "SELECT COUNT(*) AS pcw_quotes_2025 FROM quote WHERE channel = 'PCW' AND quote_date >= DATE '2025-01-01' AND quote_date <= DATE '2025-12-31'"
+   },
+   "output": "pcw_quotes_2025\n99720",
+   "error": false
+  },
+  {
+   "tool": "run_sql",
+   "input": {
+    "query": "SELECT channel, COUNT(*) FROM quote WHERE quote_date >= DATE '2025-01-01' AND quote_date <= DATE '2025-12-31' GROUP BY channel"
+   },
+   "output": "channel,count_star()\nBROKER,17886\nDIRECT,29426\nPCW,99720",
+   "error": false
+  }
+ ],
+ "usage": {
+  "input": 855,
+  "output": 412,
+  "cache_read": 15939,
+  "cache_write": 0
+ },
+ "effort": "medium",
+ "prompt_version": "v1"
+}

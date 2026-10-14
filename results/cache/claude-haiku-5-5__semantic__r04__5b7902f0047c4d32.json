@@ -1,0 +1,38 @@
+{
+ "model": "claude-haiku-5-5",
+ "condition": "semantic",
+ "qid": "r04",
+ "question": "What is the average reported cost per reported claim for own-damage claims in accident year 2024?",
+ "final_text": "For own-damage claims in accident year 2024, the average reported cost per reported claim is \u00a33,054.96. This is reported loss (paid plus case reserves, excluding IBNR and ALAE) of \u00a35,120,112.18 divided by 1,676 reported claims, valued at 31 December 2025.\n\nANSWER: 3054.96",
+ "stop_reason": "end_turn",
+ "tool_calls": [
+  {
+   "tool": "query_metrics",
+   "input": {
+    "metrics": [
+     "severity_reported",
+     "reported_loss",
+     "reported_claim_count"
+    ],
+    "basis": "accident",
+    "as_of": "2025-12-31",
+    "filters": {
+     "peril": "OWN_DAMAGE"
+    },
+    "grain": "year",
+    "period_from": "2024-01-01",
+    "period_to": "2024-12-31"
+   },
+   "output": "period,severity_reported,reported_loss,reported_claim_count\n2024,3054.96,5120112.18,1676.00",
+   "error": false
+  }
+ ],
+ "usage": {
+  "input": 670,
+  "output": 553,
+  "cache_read": 7364,
+  "cache_write": 0
+ },
+ "effort": "medium",
+ "prompt_version": "v1"
+}

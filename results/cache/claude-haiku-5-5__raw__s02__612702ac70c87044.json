@@ -1,0 +1,58 @@
+{
+ "model": "claude-haiku-5-5",
+ "condition": "raw",
+ "qid": "s02",
+ "question": "How many vehicles were in force at the end of the second quarter of 2025?",
+ "final_text": "At 30 June 2025, 36,701 vehicles were in force.\n\nI counted policy terms (one term is one insured vehicle) where inception was on or before 30 June 2025, expiry was after it, and the term had not been cancelled on or before that date. This gives 36,701 terms across 36,701 policies, so there are no duplicate vehicles. A cross-check using net exposure units from `premium_txn` (new, renewal, cancel and MTA transactions covering the date) gives the same 36,701.\n\nANSWER: 36701",
+ "stop_reason": "end_turn",
+ "tool_calls": [
+  {
+   "tool": "run_sql",
+   "input": {
+    "query": "SELECT COUNT(*) AS terms, COUNT(DISTINCT policy_id) AS pols, MIN(inception_date), MAX(inception_date), MIN(expiry_date), MAX(expiry_date), SUM(CASE WHEN cancel_date IS NOT NULL THEN 1 ELSE 0 END) AS cancelled, SUM(CASE WHEN cancel_date IS NOT NULL AND cancel_date <= DATE '2025-06-30' THEN 1 ELSE 0 END) AS cancelled_by_q2 FROM policy_term;"
+   },
+   "output": "terms,pols,min(inception_date),max(inception_date),min(expiry_date),max(expiry_date),cancelled,cancelled_by_q2\n210319,113555,2019-01-01,2026-01-20,2020-01-01,2027-01-20,13094,11742",
+   "error": false
+  },
+  {
+   "tool": "run_sql",
+   "input": {
+    "query": "SELECT txn_type, COUNT(*), SUM(exposure_units), MIN(exposure_units), MAX(exposure_units) FROM premium_txn GROUP BY 1;"
+   },
+   "output": "txn_type,count_star(),sum(exposure_units),min(exposure_units),max(exposure_units)\nNEW,113555,113555.000,1.000,1.000\nRENEWAL,96764,96764.000,1.000,1.000\nCANCEL,13081,-13081.000,-1.000,-1.000\nMTA,22310,0.000,0.000,0.000",
+   "error": false
+  },
+  {
+   "tool": "run_sql",
+   "input": {
+    "query": "SELECT COUNT(*) AS in_force_terms, COUNT(DISTINCT policy_id) AS policies FROM policy_term WHERE inception_date <= DATE '2025-06-30' AND expiry_date > DATE '2025-06-30' AND (cancel_date IS NULL OR cancel_date > DATE '2025-06-30');"
+   },
+   "output": "in_force_terms,policies\n36701,36701",
+   "error": false
+  },
+  {
+   "tool": "run_sql",
+   "input": {
+    "query": "SELECT COUNT(*) AS n, SUM(CASE WHEN cancel_date IS NOT NULL AND cancel_date <= DATE '2025-06-30' THEN 1 ELSE 0 END) AS cancelled_before, SUM(CASE WHEN cancel_date IS NOT NULL AND cancel_date > DATE '2025-06-30' THEN 1 ELSE 0 END) AS cancelled_after FROM policy_term WHERE inception_date <= DATE '2025-06-30' AND expiry_date > DATE '2025-06-30';"
+   },
+   "output": "n,cancelled_before,cancelled_after\n37939,1238,1085",
+   "error": false
+  },
+  {
+   "tool": "run_sql",
+   "input": {
+    "query": "SELECT COUNT(DISTINCT t.term_id) AS terms_with_exposure, SUM(p.exposure_units) AS net_exposure FROM policy_term t JOIN premium_txn p USING (term_id) WHERE p.effective_date <= DATE '2025-06-30' AND p.cover_end_date > DATE '2025-06-30';"
+   },
+   "output": "terms_with_exposure,net_exposure\n37939,36701.000",
+   "error": false
+  }
+ ],
+ "usage": {
+  "input": 2787,
+  "output": 1640,
+  "cache_read": 6090,
+  "cache_write": 0
+ },
+ "effort": "medium",
+ "prompt_version": "v1"
+}

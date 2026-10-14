@@ -1,0 +1,26 @@
+{
+ "model": "claude-haiku-5-5",
+ "condition": "docs",
+ "qid": "r06",
+ "question": "What share of 2025 quotes for drivers aged 17-24 converted into policies?",
+ "final_text": "Of the 14,645 quotes issued in 2025 for drivers aged 17-24, 1,841 were bound to a policy, all of them new-business terms. That gives a quote conversion of 1,841 / 14,645 \u2248 0.1257.\n\nANSWER: 0.1257",
+ "stop_reason": "end_turn",
+ "tool_calls": [
+  {
+   "tool": "run_sql",
+   "input": {
+    "query": "SELECT COUNT(*) AS quotes,\n       COUNT(q.bound_term_id) AS bound_any,\n       COUNT(CASE WHEN t.term_number = 1 THEN 1 END) AS bound_new_business,\n       COUNT(CASE WHEN t.term_id IS NULL AND q.bound_term_id IS NOT NULL THEN 1 END) AS bound_missing_term\nFROM quote q\nLEFT JOIN policy_term t ON t.term_id = q.bound_term_id\nWHERE q.quote_date >= DATE '2025-01-01' AND q.quote_date < DATE '2026-01-01'\n  AND q.driver_age_band = '17-24';"
+   },
+   "output": "quotes,bound_any,bound_new_business,bound_missing_term\n14645,1841,1841,0",
+   "error": false
+  }
+ ],
+ "usage": {
+  "input": 718,
+  "output": 694,
+  "cache_read": 10626,
+  "cache_write": 0
+ },
+ "effort": "medium",
+ "prompt_version": "v1"
+}

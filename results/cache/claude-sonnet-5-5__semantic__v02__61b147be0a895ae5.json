@@ -1,0 +1,33 @@
+{
+ "model": "claude-sonnet-5-5",
+ "condition": "semantic",
+ "qid": "v02",
+ "question": "As at 30 June 2024, what was the reported loss (paid plus case reserves) for accident year 2023?",
+ "final_text": "Reported loss (paid plus case reserves) for accident year 2023, valued at 30 June 2024, was \u00a316,634,087.99. This excludes IBNR and ALAE.\n\nANSWER: 16634087.99",
+ "stop_reason": "end_turn",
+ "tool_calls": [
+  {
+   "tool": "query_metrics",
+   "input": {
+    "metrics": [
+     "reported_loss"
+    ],
+    "basis": "accident",
+    "as_of": "2024-06-30",
+    "grain": "year",
+    "period_from": "2023-01-01",
+    "period_to": "2023-12-31"
+   },
+   "output": "period,reported_loss\n2023,16634087.99",
+   "error": false
+  }
+ ],
+ "usage": {
+  "input": 430,
+  "output": 260,
+  "cache_read": 7364,
+  "cache_write": 0
+ },
+ "effort": "medium",
+ "prompt_version": "v1"
+}

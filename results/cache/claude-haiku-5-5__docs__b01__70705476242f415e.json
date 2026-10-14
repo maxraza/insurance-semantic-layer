@@ -1,0 +1,42 @@
+{
+ "model": "claude-haiku-5-5",
+ "condition": "docs",
+ "qid": "b01",
+ "question": "What is the accident-year 2023 loss ratio on a reported basis (paid plus case reserves, excluding IBNR and ALAE), valued at 31 December 2025?",
+ "final_text": "The accident-year 2023 reported loss ratio, valued at 31 December 2025, is about 0.912.\n\n- **Reported loss:** \u00a319,438,808 = indemnity paid net of recoveries (\u00a317,773,027) plus case reserves (\u00a31,665,781). Claims are selected by accident date in 2023. ALAE and IBNR are excluded.\n- **Earned premium:** \u00a321,311,739. Each premium transaction is earned pro rata daily over its cover period, and the 2023 slice is taken. The glossary says accident-basis earned premium equals calendar, so this is the 2023 earned amount.\n\nRatio: 19,438,808 / 21,311,739 \u2248 0.912.\n\nANSWER: 0.912",
+ "stop_reason": "end_turn",
+ "tool_calls": [
+  {
+   "tool": "run_sql",
+   "input": {
+    "query": "SELECT txn_type, COUNT(*) n, MIN(effective_date), MAX(effective_date), MIN(booked_date), MAX(booked_date), MIN(cover_end_date), MAX(cover_end_date), SUM(written_premium) FROM premium_txn GROUP BY txn_type;"
+   },
+   "output": "txn_type,n,min(effective_date),max(effective_date),min(booked_date),max(booked_date),min(cover_end_date),max(cover_end_date),sum(written_premium)\nCANCEL,13081,2019-01-28,2025-12-31,2019-02-02,2025-12-31,2020-01-03,2026-12-07,-4423904.86\nMTA,22310,2019-02-05,2025-12-31,2019-02-08,2025-12-31,2020-01-01,2026-12-07,466631.74\nNEW,113555,2019-01-01,2026-01-14,2019-01-01,2025-12-31,2020-01-01,2027-01-14,74247233.10\nRENEWAL,96764,2020-01-01,2026-01-20,2019-12-15,2025-12-31,2021-01-01,2027-01-20,66470703.32",
+   "error": false
+  },
+  {
+   "tool": "run_sql",
+   "input": {
+    "query": "SELECT c.peril, COUNT(*) n, MIN(c.accident_date), MAX(c.accident_date), MIN(t.txn_date), MAX(t.txn_date), t.txn_type, t.cost_type, SUM(t.amount) FROM claim c JOIN claim_txn t USING(claim_id) GROUP BY ALL ORDER BY 1,7,8;"
+   },
+   "output": "peril,n,min(c.accident_date),max(c.accident_date),min(t.txn_date),max(t.txn_date),txn_type,cost_type,sum(t.amount)\nBODILY_INJURY,814,2019-02-17,2025-07-07,2019-10-09,2025-12-31,PAYMENT,ALAE,2266381.00\nBODILY_INJURY,2897,2019-02-17,2025-09-05,2019-09-05,2025-12-31,PAYMENT,INDEMNITY,26736614.25\nBODILY_INJURY,5819,2019-02-17,2025-12-14,2019-03-20,2025-12-31,RESERVE,INDEMNITY,11574541.29\nOWN_DAMAGE,15688,2019-01-21,2025-12-20,2019-02-24,2025-12-31,PAYMENT,INDEMNITY,25825487.44\nOWN_DAMAGE,744,2019-02-17,2025-10-20,2019-07-11,2025-12-28,RECOVERY,INDEMNITY,-1397168.60\nOWN_DAMAGE,34972,2019-01-21,2025-12-30,2019-02-06,2025-12-31,RESERVE,INDEMNITY,1040476.54\nTHEFT,610,2019-03-15,2025-12-11,2019-06-11,2025-12-31,PAYMENT,INDEMNITY,4749914.90\nTHEFT,2003,2019-03-15,2025-12-31,2019-03-30,2025-12-31,RESERVE,INDEMNITY,426590.39\nTHIRD_PARTY_PROPERTY,4668,2019-02-08,2025-12-11,2019-04-02,2025-12-31,PAYMENT,ALAE,1775392.75\nTHIRD_PARTY_PROPERTY,9743,2019-02-08,2025-12-18,2019-03-28,2025-12-31,PAYMENT,INDEMNITY,18171651.24\nTHIRD_PARTY_PROPERTY,407,2019-04-29,2025-09-05,2019-09-08,2025-12-31,RECOVERY,INDEMNITY,-881491.94\nTHIRD_PARTY_PROPERTY,22427,2019-02-08,2025-12-30,2019-02-23,2025-12-31,RESERVE,INDEMNITY,1964001.72\nWINDSCREEN,5460,2019-02-02,2025-12-26,2019-02-22,2025-12-31,PAYMENT,INDEMNITY,2613411.92\nWINDSCREEN,13995,2019-02-02,2025-12-31,2019-02-04,2025-12-31,RESERVE,INDEMNITY,14922.09",
+   "error": false
+  },
+  {
+   "tool": "run_sql",
+   "input": {
+    "query": "\nWITH ep AS (\n  SELECT SUM(written_premium * GREATEST(0, DATE_DIFF('day', GREATEST(effective_date, DATE '2023-01-01'), LEAST(cover_end_date, DATE '2024-01-01'))) / NULLIF(DATE_DIFF('day', effective_date, cover_end_date),0)) AS earned_prem,\n         SUM(CASE WHEN DATE_DIFF('day', effective_date, cover_end_date)=0 THEN 1 ELSE 0 END) AS zero_len\n  FROM premium_txn\n),\nloss AS (\n  SELECT SUM(CASE WHEN t.txn_type IN ('PAYMENT','RECOVERY') AND t.cost_type='INDEMNITY' THEN t.amount ELSE 0 END) AS paid_ind,\n         SUM(CASE WHEN t.txn_type='RESERVE' AND t.cost_type='INDEMNITY' THEN t.amount ELSE 0 END) AS case_res,\n         SUM(CASE WHEN t.txn_type IN ('PAYMENT','RECOVERY') AND t.cost_type='INDEMNITY' THEN t.amount ELSE 0 END)\n           + SUM(CASE WHEN t.txn_type='RESERVE' AND t.cost_type='INDEMNITY' THEN t.amount ELSE 0 END) AS reported_loss\n  FROM claim c JOIN claim_txn t USING(claim_id)\n  WHERE c.accident_date >= DATE '2023-01-01' AND c.accident_date < DATE '2024-01-01' AND t.txn_date <= DATE '2025-12-31'\n)\nSELECT ep.earned_prem, ep.zero_len, loss.paid_ind, loss.case_res, loss.reported_loss, loss.reported_loss / ep.earned_prem AS lr\nFROM ep, loss;\n"
+   },
+   "output": "earned_prem,zero_len,paid_ind,case_res,reported_loss,lr\n21311739.45,0,17773026.92,1665781.33,19438808.25,0.912117",
+   "error": false
+  }
+ ],
+ "usage": {
+  "input": 5671,
+  "output": 2309,
+  "cache_read": 15939,
+  "cache_write": 0
+ },
+ "effort": "medium",
+ "prompt_version": "v1"
+}

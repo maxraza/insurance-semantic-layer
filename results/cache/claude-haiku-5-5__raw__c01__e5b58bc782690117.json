@@ -1,0 +1,26 @@
+{
+ "model": "claude-haiku-5-5",
+ "condition": "raw",
+ "qid": "c01",
+ "question": "How many quotes did we issue in 2024?",
+ "final_text": "We issued 140,274 quotes in 2024, counted as rows in the `quote` table with a `quote_date` from 1 January to 31 December 2024.\n\nANSWER: 140274",
+ "stop_reason": "end_turn",
+ "tool_calls": [
+  {
+   "tool": "run_sql",
+   "input": {
+    "query": "SELECT COUNT(*) AS quotes_2024 FROM quote WHERE quote_date >= DATE '2024-01-01' AND quote_date < DATE '2025-01-01';"
+   },
+   "output": "quotes_2024\n140274",
+   "error": false
+  }
+ ],
+ "usage": {
+  "input": 305,
+  "output": 208,
+  "cache_read": 4060,
+  "cache_write": 0
+ },
+ "effort": "medium",
+ "prompt_version": "v1"
+}

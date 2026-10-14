@@ -1,0 +1,35 @@
+{
+ "model": "claude-haiku-5-5",
+ "condition": "semantic",
+ "qid": "t04",
+ "question": "What was the renewal retention rate for renewals due in 2023?",
+ "final_text": "The renewal retention rate for renewals due in 2023 is 0.546. That is 17,369 renewals accepted out of 31,806 renewals due, with the figures valued at 31 December 2025. All 2023 invitations had matured by that date, so none are excluded as pending.\n\nANSWER: 0.546092",
+ "stop_reason": "end_turn",
+ "tool_calls": [
+  {
+   "tool": "query_metrics",
+   "input": {
+    "metrics": [
+     "retention_rate",
+     "renewals_due",
+     "renewals_accepted"
+    ],
+    "basis": "calendar",
+    "as_of": "2025-12-31",
+    "grain": "year",
+    "period_from": "2023-01-01",
+    "period_to": "2023-12-31"
+   },
+   "output": "period,retention_rate,renewals_due,renewals_accepted\n2023,0.546092,31806.00,17369.00",
+   "error": false
+  }
+ ],
+ "usage": {
+  "input": 547,
+  "output": 469,
+  "cache_read": 7364,
+  "cache_write": 0
+ },
+ "effort": "medium",
+ "prompt_version": "v1"
+}

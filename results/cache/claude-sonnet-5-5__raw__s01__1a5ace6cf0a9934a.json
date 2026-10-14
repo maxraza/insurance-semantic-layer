@@ -1,0 +1,42 @@
+{
+ "model": "claude-sonnet-5-5",
+ "condition": "raw",
+ "qid": "s01",
+ "question": "How many vehicles were on cover at 31 December 2025?",
+ "final_text": "Expiry is exclusive, because the next term starts on the previous term's expiry date. So the count is right as run.\n\nI counted policy terms that had started by 31 December 2025, had an expiry date after it, and were not cancelled on or before it. That gives 39,907 terms. They belong to 39,907 distinct policies, so each policy has one vehicle on cover.\n\nANSWER: 39907",
+ "stop_reason": "end_turn",
+ "tool_calls": [
+  {
+   "tool": "run_sql",
+   "input": {
+    "query": "select count(*), count(distinct policy_id) from policy_term where inception_date<=DATE '2025-12-31' and expiry_date>DATE '2025-12-31' and (cancel_date is null or cancel_date>DATE '2025-12-31')"
+   },
+   "output": "count_star(),count(DISTINCT policy_id)\n39907,39907",
+   "error": false
+  },
+  {
+   "tool": "run_sql",
+   "input": {
+    "query": "select txn_type,count(*),min(effective_date),max(cover_end_date) from premium_txn group by 1"
+   },
+   "output": "txn_type,count_star(),min(effective_date),max(cover_end_date)\nRENEWAL,96764,2020-01-01,2027-01-20\nNEW,113555,2019-01-01,2027-01-14\nCANCEL,13081,2019-01-28,2026-12-07\nMTA,22310,2019-02-05,2026-12-07",
+   "error": false
+  },
+  {
+   "tool": "run_sql",
+   "input": {
+    "query": "select sum(case when t2.inception_date=t1.expiry_date then 1 else 0 end) eq, sum(case when t2.inception_date=t1.expiry_date+1 then 1 else 0 end) plus1 from policy_term t1 join policy_term t2 on t1.policy_id=t2.policy_id and t2.term_number=t1.term_number+1"
+   },
+   "output": "eq,plus1\n96764,0",
+   "error": false
+  }
+ ],
+ "usage": {
+  "input": 1388,
+  "output": 611,
+  "cache_read": 6090,
+  "cache_write": 0
+ },
+ "effort": "medium",
+ "prompt_version": "v1"
+}

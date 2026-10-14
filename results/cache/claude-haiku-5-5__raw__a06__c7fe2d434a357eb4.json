@@ -1,0 +1,34 @@
+{
+ "model": "claude-haiku-5-5",
+ "condition": "raw",
+ "qid": "a06",
+ "question": "How much premium did we do in 2025?",
+ "final_text": "Written premium booked in 2025 comes to **\u00a330,274,839.20**, net of cancellations. I took \"premium done\" to mean written premium by booked date, summed across all `premium_txn` types:\n\n- NEW: \u00a313,916,006.79\n- RENEWAL: \u00a317,264,002.22\n- MTA (mid-term adjustments): \u00a3106,173.07\n- CANCEL (negative): \u2212\u00a31,011,342.88\n\nOn an effective-date basis the figure is \u00a330,143,714.82. The quote table is not used here because it holds quoted prices, not bound premium.\n\nANSWER: 30274839.20",
+ "stop_reason": "end_turn",
+ "tool_calls": [
+  {
+   "tool": "run_sql",
+   "input": {
+    "query": "SELECT txn_type, COUNT(*) AS n, SUM(written_premium) AS wp, MIN(booked_date) AS min_b, MAX(booked_date) AS max_b, SUM(CASE WHEN booked_date BETWEEN '2025-01-01' AND '2025-12-31' THEN written_premium ELSE 0 END) AS wp_2025_booked, SUM(CASE WHEN effective_date BETWEEN '2025-01-01' AND '2025-12-31' THEN written_premium ELSE 0 END) AS wp_2025_effective FROM premium_txn GROUP BY txn_type"
+   },
+   "output": "txn_type,n,wp,min_b,max_b,wp_2025_booked,wp_2025_effective\nMTA,22310,466631.74,2019-02-08,2025-12-31,106173.07,106074.90\nNEW,113555,74247233.10,2019-01-01,2025-12-31,13916006.79,13905002.72\nRENEWAL,96764,66470703.32,2019-12-15,2025-12-31,17264002.22,17137930.54\nCANCEL,13081,-4423904.86,2019-02-02,2025-12-31,-1011342.88,-1005293.34",
+   "error": false
+  },
+  {
+   "tool": "run_sql",
+   "input": {
+    "query": "SELECT COUNT(*) AS n, SUM(quoted_premium) FROM quote WHERE quote_date BETWEEN '2025-01-01' AND '2025-12-31'"
+   },
+   "output": "n,sum(quoted_premium)\n147032,114065116.87",
+   "error": false
+  }
+ ],
+ "usage": {
+  "input": 902,
+  "output": 971,
+  "cache_read": 4060,
+  "cache_write": 0
+ },
+ "effort": "medium",
+ "prompt_version": "v1"
+}

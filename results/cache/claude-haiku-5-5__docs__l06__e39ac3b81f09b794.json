@@ -1,0 +1,42 @@
+{
+ "model": "claude-haiku-5-5",
+ "condition": "docs",
+ "qid": "l06",
+ "question": "What is the estimated ultimate loss (reported plus IBNR, excluding ALAE) for accident year 2023?",
+ "final_text": "The estimated ultimate loss for accident year 2023 is about \u00a319.62m, valued at 31 December 2025, on an accident basis and excluding ALAE.\n\n- **Reported loss: \u00a319,438,808.25.** This is paid indemnity (\u00a317,773,026.92, payments net of recoveries) plus case reserves (\u00a31,665,781.33) across 4,379 claims with 2023 accident dates. Only transactions dated on or before 31 December 2025 are included.\n- **IBNR: \u00a3184,880.76.** This is the 2025-12-31 chain-ladder figure for accident year 2023. The IBNR table has no segment split, so it is taken at the total level.\n\nUltimate = 19,438,808.25 + 184,880.76 = 19,623,689.01.\n\nChecks: no closed claim carries a case reserve, and no claim has a negative case reserve. Seven open claims carry zero case reserve, which is plausible but I did not investigate further.\n\nANSWER: 19623689.01",
+ "stop_reason": "end_turn",
+ "tool_calls": [
+  {
+   "tool": "run_sql",
+   "input": {
+    "query": "\nWITH c AS (\n  SELECT c.claim_id, c.peril, c.accident_date, c.report_date\n  FROM claim c\n  WHERE YEAR(c.accident_date) = 2023\n),\nt AS (\n  SELECT ct.claim_id,\n    SUM(CASE WHEN ct.cost_type='INDEMNITY' AND ct.txn_type IN ('PAYMENT','RECOVERY') THEN ct.amount ELSE 0 END) AS paid_indem,\n    SUM(CASE WHEN ct.txn_type='RESERVE' THEN ct.amount ELSE 0 END) AS case_res\n  FROM claim_txn ct\n  WHERE ct.txn_date <= DATE '2025-12-31'\n  GROUP BY ct.claim_id\n)\nSELECT\n  COUNT(*) AS n_claims,\n  SUM(COALESCE(t.paid_indem,0)) AS paid_indem,\n  SUM(COALESCE(t.case_res,0)) AS case_res,\n  SUM(COALESCE(t.paid_indem,0)+COALESCE(t.case_res,0)) AS reported_loss\nFROM c LEFT JOIN t USING (claim_id)\n"
+   },
+   "output": "n_claims,paid_indem,case_res,reported_loss\n4379,17773026.92,1665781.33,19438808.25",
+   "error": false
+  },
+  {
+   "tool": "run_sql",
+   "input": {
+    "query": "\nSELECT valuation_date, accident_year, ibnr FROM ibnr_valuation\nWHERE accident_year = 2023 ORDER BY valuation_date\n"
+   },
+   "output": "valuation_date,accident_year,ibnr\n2023-03-31,2023,1564851.71\n2023-06-30,2023,2231077.31\n2023-09-30,2023,2741200.56\n2023-12-31,2023,3068439.64\n2024-03-31,2023,1898002.88\n2024-06-30,2023,918299.78\n2024-09-30,2023,836928.50\n2024-12-31,2023,506230.09\n2025-03-31,2023,268790.96\n2025-06-30,2023,221581.16\n2025-09-30,2023,213529.95\n2025-12-31,2023,184880.76",
+   "error": false
+  },
+  {
+   "tool": "run_sql",
+   "input": {
+    "query": "\nSELECT\n  SUM(CASE WHEN c.closed_date IS NOT NULL AND ABS(r.case_res) > 0.005 THEN 1 ELSE 0 END) AS closed_with_reserve,\n  SUM(CASE WHEN r.case_res < -0.005 THEN 1 ELSE 0 END) AS negative_reserve_claims,\n  SUM(CASE WHEN c.closed_date IS NULL AND ABS(COALESCE(r.case_res,0)) < 0.005 THEN 1 ELSE 0 END) AS open_zero_reserve,\n  COUNT(*) AS n\nFROM claim c\nLEFT JOIN (SELECT claim_id, SUM(CASE WHEN txn_type='RESERVE' THEN amount ELSE 0 END) AS case_res\n           FROM claim_txn WHERE txn_date <= DATE '2025-12-31' GROUP BY claim_id) r USING (claim_id)\nWHERE YEAR(c.accident_date) = 2023\n"
+   },
+   "output": "closed_with_reserve,negative_reserve_claims,open_zero_reserve,n\n0,0,7,4379",
+   "error": false
+  }
+ ],
+ "usage": {
+  "input": 3125,
+  "output": 1727,
+  "cache_read": 15939,
+  "cache_write": 0
+ },
+ "effort": "medium",
+ "prompt_version": "v1"
+}

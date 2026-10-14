@@ -1,0 +1,34 @@
+{
+ "model": "claude-haiku-5-5",
+ "condition": "docs",
+ "qid": "c07",
+ "question": "How much written premium did the broker channel book in 2023?",
+ "final_text": "Broker-channel written premium booked in 2023 was \u00a37,279,940.35 (calendar basis: premium transactions with booked_date from 1 Jan to 31 Dec 2023, channel taken from the policy term). The term and policy channel fields agree for every transaction, so the split is unambiguous.\n\nANSWER: 7279940.35",
+ "stop_reason": "end_turn",
+ "tool_calls": [
+  {
+   "tool": "run_sql",
+   "input": {
+    "query": "SELECT t.channel, COUNT(*) AS txns, ROUND(SUM(p.written_premium),2) AS written_premium\nFROM premium_txn p JOIN policy_term t USING (term_id)\nWHERE p.booked_date >= DATE '2023-01-01' AND p.booked_date < DATE '2024-01-01'\nGROUP BY t.channel ORDER BY t.channel"
+   },
+   "output": "channel,txns,written_premium\nBROKER,12961,7279940.35\nDIRECT,15301,8550351.71\nPCW,12596,6531671.03",
+   "error": false
+  },
+  {
+   "tool": "run_sql",
+   "input": {
+    "query": "SELECT t.channel AS term_channel, po.channel AS policy_channel, COUNT(*) AS txns, ROUND(SUM(p.written_premium),2) AS wp\nFROM premium_txn p JOIN policy_term t USING (term_id) JOIN policy po USING (policy_id)\nWHERE p.booked_date >= DATE '2023-01-01' AND p.booked_date < DATE '2024-01-01'\nGROUP BY 1,2 ORDER BY 1,2"
+   },
+   "output": "term_channel,policy_channel,txns,wp\nBROKER,BROKER,12961,7279940.35\nDIRECT,DIRECT,15301,8550351.71\nPCW,PCW,12596,6531671.03",
+   "error": false
+  }
+ ],
+ "usage": {
+  "input": 1425,
+  "output": 740,
+  "cache_read": 15939,
+  "cache_write": 0
+ },
+ "effort": "medium",
+ "prompt_version": "v1"
+}

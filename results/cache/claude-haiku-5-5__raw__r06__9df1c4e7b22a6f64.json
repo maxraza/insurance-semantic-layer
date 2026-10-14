@@ -1,0 +1,42 @@
+{
+ "model": "claude-haiku-5-5",
+ "condition": "raw",
+ "qid": "r06",
+ "question": "What share of 2025 quotes for drivers aged 17-24 converted into policies?",
+ "final_text": "**Answer: about 0.126 (12.6%)**\n\nOf the 14,645 quotes for drivers aged 17-24 dated in 2025, 1,841 are linked to a bound policy term, giving 1,841 / 14,645 \u2248 0.1257.\n\nI checked the linkage: every bound quote points to a real policy term, and each bind date falls on or after its quote date, all within 2025. Conversion is counted as quotes with a `bound_term_id`, so it is quote-level, not premium-weighted.\n\nANSWER: 0.1257",
+ "stop_reason": "end_turn",
+ "tool_calls": [
+  {
+   "tool": "run_sql",
+   "input": {
+    "query": "SELECT driver_age_band, COUNT(*) AS quotes, COUNT(bound_term_id) AS bound, COUNT(DISTINCT quote_id) AS dq FROM quote WHERE quote_date >= '2025-01-01' AND quote_date <= '2025-12-31' GROUP BY 1 ORDER BY 1"
+   },
+   "output": "driver_age_band,quotes,bound,dq\n17-24,14645,1841,14645\n25-39,52775,6758,52775\n40-59,56122,7006,56122\n60+,23490,3048,23490",
+   "error": false
+  },
+  {
+   "tool": "run_sql",
+   "input": {
+    "query": "SELECT MIN(quote_date), MAX(quote_date), COUNT(*), COUNT(bound_term_id) FROM quote"
+   },
+   "output": "min(quote_date),max(quote_date),count_star(),count(bound_term_id)\n2019-01-01,2025-12-31,892296,113555",
+   "error": false
+  },
+  {
+   "tool": "run_sql",
+   "input": {
+    "query": "SELECT COUNT(*) AS bound_quotes, SUM(CASE WHEN t.term_id IS NULL THEN 1 ELSE 0 END) AS dangling, SUM(CASE WHEN t.bound_date < q.quote_date THEN 1 ELSE 0 END) AS bound_before_quote, MIN(t.bound_date), MAX(t.bound_date) FROM quote q LEFT JOIN policy_term t ON t.term_id = q.bound_term_id WHERE q.quote_date BETWEEN '2025-01-01' AND '2025-12-31' AND q.bound_term_id IS NOT NULL AND q.driver_age_band='17-24'"
+   },
+   "output": "bound_quotes,dangling,bound_before_quote,min(t.bound_date),max(t.bound_date)\n1841,0,0,2025-01-01,2025-12-31",
+   "error": false
+  }
+ ],
+ "usage": {
+  "input": 1677,
+  "output": 952,
+  "cache_read": 6090,
+  "cache_write": 0
+ },
+ "effort": "medium",
+ "prompt_version": "v1"
+}

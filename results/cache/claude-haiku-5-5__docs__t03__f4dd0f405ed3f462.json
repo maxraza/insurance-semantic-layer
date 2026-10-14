@@ -1,0 +1,26 @@
+{
+ "model": "claude-haiku-5-5",
+ "condition": "docs",
+ "qid": "t03",
+ "question": "What was the renewal retention rate for customers acquired through price comparison websites, for renewals due in 2024?",
+ "final_text": "The renewal retention rate for PCW-acquired customers, for renewals due in 2024, is about 0.409 (4,028 accepted out of 9,847 matured invitations).\n\n- **Basis:** I used `retention_rate = renewals_accepted / renewals_due` from the glossary. Renewals are grouped by the invitation's due date (the expiring term's expiry) falling in 2024, and the channel is the policy's acquisition channel.\n- **Matured:** every 2024 due date is before the 31 December 2025 valuation date, so all invitations are matured. Each accepted renewal was bound on or before that date.\n- **Channel:** the acquisition channel matched the term channel for every row, so there is no ambiguity in the split.\n\nANSWER: 0.409",
+ "stop_reason": "end_turn",
+ "tool_calls": [
+  {
+   "tool": "run_sql",
+   "input": {
+    "query": "SELECT p.channel AS acq_channel, t.channel AS term_channel, COUNT(*) AS due,\n SUM(CASE WHEN r.renewed_term_id IS NOT NULL THEN 1 ELSE 0 END) AS accepted,\n SUM(CASE WHEN r.renewed_term_id IS NOT NULL AND rt.bound_date <= DATE '2025-12-31' THEN 1 ELSE 0 END) AS accepted_bound\nFROM renewal_offer r\nJOIN policy_term t ON t.term_id = r.expiring_term_id\nJOIN policy p ON p.policy_id = t.policy_id\nLEFT JOIN policy_term rt ON rt.term_id = r.renewed_term_id\nWHERE r.due_date >= DATE '2024-01-01' AND r.due_date < DATE '2025-01-01' AND r.due_date <= DATE '2025-12-31' AND r.offer_date <= DATE '2025-12-31'\nGROUP BY ALL ORDER BY ALL"
+   },
+   "output": "acq_channel,term_channel,due,accepted,accepted_bound\nBROKER,BROKER,10138,6103,6103\nDIRECT,DIRECT,12002,7280,7280\nPCW,PCW,9847,4028,4028",
+   "error": false
+  }
+ ],
+ "usage": {
+  "input": 914,
+  "output": 1141,
+  "cache_read": 10626,
+  "cache_write": 0
+ },
+ "effort": "medium",
+ "prompt_version": "v1"
+}

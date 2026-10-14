@@ -1,0 +1,35 @@
+{
+ "model": "claude-haiku-5-5",
+ "condition": "semantic",
+ "qid": "v01",
+ "question": "What was the accident-year 2023 reported loss ratio as it stood at 31 December 2023?",
+ "final_text": "The accident-year 2023 reported loss ratio as at 31 December 2023 was 0.696.\n\nThis is reported loss (paid plus case reserves, excluding IBNR and ALAE) of \u00a314,841,148 divided by earned premium of \u00a321,311,826 for accident year 2023, valued at 31 December 2023.\n\nANSWER: 0.696381",
+ "stop_reason": "end_turn",
+ "tool_calls": [
+  {
+   "tool": "query_metrics",
+   "input": {
+    "metrics": [
+     "loss_ratio_reported",
+     "earned_premium",
+     "reported_loss"
+    ],
+    "basis": "accident",
+    "as_of": "2023-12-31",
+    "grain": "year",
+    "period_from": "2023-01-01",
+    "period_to": "2023-12-31"
+   },
+   "output": "period,loss_ratio_reported,earned_premium,reported_loss\n2023,0.696381,21311826.07,14841148.31",
+   "error": false
+  }
+ ],
+ "usage": {
+  "input": 556,
+  "output": 440,
+  "cache_read": 7364,
+  "cache_write": 0
+ },
+ "effort": "medium",
+ "prompt_version": "v1"
+}

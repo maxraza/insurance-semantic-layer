@@ -1,0 +1,58 @@
+{
+ "model": "claude-sonnet-5-5",
+ "condition": "raw",
+ "qid": "r01",
+ "question": "What was the accident-year 2024 reported loss ratio for drivers aged 17-24?",
+ "final_text": "The accident-year 2024 reported loss ratio for drivers aged 17-24 is about **0.777**.\n\n- **Claims:** I took claims with a 2024 accident date on terms in the 17-24 age band. Reported incurred is payments plus movements in case reserves, which gives outstanding reserves. I netted off recoveries, included ALAE (allocated loss adjustment expense) and excluded IBNR. This comes to \u00a33,361,815.\n- **Earned premium:** I earned each premium transaction pro rata over its cover period and kept the 2024 portion. This comes to \u00a34,327,481.\n- **Ratio:** \u00a33,361,815 / \u00a34,327,481 = 0.7768.\n- **Definition choice:** If you want indemnity only, excluding ALAE, the ratio falls to about 0.747.\n\nANSWER: 0.777",
+ "stop_reason": "end_turn",
+ "tool_calls": [
+  {
+   "tool": "run_sql",
+   "input": {
+    "query": "select driver_age_band, count(*) from policy_term group by 1;\nselect txn_type, cost_type, count(*), sum(amount) from claim_txn group by 1,2;\nselect txn_type, count(*), sum(written_premium) from premium_txn group by 1;"
+   },
+   "output": "txn_type,count_star(),sum(written_premium)\nRENEWAL,96764,66470703.32\nCANCEL,13081,-4423904.86\nMTA,22310,466631.74\nNEW,113555,74247233.10",
+   "error": false
+  },
+  {
+   "tool": "run_sql",
+   "input": {
+    "query": "select driver_age_band, count(*) from policy_term group by 1"
+   },
+   "output": "driver_age_band,count_star()\n25-39,77753\n17-24,17931\n40-59,80346\n60+,34289",
+   "error": false
+  },
+  {
+   "tool": "run_sql",
+   "input": {
+    "query": "select txn_type, cost_type, count(*), sum(amount) from claim_txn group by 1,2"
+   },
+   "output": "txn_type,cost_type,count_star(),sum(amount)\nPAYMENT,ALAE,5482,4041773.75\nRECOVERY,INDEMNITY,1151,-2278660.54\nRESERVE,INDEMNITY,79216,15020532.03\nPAYMENT,INDEMNITY,34398,78097079.75",
+   "error": false
+  },
+  {
+   "tool": "run_sql",
+   "input": {
+    "query": "select c.claim_id, c.closed_date, t.txn_date,t.txn_type,t.cost_type,t.amount from claim c join claim_txn t using(claim_id) where c.claim_id in (select claim_id from claim order by claim_id limit 6) order by 1,3"
+   },
+   "output": "claim_id,closed_date,txn_date,txn_type,cost_type,amount\n1,2020-01-03,2019-11-13,RESERVE,INDEMNITY,1511.36\n1,2020-01-03,2019-11-23,PAYMENT,INDEMNITY,40.80\n1,2020-01-03,2019-11-23,RESERVE,INDEMNITY,-40.80\n1,2020-01-03,2019-11-28,RESERVE,INDEMNITY,-18.26\n1,2020-01-03,2019-11-29,PAYMENT,INDEMNITY,1339.91\n1,2020-01-03,2019-11-29,RESERVE,INDEMNITY,-1339.91\n1,2020-01-03,2020-01-03,PAYMENT,INDEMNITY,355.89\n1,2020-01-03,2020-01-03,RESERVE,INDEMNITY,-112.39\n1,2020-01-03,2020-01-03,PAYMENT,ALAE,194.55\n2,2020-02-15,2019-11-14,RESERVE,INDEMNITY,96.92\n2,2020-02-15,2020-02-15,PAYMENT,INDEMNITY,179.10\n2,2020-02-15,2020-02-15,RESERVE,INDEMNITY,-96.92\n2,2020-02-15,2020-02-15,PAYMENT,ALAE,24.55\n2,2020-02-15,2020-04-21,RECOVERY,INDEMNITY,-87.11\n3,2019-07-19,2019-07-13,RESERVE,INDEMNITY,274.03\n3,2019-07-19,2019-07-19,PAYMENT,INDEMNITY,337.15\n3,2019-07-19,2019-07-19,RESERVE,INDEMNITY,-274.03\n4,2019-09-22,2019-09-16,RESERVE,INDEMNITY,210.37\n4,2019-09-22,2019-09-22,PAYMENT,INDEMNITY,331.19\n4,2019-09-22,2019-09-22,RESERVE,INDEMNITY,-210.37\n5,2019-11-01,2019-10-29,RESERVE,INDEMNITY,330.48\n5,2019-11-01,2019-11-01,PAYMENT,INDEMNITY,308.81\n5,2019-11-01,2019-11-01,RESERVE,INDEMNITY,-308.81\n5,2019-11-01,2019-11-01,RESERVE,INDEMNITY,-21.67\n6,2020-02-04,2019-11-19,RESERVE,INDEMNITY,7384.21\n6,2020-02-04,2020-02-04,PAYMENT,INDEMNITY,7047.78\n6,2020-02-04,2020-02-04,RESERVE,INDEMNITY,-7047.78\n6,2020-02-04,2020-02-04,RESERVE,INDEMNITY,-336.43",
+   "error": false
+  },
+  {
+   "tool": "run_sql",
+   "input": {
+    "query": "with ep as (select sum(p.written_premium * greatest(0, datediff('day', greatest(p.effective_date, date '2024-01-01'), least(p.cover_end_date, date '2025-01-01')))::double / nullif(datediff('day', p.effective_date,p.cover_end_date),0)) e from premium_txn p join policy_term t using(term_id) where t.driver_age_band='17-24'),\ncl as (select sum(case when x.cost_type='INDEMNITY' then amount end) ind, sum(amount) allc, sum(case when x.cost_type='INDEMNITY' and not (txn_type='RECOVERY') then amount end) gross_ind from claim_txn x join claim c using(claim_id) join policy_term t on t.term_id=c.term_id where t.driver_age_band='17-24' and year(c.accident_date)=2024 and x.txn_date<=date '2025-12-31')\nselect * from ep, cl"
+   },
+   "output": "e,ind,allc,gross_ind\n4327481.00,3232832.53,3361814.98,3309500.39",
+   "error": false
+  }
+ ],
+ "usage": {
+  "input": 5977,
+  "output": 1674,
+  "cache_read": 10150,
+  "cache_write": 0
+ },
+ "effort": "medium",
+ "prompt_version": "v1"
+}

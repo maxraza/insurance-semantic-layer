@@ -1,0 +1,26 @@
+{
+ "model": "claude-sonnet-5-5",
+ "condition": "docs",
+ "qid": "e01",
+ "question": "What was earned premium in calendar year 2024?",
+ "final_text": "Earned premium for calendar year 2024 was about \u00a323,748,558.\n\nI earned each premium transaction pro rata by day over its cover period, from effective date to cover end date. I then summed the part that falls in 1 Jan\u201331 Dec 2024. The sum includes every transaction booked up to the 31 December 2025 valuation date. That covers new business, renewals, mid-term adjustments and cancellation returns.\n\nANSWER: 23748557.88",
+ "stop_reason": "end_turn",
+ "tool_calls": [
+  {
+   "tool": "run_sql",
+   "input": {
+    "query": "select sum(written_premium * greatest(0, least(date '2025-01-01', cover_end_date) - greatest(date '2024-01-01', effective_date))::double / (cover_end_date - effective_date)) from premium_txn where booked_date <= date '2025-12-31' and cover_end_date > effective_date"
+   },
+   "output": "sum(((written_premium * CAST(greatest(0, (least(CAST('2025-01-01' AS \"DATE\"), cover_end_date) - greatest(CAST('2024-01-01' AS \"DATE\"), effective_date))) AS \"DOUBLE\")) / (cover_end_date - effective_date)))\n23748557.88",
+   "error": false
+  }
+ ],
+ "usage": {
+  "input": 447,
+  "output": 428,
+  "cache_read": 10626,
+  "cache_write": 0
+ },
+ "effort": "medium",
+ "prompt_version": "v1"
+}

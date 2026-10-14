@@ -1,0 +1,26 @@
+{
+ "model": "claude-sonnet-5-5",
+ "condition": "docs",
+ "qid": "t04",
+ "question": "What was the renewal retention rate for renewals due in 2023?",
+ "final_text": "The 2023 renewal retention rate was 0.546. That is 17,369 renewals accepted out of 31,806 invitations that fell due in 2023.\n\nI counted an invitation as due if its due date (the expiring term's expiry date) fell in 2023. I counted it as accepted if a renewed term was bound on or before 31 December 2025. All 2023 invitations had matured by that date.\n\nANSWER: 0.546",
+ "stop_reason": "end_turn",
+ "tool_calls": [
+  {
+   "tool": "run_sql",
+   "input": {
+    "query": "select count(*) due, count(o.renewed_term_id) acc, count(t.term_id) acc_bound, count(o.renewed_term_id)*1.0/count(*) r from renewal_offer o left join policy_term t on t.term_id=o.renewed_term_id and t.bound_date<=DATE '2025-12-31' where o.due_date>=DATE '2023-01-01' and o.due_date<DATE '2024-01-01' and o.offer_date<=DATE '2025-12-31'"
+   },
+   "output": "due,acc,acc_bound,r\n31806,17369,17369,0.546092",
+   "error": false
+  }
+ ],
+ "usage": {
+  "input": 538,
+  "output": 454,
+  "cache_read": 10626,
+  "cache_write": 0
+ },
+ "effort": "medium",
+ "prompt_version": "v1"
+}

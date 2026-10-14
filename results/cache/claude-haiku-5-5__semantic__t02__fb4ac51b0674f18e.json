@@ -1,0 +1,35 @@
+{
+ "model": "claude-haiku-5-5",
+ "condition": "semantic",
+ "qid": "t02",
+ "question": "As at 30 September 2025, what is the year-to-date renewal retention rate for 2025?",
+ "final_text": "The year-to-date renewal retention rate for 2025, as at 30 September 2025, is **0.6785**.\n\nThis is calendar-basis `retention_rate` for 1 January to 30 September 2025, valued at 30 September 2025. It is 16,278 renewals accepted out of 23,991 matured renewal invitations. Only invitations whose expiry had passed by the valuation date are counted, so the rate is not understated by pending renewals.\n\nANSWER: 0.678504",
+ "stop_reason": "end_turn",
+ "tool_calls": [
+  {
+   "tool": "query_metrics",
+   "input": {
+    "metrics": [
+     "retention_rate",
+     "renewals_accepted",
+     "renewals_due"
+    ],
+    "basis": "calendar",
+    "as_of": "2025-09-30",
+    "grain": "year",
+    "period_from": "2025-01-01",
+    "period_to": "2025-09-30"
+   },
+   "output": "period,retention_rate,renewals_accepted,renewals_due\n2025,0.678504,16278.00,23991.00",
+   "error": false
+  }
+ ],
+ "usage": {
+  "input": 596,
+  "output": 571,
+  "cache_read": 7364,
+  "cache_write": 0
+ },
+ "effort": "medium",
+ "prompt_version": "v1"
+}

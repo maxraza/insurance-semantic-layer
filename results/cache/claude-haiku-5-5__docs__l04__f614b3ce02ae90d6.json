@@ -1,0 +1,34 @@
+{
+ "model": "claude-haiku-5-5",
+ "condition": "docs",
+ "qid": "l04",
+ "question": "How much IBNR is held in total across all accident years at 31 December 2025?",
+ "final_text": "At 31 December 2025, total held IBNR is **\u00a35,248,275.43** across accident years 2019\u20132025.\n\nI took the 31 December 2025 quarter-end valuation from `ibnr_valuation`, which holds the IBNR booked at each quarter-end by accident year, and summed the seven accident-year rows. The glossary says balances are not summed across periods, so I used only that single valuation date. The 2025 accident year accounts for \u00a34.25m of the total, and 2019 is nil.\n\nANSWER: 5248275.43",
+ "stop_reason": "end_turn",
+ "tool_calls": [
+  {
+   "tool": "run_sql",
+   "input": {
+    "query": "SELECT valuation_date, accident_year, ibnr FROM ibnr_valuation WHERE valuation_date >= '2025-09-01' ORDER BY valuation_date, accident_year"
+   },
+   "output": "valuation_date,accident_year,ibnr\n2025-09-30,2019,0.00\n2025-09-30,2020,6356.61\n2025-09-30,2021,61979.89\n2025-09-30,2022,137633.36\n2025-09-30,2023,213529.95\n2025-09-30,2024,1008199.39\n2025-09-30,2025,3715871.89\n2025-12-31,2019,0.00\n2025-12-31,2020,1540.89\n2025-12-31,2021,38210.26\n2025-12-31,2022,163122.73\n2025-12-31,2023,184880.76\n2025-12-31,2024,611435.82\n2025-12-31,2025,4249084.97",
+   "error": false
+  },
+  {
+   "tool": "run_sql",
+   "input": {
+    "query": "SELECT valuation_date, COUNT(*) AS n_years, SUM(ibnr) AS total_ibnr FROM ibnr_valuation GROUP BY valuation_date ORDER BY valuation_date"
+   },
+   "output": "valuation_date,n_years,total_ibnr\n2019-12-31,1,450298.72\n2020-03-31,2,1039724.70\n2020-06-30,2,1165995.40\n2020-09-30,2,2057427.52\n2020-12-31,2,2009091.93\n2021-03-31,3,1911913.22\n2021-06-30,3,1810990.33\n2021-09-30,3,1710921.77\n2021-12-31,3,1373810.38\n2022-03-31,4,1771401.06\n2022-06-30,4,815343.77\n2022-09-30,4,2134223.03\n2022-12-31,4,2636192.95\n2023-03-31,5,2776671.33\n2023-06-30,5,3327159.57\n2023-09-30,5,3628601.40\n2023-12-31,5,3390892.84\n2024-03-31,6,4378157.33\n2024-06-30,6,3521252.44\n2024-09-30,6,4508810.27\n2024-12-31,6,4562282.08\n2025-03-31,7,4694735.94\n2025-06-30,7,4866244.04\n2025-09-30,7,5143571.09\n2025-12-31,7,5248275.43",
+   "error": false
+  }
+ ],
+ "usage": {
+  "input": 1320,
+  "output": 754,
+  "cache_read": 10626,
+  "cache_write": 0
+ },
+ "effort": "medium",
+ "prompt_version": "v1"
+}

@@ -1,0 +1,58 @@
+{
+ "model": "claude-haiku-5-5",
+ "condition": "raw",
+ "qid": "n02",
+ "question": "What is the average reported cost per reported windscreen claim in accident year 2024, counting nil claims?",
+ "final_text": "The average reported cost per windscreen claim with accident date in 2024 is \u00a3514.85, counting nil claims.\n\n- **Claims:** 1,069 windscreen claims with accident date in 2024, all reported by 31 December 2025.\n- **Cost definition:** the sum of all claim transactions per claim (payments plus reserve movements, which net to the outstanding reserve). Windscreen claims have no recoveries. This gives paid plus outstanding, i.e. incurred cost.\n- **Total:** \u00a3550,376.77 across the 1,069 claims, divided by 1,069 gives \u00a3514.85.\n\nANSWER: 514.85",
+ "stop_reason": "end_turn",
+ "tool_calls": [
+  {
+   "tool": "run_sql",
+   "input": {
+    "query": "SELECT 'peril' k, peril v, COUNT(*) n FROM claim GROUP BY peril\nUNION ALL SELECT 'txn_type', txn_type, COUNT(*) FROM claim_txn GROUP BY txn_type\nUNION ALL SELECT 'cost_type', cost_type, COUNT(*) FROM claim_txn GROUP BY cost_type\nUNION ALL SELECT 'accyr', CAST(YEAR(accident_date) AS VARCHAR), COUNT(*) FROM claim GROUP BY YEAR(accident_date)"
+   },
+   "output": "k,v,n\nperil,THIRD_PARTY_PROPERTY,6280\nperil,WINDSCREEN,5651\nperil,THEFT,872\nperil,BODILY_INJURY,1691\nperil,OWN_DAMAGE,9055\ntxn_type,RECOVERY,1151\ntxn_type,PAYMENT,39880\ntxn_type,RESERVE,79216\ncost_type,ALAE,5482\ncost_type,INDEMNITY,114765\naccyr,2019,910\naccyr,2020,2279\naccyr,2021,3234\naccyr,2022,3921\naccyr,2023,4379\naccyr,2024,4396\naccyr,2025,4430",
+   "error": false
+  },
+  {
+   "tool": "run_sql",
+   "input": {
+    "query": "SELECT c.peril, t.txn_type, t.cost_type, COUNT(*) n, SUM(t.amount) amt, MIN(t.txn_date), MAX(t.txn_date) FROM claim_txn t JOIN claim c USING(claim_id) GROUP BY ALL ORDER BY ALL"
+   },
+   "output": "peril,txn_type,cost_type,n,amt,min(t.txn_date),max(t.txn_date)\nBODILY_INJURY,PAYMENT,ALAE,814,2266381.00,2019-10-09,2025-12-31\nBODILY_INJURY,PAYMENT,INDEMNITY,2897,26736614.25,2019-09-05,2025-12-31\nBODILY_INJURY,RESERVE,INDEMNITY,5819,11574541.29,2019-03-20,2025-12-31\nOWN_DAMAGE,PAYMENT,INDEMNITY,15688,25825487.44,2019-02-24,2025-12-31\nOWN_DAMAGE,RECOVERY,INDEMNITY,744,-1397168.60,2019-07-11,2025-12-28\nOWN_DAMAGE,RESERVE,INDEMNITY,34972,1040476.54,2019-02-06,2025-12-31\nTHEFT,PAYMENT,INDEMNITY,610,4749914.90,2019-06-11,2025-12-31\nTHEFT,RESERVE,INDEMNITY,2003,426590.39,2019-03-30,2025-12-31\nTHIRD_PARTY_PROPERTY,PAYMENT,ALAE,4668,1775392.75,2019-04-02,2025-12-31\nTHIRD_PARTY_PROPERTY,PAYMENT,INDEMNITY,9743,18171651.24,2019-03-28,2025-12-31\nTHIRD_PARTY_PROPERTY,RECOVERY,INDEMNITY,407,-881491.94,2019-09-08,2025-12-31\nTHIRD_PARTY_PROPERTY,RESERVE,INDEMNITY,22427,1964001.72,2019-02-23,2025-12-31\nWINDSCREEN,PAYMENT,INDEMNITY,5460,2613411.92,2019-02-22,2025-12-31\nWINDSCREEN,RESERVE,INDEMNITY,13995,14922.09,2019-02-04,2025-12-31",
+   "error": false
+  },
+  {
+   "tool": "run_sql",
+   "input": {
+    "query": "SELECT c.claim_id, t.txn_date, t.txn_type, t.amount, c.accident_date, c.report_date, c.closed_date FROM claim c JOIN claim_txn t USING(claim_id) WHERE c.claim_id IN (SELECT claim_id FROM claim_txn t2 JOIN claim c2 USING(claim_id) WHERE c2.peril='WINDSCREEN' AND t2.txn_type='RESERVE' GROUP BY claim_id HAVING COUNT(*)>=3 LIMIT 4) ORDER BY 1,2"
+   },
+   "output": "claim_id,txn_date,txn_type,amount,accident_date,report_date,closed_date\n221,2019-08-19,RESERVE,373.68,2019-08-19,2019-08-19,2019-08-23\n221,2019-08-23,PAYMENT,369.27,2019-08-19,2019-08-19,2019-08-23\n221,2019-08-23,RESERVE,-369.27,2019-08-19,2019-08-19,2019-08-23\n221,2019-08-23,RESERVE,-4.41,2019-08-19,2019-08-19,2019-08-23\n402,2020-03-11,RESERVE,423.73,2020-03-11,2020-03-11,2020-03-18\n402,2020-03-18,PAYMENT,370.16,2020-03-11,2020-03-11,2020-03-18\n402,2020-03-18,RESERVE,-370.16,2020-03-11,2020-03-11,2020-03-18\n402,2020-03-18,RESERVE,-53.57,2020-03-11,2020-03-11,2020-03-18\n1163,2019-09-12,RESERVE,241.19,2019-09-11,2019-09-12,2019-09-15\n1163,2019-09-15,PAYMENT,208.88,2019-09-11,2019-09-12,2019-09-15\n1163,2019-09-15,RESERVE,-208.88,2019-09-11,2019-09-12,2019-09-15\n1163,2019-09-15,RESERVE,-32.31,2019-09-11,2019-09-12,2019-09-15\n1192,2020-07-06,RESERVE,286.71,2020-07-06,2020-07-06,2020-07-25\n1192,2020-07-25,PAYMENT,270.30,2020-07-06,2020-07-06,2020-07-25\n1192,2020-07-25,RESERVE,-270.30,2020-07-06,2020-07-06,2020-07-25\n1192,2020-07-25,RESERVE,-16.41,2020-07-06,2020-07-06,2020-07-25",
+   "error": false
+  },
+  {
+   "tool": "run_sql",
+   "input": {
+    "query": "WITH w AS (SELECT claim_id, accident_date, report_date FROM claim WHERE peril='WINDSCREEN' AND YEAR(accident_date)=2024),\ninc AS (SELECT t.claim_id, SUM(t.amount) cost FROM claim_txn t JOIN w USING(claim_id) GROUP BY 1)\nSELECT COUNT(*) n_claims, COUNT(inc.claim_id) with_txn, SUM(COALESCE(inc.cost,0)) total, AVG(COALESCE(inc.cost,0)) avg_incl_nil, SUM(CASE WHEN report_date<=DATE '2025-12-31' THEN 1 END) reported FROM w LEFT JOIN inc USING(claim_id)"
+   },
+   "output": "error: Parser Error: syntax error at or near \"cost\"\n\nLINE 2: inc AS (SELECT t.claim_id, SUM(t.amount) cost FROM claim_txn t JOIN w USING(claim_id) GROUP BY 1)\n                                                 ^",
+   "error": true
+  },
+  {
+   "tool": "run_sql",
+   "input": {
+    "query": "WITH w AS (SELECT claim_id, accident_date, report_date FROM claim WHERE peril='WINDSCREEN' AND YEAR(accident_date)=2024),\ninc AS (SELECT t.claim_id, SUM(t.amount) AS cost FROM claim_txn t JOIN w USING(claim_id) GROUP BY 1)\nSELECT COUNT(*) AS n_claims, COUNT(inc.claim_id) AS with_txn, SUM(COALESCE(inc.cost,0)) AS total, AVG(COALESCE(inc.cost,0)) AS avg_incl_nil, SUM(CASE WHEN report_date<=DATE '2025-12-31' THEN 1 ELSE 0 END) AS reported FROM w LEFT JOIN inc USING(claim_id)"
+   },
+   "output": "n_claims,with_txn,total,avg_incl_nil,reported\n1069,1069,550376.77,514.85,1069",
+   "error": false
+  }
+ ],
+ "usage": {
+  "input": 8736,
+  "output": 2108,
+  "cache_read": 8120,
+  "cache_write": 0
+ },
+ "effort": "medium",
+ "prompt_version": "v1"
+}

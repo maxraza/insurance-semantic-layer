@@ -1,0 +1,30 @@
+{
+ "model": "claude-sonnet-5-5",
+ "condition": "semantic",
+ "qid": "l04",
+ "question": "How much IBNR is held in total across all accident years at 31 December 2025?",
+ "final_text": "The total IBNR held across all accident years at 31 December 2025 is about \u00a35.25m.\n\nOn a calendar basis, the IBNR metric is the change in total IBNR over each period. Summing the yearly changes from 2019 to 2025 therefore gives the balance held at 31 December 2025:\n\n| Year | Change in IBNR (\u00a3) |\n|---|---|\n| 2019 | 450,298.72 |\n| 2020 | 1,558,793.21 |\n| 2021 | \u2212635,281.55 |\n| 2022 | 1,262,382.57 |\n| 2023 | 754,699.89 |\n| 2024 | 1,171,389.24 |\n| 2025 | 685,993.35 |\n| **Total** | **5,248,275.43** |\n\nI didn't cross-check this against the accident-basis IBNR by accident year.\n\nANSWER: 5248275.43",
+ "stop_reason": "end_turn",
+ "tool_calls": [
+  {
+   "tool": "query_metrics",
+   "input": {
+    "metrics": [
+     "ibnr"
+    ],
+    "basis": "calendar",
+    "as_of": "2025-12-31"
+   },
+   "output": "period,ibnr\n2019,450298.72\n2020,1558793.21\n2021,-635281.55\n2022,1262382.57\n2023,754699.89\n2024,1171389.24\n2025,685993.35",
+   "error": false
+  }
+ ],
+ "usage": {
+  "input": 380,
+  "output": 543,
+  "cache_read": 7364,
+  "cache_write": 0
+ },
+ "effort": "medium",
+ "prompt_version": "v1"
+}

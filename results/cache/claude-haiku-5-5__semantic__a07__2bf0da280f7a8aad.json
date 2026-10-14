@@ -1,0 +1,41 @@
+{
+ "model": "claude-haiku-5-5",
+ "condition": "semantic",
+ "qid": "a07",
+ "question": "What is the loss ratio for the London region in 2024?",
+ "final_text": "The London loss ratio for 2024 is **0.791** (calendar basis, valued at 31 December 2025).\n\n- **Loss ratio reported** (paid indemnity plus case reserves, over earned premium of \u00a35,401,939): 0.791\n- **Loss ratio paid** (paid indemnity only): 0.791\n\nThe reported figure excludes IBNR and ALAE. The ultimate loss ratio (which includes IBNR and ALAE) is only available at company level, not by region, so I couldn't calculate a London version of it.\n\nANSWER: 0.791128",
+ "stop_reason": "end_turn",
+ "tool_calls": [
+  {
+   "tool": "query_metrics",
+   "input": {
+    "metrics": [
+     "loss_ratio_reported",
+     "loss_ratio_paid",
+     "earned_premium"
+    ],
+    "basis": "calendar",
+    "as_of": "2025-12-31",
+    "filters": {
+     "region": "LONDON"
+    },
+    "grain": "year",
+    "group_by": [
+     "region"
+    ],
+    "period_from": "2024-01-01",
+    "period_to": "2024-12-31"
+   },
+   "output": "period,region,loss_ratio_reported,loss_ratio_paid,earned_premium\n2024,LONDON,0.791128,0.790881,5401939.37",
+   "error": false
+  }
+ ],
+ "usage": {
+  "input": 724,
+  "output": 749,
+  "cache_read": 7364,
+  "cache_write": 0
+ },
+ "effort": "medium",
+ "prompt_version": "v1"
+}

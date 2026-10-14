@@ -1,0 +1,33 @@
+{
+ "model": "claude-haiku-5-5",
+ "condition": "semantic",
+ "qid": "e05",
+ "question": "What was the average written premium per vehicle (per written car-year) in 2025?",
+ "final_text": "The average written premium per written car-year in calendar 2025 was \u00a3753.28, on a calendar-period basis as at 31 December 2025.\n\nANSWER: 753.28",
+ "stop_reason": "end_turn",
+ "tool_calls": [
+  {
+   "tool": "query_metrics",
+   "input": {
+    "metrics": [
+     "average_written_premium"
+    ],
+    "basis": "calendar",
+    "as_of": "2025-12-31",
+    "grain": "year",
+    "period_from": "2025-01-01",
+    "period_to": "2025-12-31"
+   },
+   "output": "period,average_written_premium\n2025,753.28",
+   "error": false
+  }
+ ],
+ "usage": {
+  "input": 409,
+  "output": 245,
+  "cache_read": 7378,
+  "cache_write": 0
+ },
+ "effort": "medium",
+ "prompt_version": "v1"
+}

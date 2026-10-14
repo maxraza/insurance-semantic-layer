@@ -1,0 +1,26 @@
+{
+ "model": "claude-sonnet-5-5",
+ "condition": "raw",
+ "qid": "c04",
+ "question": "What was the quote-to-bind conversion rate for price comparison website quotes in 2025?",
+ "final_text": "PCW quotes in 2025 converted at about 7.0%. Of 99,720 quotes with a 2025 quote date, 6,957 were bound, which gives 0.0698. I counted a quote as bound when it has a `bound_term_id`. I didn't check for duplicate quotes or for `bound_term_id` values that don't match a policy term.\n\nANSWER: 0.0698",
+ "stop_reason": "end_turn",
+ "tool_calls": [
+  {
+   "tool": "run_sql",
+   "input": {
+    "query": "select channel, count(*), count(bound_term_id), count(bound_term_id)*1.0/count(*) from quote where quote_date>='2025-01-01' and quote_date<'2026-01-01' group by 1"
+   },
+   "output": "channel,count_star(),count(bound_term_id),((count(bound_term_id) * 1.0) / count_star())\nDIRECT,29426,6495,0.220723\nPCW,99720,6957,0.0697653\nBROKER,17886,5201,0.290786",
+   "error": false
+  }
+ ],
+ "usage": {
+  "input": 419,
+  "output": 281,
+  "cache_read": 4060,
+  "cache_write": 0
+ },
+ "effort": "medium",
+ "prompt_version": "v1"
+}

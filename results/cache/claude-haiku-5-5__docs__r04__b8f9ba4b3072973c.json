@@ -1,0 +1,42 @@
+{
+ "model": "claude-haiku-5-5",
+ "condition": "docs",
+ "qid": "r04",
+ "question": "What is the average reported cost per reported claim for own-damage claims in accident year 2024?",
+ "final_text": "Average reported cost per reported own-damage claim for accident year 2024 is about \u00a33,054.96.\n\n- **Numerator (reported loss):** \u00a35,120,112.18. This is indemnity payments net of recoveries plus outstanding case reserves, on an accident-year basis, valued at 31 December 2025. ALAE and IBNR are excluded.\n- **Denominator (reported claims):** 1,676 own-damage claims with accident dates in 2024, all reported by 31 December 2025, including nil claims.\n\nANSWER: 3054.96",
+ "stop_reason": "end_turn",
+ "tool_calls": [
+  {
+   "tool": "run_sql",
+   "input": {
+    "query": "SELECT txn_type, cost_type, COUNT(*) n, SUM(amount) amt, MIN(amount) mn, MAX(amount) mx FROM claim_txn GROUP BY 1,2 ORDER BY 1,2;"
+   },
+   "output": "txn_type,cost_type,n,amt,mn,mx\nPAYMENT,ALAE,5482,4041773.75,5.38,129243.82\nPAYMENT,INDEMNITY,34398,78097079.75,0.10,1214443.66\nRECOVERY,INDEMNITY,1151,-2278660.54,-24511.92,-26.63\nRESERVE,INDEMNITY,79216,15020532.03,-1214443.66,1529370.74",
+   "error": false
+  },
+  {
+   "tool": "run_sql",
+   "input": {
+    "query": "SELECT peril, COUNT(*) n, MIN(accident_date), MAX(accident_date), MAX(report_date) FROM claim GROUP BY 1 ORDER BY 1;"
+   },
+   "output": "peril,n,min(accident_date),max(accident_date),max(report_date)\nBODILY_INJURY,1691,2019-02-17,2025-12-14,2025-12-31\nOWN_DAMAGE,9055,2019-01-21,2025-12-30,2025-12-31\nTHEFT,872,2019-03-15,2025-12-31,2025-12-31\nTHIRD_PARTY_PROPERTY,6280,2019-02-08,2025-12-30,2025-12-31\nWINDSCREEN,5651,2019-02-02,2025-12-31,2025-12-31",
+   "error": false
+  },
+  {
+   "tool": "run_sql",
+   "input": {
+    "query": "WITH c AS (\n  SELECT claim_id FROM claim WHERE peril='OWN_DAMAGE' AND EXTRACT(year FROM accident_date)=2024 AND report_date<=DATE '2025-12-31'\n),\nloss AS (\n  SELECT SUM(t.amount) AS reported_loss FROM claim_txn t JOIN c USING(claim_id)\n  WHERE t.cost_type='INDEMNITY' AND t.txn_date<=DATE '2025-12-31'\n),\ncnt AS (SELECT COUNT(*) n FROM c)\nSELECT reported_loss, n AS reported_claims, reported_loss/n AS severity_reported FROM loss, cnt;"
+   },
+   "output": "reported_loss,reported_claims,severity_reported\n5120112.18,1676,3054.96",
+   "error": false
+  }
+ ],
+ "usage": {
+  "input": 2723,
+  "output": 1232,
+  "cache_read": 15939,
+  "cache_write": 0
+ },
+ "effort": "medium",
+ "prompt_version": "v1"
+}

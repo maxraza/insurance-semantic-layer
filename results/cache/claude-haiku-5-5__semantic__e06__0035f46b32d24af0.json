@@ -1,0 +1,48 @@
+{
+ "model": "claude-haiku-5-5",
+ "condition": "semantic",
+ "qid": "e06",
+ "question": "As at 31 March 2023, how much premium had been earned so far in calendar year 2023?",
+ "final_text": "Earned premium for calendar year 2023 up to 31 March 2023 (i.e. Q1 2023, on a calendar basis as at 31 March 2023) was \u00a35,060,695.55.\n\nANSWER: 5060695.55",
+ "stop_reason": "end_turn",
+ "tool_calls": [
+  {
+   "tool": "query_metrics",
+   "input": {
+    "metrics": [
+     "earned_premium"
+    ],
+    "basis": "calendar",
+    "as_of": "2023-03-31",
+    "grain": "year",
+    "period_from": "2023-01-01",
+    "period_to": "2023-03-31"
+   },
+   "output": "period,earned_premium\n2023,5060695.55",
+   "error": false
+  },
+  {
+   "tool": "query_metrics",
+   "input": {
+    "metrics": [
+     "earned_premium"
+    ],
+    "basis": "calendar",
+    "as_of": "2023-03-31",
+    "grain": "quarter",
+    "period_from": "2023-01-01",
+    "period_to": "2023-03-31"
+   },
+   "output": "period,earned_premium\n2023-Q1,5060695.55",
+   "error": false
+  }
+ ],
+ "usage": {
+  "input": 1241,
+  "output": 636,
+  "cache_read": 11046,
+  "cache_write": 0
+ },
+ "effort": "medium",
+ "prompt_version": "v1"
+}

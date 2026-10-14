@@ -1,0 +1,26 @@
+{
+ "model": "claude-haiku-5-5",
+ "condition": "raw",
+ "qid": "v03",
+ "question": "At the 31 December 2024 valuation, how much IBNR was booked for accident year 2024?",
+ "final_text": "At the 31 December 2024 valuation, the IBNR booked for accident year 2024 was \u00a33,882,380.39.\n\nANSWER: 3882380.39",
+ "stop_reason": "end_turn",
+ "tool_calls": [
+  {
+   "tool": "run_sql",
+   "input": {
+    "query": "SELECT valuation_date, accident_year, ibnr FROM ibnr_valuation WHERE accident_year = 2024 ORDER BY valuation_date"
+   },
+   "output": "valuation_date,accident_year,ibnr\n2024-03-31,2024,1564164.64\n2024-06-30,2024,2440226.21\n2024-09-30,2024,3427063.37\n2024-12-31,2024,3882380.39\n2025-03-31,2024,2352791.90\n2025-06-30,2024,1576668.45\n2025-09-30,2024,1008199.39\n2025-12-31,2024,611435.82",
+   "error": false
+  }
+ ],
+ "usage": {
+  "input": 462,
+  "output": 155,
+  "cache_read": 4060,
+  "cache_write": 0
+ },
+ "effort": "medium",
+ "prompt_version": "v1"
+}

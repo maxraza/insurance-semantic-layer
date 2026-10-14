@@ -1,0 +1,26 @@
+{
+ "model": "claude-sonnet-5-5",
+ "condition": "docs",
+ "qid": "c02",
+ "question": "How many quotes came through price comparison websites in 2025?",
+ "final_text": "There were 99,720 quotes through price comparison websites in 2025. I counted quotes with channel PCW and a quote date from 1 January to 31 December 2025.\n\nANSWER: 99720",
+ "stop_reason": "end_turn",
+ "tool_calls": [
+  {
+   "tool": "run_sql",
+   "input": {
+    "query": "select count(*) from quote where channel='PCW' and quote_date between '2025-01-01' and '2025-12-31'"
+   },
+   "output": "count_star()\n99720",
+   "error": false
+  }
+ ],
+ "usage": {
+  "input": 286,
+  "output": 151,
+  "cache_read": 10626,
+  "cache_write": 0
+ },
+ "effort": "medium",
+ "prompt_version": "v1"
+}

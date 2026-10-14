@@ -1,0 +1,58 @@
+{
+ "model": "claude-haiku-5-5",
+ "condition": "raw",
+ "qid": "v04",
+ "question": "By how much did accident-year 2022 reported loss (paid plus case) develop between the 31 December 2022 and 31 December 2025 valuations?",
+ "final_text": "**Answer: accident-year 2022 reported loss rose by \u00a32,863,315.89 between the 31 Dec 2022 and 31 Dec 2025 valuations.**\n\n- **Method:** Reported loss at each date is the sum of all claim transactions on AY2022 claims (accident year from `accident_date`) booked on or before that date. Payments and recoveries are the paid side, and RESERVE rows are case-reserve movements. I checked on a sample of claims that the reserve rows net to the outstanding case, so this sum equals paid plus case.\n- **At 31 Dec 2022:** \u00a313,048,499.51 (paid \u00a37,975,795.69 less recoveries \u00a3175,242.10, plus case \u00a35,247,945.92).\n- **At 31 Dec 2025:** \u00a315,911,815.40 (paid \u00a315,588,630.05 less recoveries \u00a3443,525.67, plus case \u00a3766,711.02).\n- **Development:** 15,911,815.40 \u2212 13,048,499.51 = \u00a32,863,315.89.\n\nRecoveries are netted against paid. Gross of recoveries, the development would be about \u00a33.14m. ALAE payments are included, as the question did not exclude them.\n\nANSWER: 2863315.89",
+ "stop_reason": "end_turn",
+ "tool_calls": [
+  {
+   "tool": "run_sql",
+   "input": {
+    "query": "SELECT txn_type, cost_type, COUNT(*), MIN(txn_date), MAX(txn_date), SUM(amount) FROM claim_txn GROUP BY 1,2 ORDER BY 1,2;"
+   },
+   "output": "txn_type,cost_type,count_star(),min(txn_date),max(txn_date),sum(amount)\nPAYMENT,ALAE,5482,2019-04-02,2025-12-31,4041773.75\nPAYMENT,INDEMNITY,34398,2019-02-22,2025-12-31,78097079.75\nRECOVERY,INDEMNITY,1151,2019-07-11,2025-12-31,-2278660.54\nRESERVE,INDEMNITY,79216,2019-02-04,2025-12-31,15020532.03",
+   "error": false
+  },
+  {
+   "tool": "run_sql",
+   "input": {
+    "query": "SELECT c.peril, YEAR(c.accident_date) ay, COUNT(*) FROM claim c GROUP BY 1,2 ORDER BY 2,1;"
+   },
+   "output": "peril,ay,count_star()\nBODILY_INJURY,2019,76\nOWN_DAMAGE,2019,338\nTHEFT,2019,30\nTHIRD_PARTY_PROPERTY,2019,255\nWINDSCREEN,2019,211\nBODILY_INJURY,2020,170\nOWN_DAMAGE,2020,864\nTHEFT,2020,97\nTHIRD_PARTY_PROPERTY,2020,620\nWINDSCREEN,2020,528\nBODILY_INJURY,2021,230\nOWN_DAMAGE,2021,1229\nTHEFT,2021,121\nTHIRD_PARTY_PROPERTY,2021,847\nWINDSCREEN,2021,807\nBODILY_INJURY,2022,282\nOWN_DAMAGE,2022,1506\nTHEFT,2022,158\nTHIRD_PARTY_PROPERTY,2022,1026\nWINDSCREEN,2022,949\nBODILY_INJURY,2023,338\nOWN_DAMAGE,2023,1643\nTHEFT,2023,163\nTHIRD_PARTY_PROPERTY,2023,1199\nWINDSCREEN,2023,1036\nBODILY_INJURY,2024,356\nOWN_DAMAGE,2024,1676\nTHEFT,2024,130\nTHIRD_PARTY_PROPERTY,2024,1165\nWINDSCREEN,2024,1069\nBODILY_INJURY,2025,239\nOWN_DAMAGE,2025,1799\nTHEFT,2025,173\nTHIRD_PARTY_PROPERTY,2025,1168\nWINDSCREEN,2025,1051",
+   "error": false
+  },
+  {
+   "tool": "run_sql",
+   "input": {
+    "query": "SELECT t.claim_id, t.txn_date, t.txn_type, t.cost_type, t.amount FROM claim_txn t WHERE t.claim_id IN (SELECT claim_id FROM claim_txn WHERE txn_type='RESERVE' GROUP BY 1 HAVING COUNT(*)>=3 LIMIT 3) ORDER BY 1,2,3;"
+   },
+   "output": "claim_id,txn_date,txn_type,cost_type,amount\n6,2019-11-19,RESERVE,INDEMNITY,7384.21\n6,2020-02-04,PAYMENT,INDEMNITY,7047.78\n6,2020-02-04,RESERVE,INDEMNITY,-7047.78\n6,2020-02-04,RESERVE,INDEMNITY,-336.43\n18,2019-04-16,RESERVE,INDEMNITY,1342.42\n18,2019-04-24,PAYMENT,INDEMNITY,204.80\n18,2019-04-24,RESERVE,INDEMNITY,-204.80\n18,2019-05-25,RESERVE,INDEMNITY,-25.55\n18,2019-05-26,PAYMENT,INDEMNITY,1220.93\n18,2019-05-26,RESERVE,INDEMNITY,-1112.07\n31,2019-04-20,RESERVE,INDEMNITY,1754.71\n31,2019-07-03,PAYMENT,INDEMNITY,1118.31\n31,2019-07-03,RESERVE,INDEMNITY,-1118.31\n31,2019-07-03,RESERVE,INDEMNITY,-636.40",
+   "error": false
+  },
+  {
+   "tool": "run_sql",
+   "input": {
+    "query": "SELECT SUM(CASE WHEN t.txn_date<='2022-12-31' THEN t.amount ELSE 0 END) paid_case_2022_all, SUM(CASE WHEN t.txn_date<='2025-12-31' THEN t.amount END) all_2025 FROM claim_txn t JOIN claim c USING(claim_id) WHERE YEAR(c.accident_date)=2022;"
+   },
+   "output": "paid_case_2022_all,all_2025\n13048499.51,15911815.40",
+   "error": false
+  },
+  {
+   "tool": "run_sql",
+   "input": {
+    "query": "SELECT t.txn_type, SUM(CASE WHEN t.txn_date<='2022-12-31' THEN t.amount ELSE 0 END) at_2022, SUM(CASE WHEN t.txn_date<='2025-12-31' THEN t.amount ELSE 0 END) at_2025 FROM claim_txn t JOIN claim c USING(claim_id) WHERE YEAR(c.accident_date)=2022 GROUP BY 1 ORDER BY 1;"
+   },
+   "output": "txn_type,at_2022,at_2025\nPAYMENT,7975795.69,15588630.05\nRECOVERY,-175242.10,-443525.67\nRESERVE,5247945.92,766711.02",
+   "error": false
+  }
+ ],
+ "usage": {
+  "input": 7163,
+  "output": 2574,
+  "cache_read": 8120,
+  "cache_write": 0
+ },
+ "effort": "medium",
+ "prompt_version": "v1"
+}

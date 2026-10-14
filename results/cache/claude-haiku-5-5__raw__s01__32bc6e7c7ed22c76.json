@@ -1,0 +1,66 @@
+{
+ "model": "claude-haiku-5-5",
+ "condition": "raw",
+ "qid": "s01",
+ "question": "How many vehicles were on cover at 31 December 2025?",
+ "final_text": "**Answer: 39,907 vehicles** were on cover at 31 December 2025.\n\nThe database has no vehicle identifier, so I counted in-force policy terms as vehicles. A term counts if its inception is on or before 31 Dec 2025, its expiry is after that date, and it was not cancelled on or before that date. This gives 39,907 terms, each on a different policy, so there is one insured vehicle per policy term. That one-vehicle-per-term reading is an assumption; if a policy could cover several vehicles, the true count would be higher.\n\nANSWER: 39907",
+ "stop_reason": "end_turn",
+ "tool_calls": [
+  {
+   "tool": "run_sql",
+   "input": {
+    "query": "SELECT COUNT(*) AS terms, COUNT(DISTINCT policy_id) AS policies, MIN(inception_date), MAX(inception_date), SUM(CASE WHEN cancel_date IS NOT NULL THEN 1 ELSE 0 END) AS cancelled FROM policy_term;"
+   },
+   "output": "terms,policies,min(inception_date),max(inception_date),cancelled\n210319,113555,2019-01-01,2026-01-20,13094",
+   "error": false
+  },
+  {
+   "tool": "run_sql",
+   "input": {
+    "query": "SELECT txn_type, COUNT(*), SUM(exposure_units), MIN(effective_date), MAX(cover_end_date) FROM premium_txn GROUP BY txn_type;"
+   },
+   "output": "txn_type,count_star(),sum(exposure_units),min(effective_date),max(cover_end_date)\nRENEWAL,96764,96764.000,2020-01-01,2027-01-20\nMTA,22310,0.000,2019-02-05,2026-12-07\nCANCEL,13081,-13081.000,2019-01-28,2026-12-07\nNEW,113555,113555.000,2019-01-01,2027-01-14",
+   "error": false
+  },
+  {
+   "tool": "run_sql",
+   "input": {
+    "query": "SELECT term_number, COUNT(*) FROM policy_term GROUP BY term_number ORDER BY 1;"
+   },
+   "output": "term_number,count_star()\n1,113555\n2,50883\n3,24984\n4,12264\n5,5525\n6,2327\n7,777\n8,4",
+   "error": false
+  },
+  {
+   "tool": "run_sql",
+   "input": {
+    "query": "SELECT COUNT(*) AS terms_on_cover, COUNT(DISTINCT policy_id) AS policies, SUM(CASE WHEN cancel_date IS NOT NULL AND cancel_date<=DATE '2025-12-31' THEN 1 ELSE 0 END) AS cancelled_by_date FROM policy_term WHERE inception_date <= DATE '2025-12-31' AND expiry_date > DATE '2025-12-31' AND (cancel_date IS NULL OR cancel_date > DATE '2025-12-31');"
+   },
+   "output": "terms_on_cover,policies,cancelled_by_date\n39907,39907,0",
+   "error": false
+  },
+  {
+   "tool": "run_sql",
+   "input": {
+    "query": "SELECT p.policy_id, COUNT(*) c FROM policy_term p WHERE inception_date <= DATE '2025-12-31' AND expiry_date > DATE '2025-12-31' AND (cancel_date IS NULL OR cancel_date > DATE '2025-12-31') GROUP BY 1 HAVING COUNT(*)>1 LIMIT 10;"
+   },
+   "output": "policy_id,c\n(no rows)",
+   "error": false
+  },
+  {
+   "tool": "run_sql",
+   "input": {
+    "query": "SELECT t.term_id, t.policy_id, t.term_number, t.inception_date, t.expiry_date, t.cancel_date, t.vehicle_group, t.bound_date FROM policy_term t WHERE policy_id IN (SELECT policy_id FROM policy_term GROUP BY policy_id HAVING COUNT(*)>=4 LIMIT 3) ORDER BY policy_id, term_number;"
+   },
+   "output": "term_id,policy_id,term_number,inception_date,expiry_date,cancel_date,vehicle_group,bound_date\n17080,17080,1,2020-03-23,2021-03-23,None,B,2020-03-13\n122992,17080,2,2021-03-23,2022-03-23,None,B,2021-03-16\n181998,17080,3,2022-03-23,2023-03-23,None,B,2022-03-07\n212457,17080,4,2023-03-23,2024-03-23,None,B,2023-03-06\n17251,17251,1,2020-03-29,2021-03-29,None,C,2020-03-17\n123105,17251,2,2021-03-29,2022-03-29,None,C,2021-03-16\n182075,17251,3,2022-03-29,2023-03-29,None,C,2022-03-13\n212497,17251,4,2023-03-29,2024-03-29,None,C,2023-03-14\n17258,17258,1,2020-03-23,2021-03-23,None,B,2020-03-17\n123110,17258,2,2021-03-23,2022-03-23,None,B,2021-03-11\n182079,17258,3,2022-03-23,2023-03-23,None,B,2022-03-19\n212498,17258,4,2023-03-23,2024-03-23,None,B,2023-03-18\n226442,17258,5,2024-03-23,2025-03-23,None,B,2024-03-11",
+   "error": false
+  }
+ ],
+ "usage": {
+  "input": 3215,
+  "output": 1751,
+  "cache_read": 6090,
+  "cache_write": 0
+ },
+ "effort": "medium",
+ "prompt_version": "v1"
+}

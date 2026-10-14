@@ -1,0 +1,35 @@
+{
+ "model": "claude-sonnet-5-5",
+ "condition": "semantic",
+ "qid": "a01",
+ "question": "What was our loss ratio in 2024?",
+ "final_text": "Our 2024 accident-year loss ratio was **0.819** (81.9%). I took \"loss ratio\" to mean the ultimate loss ratio, valued at 31 December 2025. That is reported loss (paid plus case reserves) plus IBNR, divided by premium earned in 2024. It excludes ALAE.\n\nThe other bases give lower figures:\n- **Reported loss ratio:** 0.793. This leaves out IBNR.\n- **Paid loss ratio:** 0.590. This counts paid indemnity only.\n\nIf you meant one of those, or a calendar-year figure, tell me and I'll rerun it.\n\nANSWER: 0.818528",
+ "stop_reason": "end_turn",
+ "tool_calls": [
+  {
+   "tool": "query_metrics",
+   "input": {
+    "metrics": [
+     "loss_ratio_ultimate",
+     "loss_ratio_reported",
+     "loss_ratio_paid"
+    ],
+    "basis": "accident",
+    "as_of": "2025-12-31",
+    "grain": "year",
+    "period_from": "2024-01-01",
+    "period_to": "2024-12-31"
+   },
+   "output": "period,loss_ratio_ultimate,loss_ratio_reported,loss_ratio_paid\n2024,0.818528,0.792781,0.589567",
+   "error": false
+  }
+ ],
+ "usage": {
+  "input": 540,
+  "output": 522,
+  "cache_read": 7364,
+  "cache_write": 0
+ },
+ "effort": "medium",
+ "prompt_version": "v1"
+}

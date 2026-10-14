@@ -1,0 +1,26 @@
+{
+ "model": "claude-sonnet-5-5",
+ "condition": "docs",
+ "qid": "s04",
+ "question": "What was the average number of vehicles in force across the four quarter-ends of 2025?",
+ "final_text": "The average number of vehicles in force across the four 2025 quarter-ends was about 37,570.\n\nI counted a vehicle as in force at a date if it met three conditions:\n- The cover had started (effective on or before that date).\n- The cover had not yet expired.\n- The booking was known on or before that date.\n\nCancellations count as \u22121, but only once they are booked.\n\n| Quarter-end | Vehicles in force |\n|---|---|\n| 31 Mar 2025 | 35,539 |\n| 30 Jun 2025 | 36,722 |\n| 30 Sep 2025 | 38,098 |\n| 31 Dec 2025 | 39,920 |\n\nThese sum to 150,279, and dividing by 4 gives 37,569.75.\n\nA simpler count based on each term's cancel date gave slightly lower figures, about 20 fewer at each date. I used the booking-date version because it follows the rule that a figure \"as at\" a date only uses what was known by then.\n\nANSWER: 37569.75",
+ "stop_reason": "end_turn",
+ "tool_calls": [
+  {
+   "tool": "run_sql",
+   "input": {
+    "query": "with d as (select unnest([date '2025-03-31',date '2025-06-30',date '2025-09-30',date '2025-12-31']) dt)\nselect dt,\n(select count(*) from policy_term t where t.bound_date<=dt and t.inception_date<=dt and t.expiry_date>dt and (t.cancel_date is null or t.cancel_date>dt)) a,\n(select sum(p.exposure_units) from premium_txn p join policy_term t using(term_id) where p.booked_date<=dt and p.effective_date<=dt and p.cover_end_date>dt) b\nfrom d order by dt"
+   },
+   "output": "dt,a,b\n2025-03-31,35517,35539.000\n2025-06-30,36701,36722.000\n2025-09-30,38079,38098.000\n2025-12-31,39907,39920.000",
+   "error": false
+  }
+ ],
+ "usage": {
+  "input": 669,
+  "output": 1055,
+  "cache_read": 10626,
+  "cache_write": 0
+ },
+ "effort": "medium",
+ "prompt_version": "v1"
+}

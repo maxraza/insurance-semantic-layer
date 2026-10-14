@@ -1,0 +1,33 @@
+{
+ "model": "claude-haiku-5-5",
+ "condition": "semantic",
+ "qid": "v05",
+ "question": "As at 30 September 2025, how many claims were open?",
+ "final_text": "As at 30 September 2025, 1,542 claims were open (calendar basis, Q3 2025 period end, all segments combined). Open claim count is a semi-additive stock measure, so I took the value at the end of Q3 rather than summing across the quarter.\n\nANSWER: 1542",
+ "stop_reason": "end_turn",
+ "tool_calls": [
+  {
+   "tool": "query_metrics",
+   "input": {
+    "metrics": [
+     "open_claim_count"
+    ],
+    "basis": "calendar",
+    "as_of": "2025-09-30",
+    "grain": "quarter",
+    "period_from": "2025-07-01",
+    "period_to": "2025-09-30"
+   },
+   "output": "period,open_claim_count\n2025-Q3,1542.00",
+   "error": false
+  }
+ ],
+ "usage": {
+  "input": 529,
+  "output": 413,
+  "cache_read": 7364,
+  "cache_write": 0
+ },
+ "effort": "medium",
+ "prompt_version": "v1"
+}

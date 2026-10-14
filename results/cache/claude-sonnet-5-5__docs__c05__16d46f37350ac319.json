@@ -1,0 +1,26 @@
+{
+ "model": "claude-sonnet-5-5",
+ "condition": "docs",
+ "qid": "c05",
+ "question": "How many claims were reported to us during calendar year 2025?",
+ "final_text": "There were 4,677 claims reported in calendar year 2025. This counts every claim with a report date from 1 January to 31 December 2025, including any later closed without payment. That matches the glossary definition of reported claim count.\n\nANSWER: 4677",
+ "stop_reason": "end_turn",
+ "tool_calls": [
+  {
+   "tool": "run_sql",
+   "input": {
+    "query": "select count(*) from claim where report_date between '2025-01-01' and '2025-12-31'"
+   },
+   "output": "count_star()\n4677",
+   "error": false
+  }
+ ],
+ "usage": {
+  "input": 277,
+  "output": 158,
+  "cache_read": 10626,
+  "cache_write": 0
+ },
+ "effort": "medium",
+ "prompt_version": "v1"
+}

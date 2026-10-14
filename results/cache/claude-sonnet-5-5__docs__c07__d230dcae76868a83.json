@@ -1,0 +1,34 @@
+{
+ "model": "claude-sonnet-5-5",
+ "condition": "docs",
+ "qid": "c07",
+ "question": "How much written premium did the broker channel book in 2023?",
+ "final_text": "The broker channel booked \u00a37,279,940.35 of written premium in 2023. This is on a calendar basis, meaning premium booked from 1 January to 31 December 2023. It includes new business, renewals, mid-term adjustments and cancellation returns, and it is gross of reinsurance.\n\nEvery policy term has the same channel as its policy, so the result doesn't depend on which channel field is used.\n\nANSWER: 7279940.35",
+ "stop_reason": "end_turn",
+ "tool_calls": [
+  {
+   "tool": "run_sql",
+   "input": {
+    "query": "select t.channel, sum(p.written_premium), count(*) from premium_txn p join policy_term t using(term_id) where p.booked_date between '2023-01-01' and '2023-12-31' group by 1"
+   },
+   "output": "channel,sum(p.written_premium),count_star()\nPCW,6531671.03,12596\nBROKER,7279940.35,12961\nDIRECT,8550351.71,15301",
+   "error": false
+  },
+  {
+   "tool": "run_sql",
+   "input": {
+    "query": "select count(*) from policy_term t join policy po using(policy_id) where t.channel<>po.channel"
+   },
+   "output": "count_star()\n0",
+   "error": false
+  }
+ ],
+ "usage": {
+  "input": 550,
+  "output": 383,
+  "cache_read": 10626,
+  "cache_write": 0
+ },
+ "effort": "medium",
+ "prompt_version": "v1"
+}

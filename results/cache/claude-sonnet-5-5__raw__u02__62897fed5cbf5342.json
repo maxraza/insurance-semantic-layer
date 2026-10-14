@@ -1,0 +1,74 @@
+{
+ "model": "claude-sonnet-5-5",
+ "condition": "raw",
+ "qid": "u02",
+ "question": "What is the booked ultimate loss ratio (including IBNR) for policy year 2023?",
+ "final_text": "Policy year 2023 has a booked ultimate loss ratio of about 0.907. That depends on one assumption I made about IBNR, described below.\n\n- **Premium:** Net written premium on terms incepting in 2023 is \u00a322.29m. That includes MTAs and cancellations, and these terms are fully earned by the end of 2025.\n- **Claims incurred:** Claims on those terms total \u00a319.86m. That is indemnity payments, ALAE, recoveries and outstanding case reserves. It falls across accident years 2023 (\u00a311.90m) and 2024 (\u00a37.95m). I included ALAE as a claim cost, which is a judgement call.\n- **IBNR:** The IBNR table is held by accident year, not policy year. I took the 31 December 2025 IBNR for accident years 2023 (\u00a3184.9k) and 2024 (\u00a3611.4k). I then allocated each in proportion to policy year 2023's share of that accident year's incurred claims, 58.2% and 40.8% respectively. That gives about \u00a30.357m of IBNR for policy year 2023.\n- **Result:** Ultimate losses are about \u00a320.21m. Dividing by \u00a322.29m gives roughly 0.907.\n\nANSWER: 0.907",
+ "stop_reason": "end_turn",
+ "tool_calls": [
+  {
+   "tool": "run_sql",
+   "input": {
+    "query": "select txn_type,cost_type,count(*),sum(amount),min(txn_date),max(txn_date) from claim_txn group by all;"
+   },
+   "output": "txn_type,cost_type,count_star(),sum(amount),min(txn_date),max(txn_date)\nPAYMENT,ALAE,5482,4041773.75,2019-04-02,2025-12-31\nRECOVERY,INDEMNITY,1151,-2278660.54,2019-07-11,2025-12-31\nRESERVE,INDEMNITY,79216,15020532.03,2019-02-04,2025-12-31\nPAYMENT,INDEMNITY,34398,78097079.75,2019-02-22,2025-12-31",
+   "error": false
+  },
+  {
+   "tool": "run_sql",
+   "input": {
+    "query": "select * from ibnr_valuation order by 1,2;"
+   },
+   "output": "valuation_date,accident_year,ibnr\n2019-12-31,2019,450298.72\n2020-03-31,2019,356582.03\n2020-03-31,2020,683142.67\n2020-06-30,2019,341514.05\n2020-06-30,2020,824481.35\n2020-09-30,2019,165779.06\n2020-09-30,2020,1891648.46\n2020-12-31,2019,97378.08\n2020-12-31,2020,1911713.85\n2021-03-31,2019,86329.61\n2021-03-31,2020,905461.64\n2021-03-31,2021,920121.97\n2021-06-30,2019,22351.59\n2021-06-30,2020,277377.64\n2021-06-30,2021,1511261.10\n2021-09-30,2019,1543.50\n2021-09-30,2020,194333.49\n2021-09-30,2021,1515044.78\n2021-12-31,2019,0.00\n2021-12-31,2020,22311.98\n2021-12-31,2021,1351498.40\n2022-03-31,2019,0.00\n2022-03-31,2020,59952.40\n2022-03-31,2021,760092.87\n2022-03-31,2022,951355.79\n2022-06-30,2019,0.00\n2022-06-30,2020,0.00\n2022-06-30,2021,0.00\n2022-06-30,2022,815343.77\n2022-09-30,2019,0.00\n2022-09-30,2020,0.00\n2022-09-30,2021,104469.41\n2022-09-30,2022,2029753.62\n2022-12-31,2019,0.00\n2022-12-31,2020,7662.80\n2022-12-31,2021,194613.54\n2022-12-31,2022,2433916.61\n2023-03-31,2019,0.00\n2023-03-31,2020,0.00\n2023-03-31,2021,80286.90\n2023-03-31,2022,1131532.72\n2023-03-31,2023,1564851.71\n2023-06-30,2019,277.51\n2023-06-30,2020,6679.01\n2023-06-30,2021,66339.38\n2023-06-30,2022,1022786.36\n2023-06-30,2023,2231077.31\n2023-09-30,2019,0.00\n2023-09-30,2020,58414.96\n2023-09-30,2021,104788.35\n2023-09-30,2022,724197.53\n2023-09-30,2023,2741200.56\n2023-12-31,2019,0.00\n2023-12-31,2020,0.00\n2023-12-31,2021,12485.20\n2023-12-31,2022,309968.00\n2023-12-31,2023,3068439.64\n2024-03-31,2019,64837.26\n2024-03-31,2020,212592.74\n2024-03-31,2021,179429.31\n... 49 more rows",
+   "error": false
+  },
+  {
+   "tool": "run_sql",
+   "input": {
+    "query": "select txn_type,count(*),sum(written_premium),sum(exposure_units) from premium_txn group by all;"
+   },
+   "output": "txn_type,count_star(),sum(written_premium),sum(exposure_units)\nCANCEL,13081,-4423904.86,-13081.000\nRENEWAL,96764,66470703.32,96764.000\nMTA,22310,466631.74,0.000\nNEW,113555,74247233.10,113555.000",
+   "error": false
+  },
+  {
+   "tool": "run_sql",
+   "input": {
+    "query": "with c as (select c.claim_id, year(t.inception_date) py, year(c.accident_date) ay,\n sum(case when x.txn_type='PAYMENT' and cost_type='INDEMNITY' then amount else 0 end) pay,\n sum(case when cost_type='ALAE' then amount else 0 end) alae,\n sum(case when x.txn_type='RECOVERY' then amount else 0 end) rec,\n sum(case when x.txn_type='RESERVE' then amount else 0 end) res\n from claim c join policy_term t using(term_id) left join claim_txn x using(claim_id) group by all)\nselect py,ay,count(*),sum(pay),sum(alae),sum(rec),sum(res) from c where py in (2023) or ay=2023 group by all order by 1,2;"
+   },
+   "output": "py,ay,count_star(),sum(pay),sum(alae),sum(rec),sum(res)\n2022,2023,2062,7910335.85,451232.52,-237933.82,421990.08\n2023,2023,2317,10355284.31,560274.13,-254659.42,1243791.25\n2023,2024,1937,6350079.30,284686.81,-227504.27,1544673.84",
+   "error": false
+  },
+  {
+   "tool": "run_sql",
+   "input": {
+    "query": "select * from ibnr_valuation where valuation_date>='2024-12-31' order by 1,2;"
+   },
+   "output": "valuation_date,accident_year,ibnr\n2024-12-31,2019,0.00\n2024-12-31,2020,42519.03\n2024-12-31,2021,60849.87\n2024-12-31,2022,70302.70\n2024-12-31,2023,506230.09\n2024-12-31,2024,3882380.39\n2025-03-31,2019,0.00\n2025-03-31,2020,16922.54\n2025-03-31,2021,57540.02\n2025-03-31,2022,21003.28\n2025-03-31,2023,268790.96\n2025-03-31,2024,2352791.90\n2025-03-31,2025,1977687.24\n2025-06-30,2019,958.06\n2025-06-30,2020,17727.97\n2025-06-30,2021,73038.12\n2025-06-30,2022,93706.08\n2025-06-30,2023,221581.16\n2025-06-30,2024,1576668.45\n2025-06-30,2025,2882564.20\n2025-09-30,2019,0.00\n2025-09-30,2020,6356.61\n2025-09-30,2021,61979.89\n2025-09-30,2022,137633.36\n2025-09-30,2023,213529.95\n2025-09-30,2024,1008199.39\n2025-09-30,2025,3715871.89\n2025-12-31,2019,0.00\n2025-12-31,2020,1540.89\n2025-12-31,2021,38210.26\n2025-12-31,2022,163122.73\n2025-12-31,2023,184880.76\n2025-12-31,2024,611435.82\n2025-12-31,2025,4249084.97",
+   "error": false
+  },
+  {
+   "tool": "run_sql",
+   "input": {
+    "query": "select year(t.inception_date) py,sum(written_premium),count(distinct t.term_id) from premium_txn p join policy_term t using(term_id) group by all order by 1;"
+   },
+   "output": "py,sum(written_premium),count(DISTINCT t.term_id)\n2019,7739256.26,13496\n2020,13016805.68,22042\n2021,16710592.65,28339\n2022,20136044.70,34188\n2023,22291250.32,34397\n2024,25541626.60,35350\n2025,30430851.87,41306\n2026,894235.22,1201",
+   "error": false
+  },
+  {
+   "tool": "run_sql",
+   "input": {
+    "query": "with c as (select year(t.inception_date) py, year(c.accident_date) ay, sum(x.amount) inc from claim c join policy_term t using(term_id) join claim_txn x using(claim_id) group by all)\nselect ay, sum(inc) tot, sum(case when py=2023 then inc end) p23 from c group by ay order by ay;"
+   },
+   "output": "ay,tot,p23\n2019,2928150.45,None\n2020,8744757.31,None\n2021,9543971.00,None\n2022,15911815.40,None\n2023,20450314.90,11904690.27\n2024,19480146.21,7951935.68\n2025,17821569.72,None",
+   "error": false
+  }
+ ],
+ "usage": {
+  "input": 9691,
+  "output": 2656,
+  "cache_read": 8120,
+  "cache_write": 0
+ },
+ "effort": "medium",
+ "prompt_version": "v1"
+}

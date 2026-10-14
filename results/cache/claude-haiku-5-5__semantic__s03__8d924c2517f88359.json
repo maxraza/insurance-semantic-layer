@@ -1,0 +1,33 @@
+{
+ "model": "claude-haiku-5-5",
+ "condition": "semantic",
+ "qid": "s03",
+ "question": "How many claims were open at 31 December 2024?",
+ "final_text": "At 31 December 2024, 1,437 claims were open. This is the year-2024 calendar figure as at that date; open claim count is an end-of-period (semi-additive) measure, so it is not summed across periods.\n\nANSWER: 1437",
+ "stop_reason": "end_turn",
+ "tool_calls": [
+  {
+   "tool": "query_metrics",
+   "input": {
+    "metrics": [
+     "open_claim_count"
+    ],
+    "basis": "calendar",
+    "as_of": "2024-12-31",
+    "grain": "year",
+    "period_from": "2024-01-01",
+    "period_to": "2024-12-31"
+   },
+   "output": "period,open_claim_count\n2024,1437.00",
+   "error": false
+  }
+ ],
+ "usage": {
+  "input": 517,
+  "output": 394,
+  "cache_read": 7364,
+  "cache_write": 0
+ },
+ "effort": "medium",
+ "prompt_version": "v1"
+}

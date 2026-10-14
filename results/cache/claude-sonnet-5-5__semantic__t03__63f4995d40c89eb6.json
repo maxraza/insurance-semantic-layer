@@ -1,0 +1,38 @@
+{
+ "model": "claude-sonnet-5-5",
+ "condition": "semantic",
+ "qid": "t03",
+ "question": "What was the renewal retention rate for customers acquired through price comparison websites, for renewals due in 2024?",
+ "final_text": "PCW (price comparison website) customers had a renewal retention rate of about 40.9% for renewals due in 2024. Of 9,847 matured renewal invitations, 4,028 were accepted. The figures are valued at 31 December 2025.\n\nThe channel filter is the channel on the policy, which I've taken to be the channel the customer was acquired through.\n\nANSWER: 0.409059",
+ "stop_reason": "end_turn",
+ "tool_calls": [
+  {
+   "tool": "query_metrics",
+   "input": {
+    "metrics": [
+     "retention_rate",
+     "renewals_due",
+     "renewals_accepted"
+    ],
+    "basis": "calendar",
+    "as_of": "2025-12-31",
+    "period_from": "2024-01-01",
+    "period_to": "2024-12-31",
+    "grain": "year",
+    "filters": {
+     "channel": "PCW"
+    }
+   },
+   "output": "period,retention_rate,renewals_due,renewals_accepted\n2024,0.409059,9847.00,4028.00",
+   "error": false
+  }
+ ],
+ "usage": {
+  "input": 500,
+  "output": 361,
+  "cache_read": 7364,
+  "cache_write": 0
+ },
+ "effort": "medium",
+ "prompt_version": "v1"
+}

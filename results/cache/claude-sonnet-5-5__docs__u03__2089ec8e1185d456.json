@@ -1,0 +1,17 @@
+{
+ "model": "claude-sonnet-5-5",
+ "condition": "docs",
+ "qid": "u03",
+ "question": "What is the accident-year 2024 ultimate loss ratio, including booked IBNR, for the price comparison website channel?",
+ "final_text": "I can't give this figure for the PCW channel. The ultimate loss ratio is (reported loss + IBNR) / earned premium. Reported loss and earned premium can both be split by channel. IBNR can't be, because the reserving team books it in total by accident year, with no channel, region or other segment split. Any PCW share of the 2024 IBNR would be an allocation I'd have to invent, and the instruction is not to guess.\n\nWhat I can do is give the PCW accident-year 2024 reported loss ratio, which excludes IBNR. I can also give the all-channel ultimate loss ratio for 2024.\n\nANSWER: UNANSWERABLE",
+ "stop_reason": "end_turn",
+ "tool_calls": [],
+ "usage": {
+  "input": 115,
+  "output": 347,
+  "cache_read": 5313,
+  "cache_write": 0
+ },
+ "effort": "medium",
+ "prompt_version": "v1"
+}

@@ -1,0 +1,26 @@
+{
+ "model": "claude-sonnet-5-5",
+ "condition": "docs",
+ "qid": "l03",
+ "question": "What is the accident-year 2023 loss and ALAE ratio, including IBNR?",
+ "final_text": "The accident-year 2023 loss and ALAE ratio, including IBNR, is 0.968 as at 31 December 2025. This is (reported loss + IBNR + paid ALAE) / earned premium.\n\n- **Reported loss:** \u00a319.44m. This is \u00a317.77m of indemnity paid net of recoveries, plus \u00a31.67m of case reserves, for claims with a 2023 accident date.\n- **IBNR:** \u00a30.18m, from the 31 December 2025 valuation for accident year 2023.\n- **Paid ALAE:** \u00a31.01m.\n- **Earned premium:** \u00a321.31m. I took this as premium earned during 2023, spreading each premium transaction evenly over its cover period.\n\nANSWER: 0.968",
+ "stop_reason": "end_turn",
+ "tool_calls": [
+  {
+   "tool": "run_sql",
+   "input": {
+    "query": "with c as (select sum(case when t.txn_type in('PAYMENT','RECOVERY') and t.cost_type='INDEMNITY' then amount end) paid, sum(case when t.txn_type='RESERVE' and t.cost_type='INDEMNITY' then amount end) res, sum(case when t.txn_type in('PAYMENT','RECOVERY') and t.cost_type='ALAE' then amount end) alae, sum(case when t.txn_type='RESERVE' and t.cost_type='ALAE' then amount end) alaeres from claim_txn t join claim c using(claim_id) where year(c.accident_date)=2023 and t.txn_date<='2025-12-31'),\ni as (select ibnr from ibnr_valuation where valuation_date='2025-12-31' and accident_year=2023),\np as (select sum(written_premium*greatest(0,least(date_diff('day',effective_date,least(cover_end_date,date '2024-01-01')),date_diff('day',effective_date,cover_end_date)) - greatest(0,date_diff('day',effective_date,date '2023-01-01')))/date_diff('day',effective_date,cover_end_date)) ep from premium_txn where booked_date<='2025-12-31' and effective_date<'2024-01-01' and cover_end_date>'2023-01-01')\nselect c.*, i.ibnr, p.ep, (paid+res+alae+i.ibnr)/ep r from c,i,p"
+   },
+   "output": "paid,res,alae,alaeres,ibnr,ep,r\n17773026.92,1665781.33,1011506.65,None,184880.76,21311739.45,0.968255",
+   "error": false
+  }
+ ],
+ "usage": {
+  "input": 955,
+  "output": 929,
+  "cache_read": 10626,
+  "cache_write": 0
+ },
+ "effort": "medium",
+ "prompt_version": "v1"
+}

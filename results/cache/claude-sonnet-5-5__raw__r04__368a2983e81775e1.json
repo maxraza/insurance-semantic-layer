@@ -1,0 +1,42 @@
+{
+ "model": "claude-sonnet-5-5",
+ "condition": "raw",
+ "qid": "r04",
+ "question": "What is the average reported cost per reported claim for own-damage claims in accident year 2024?",
+ "final_text": "The average reported cost per own-damage claim for accident year 2024 is about \u00a33,054.96.\n\n- **Claim count:** 1,676 own-damage claims have an accident date in 2024.\n- **Reported cost:** I took this as payments plus case reserves, net of recoveries. The own-damage case reserves net to \u00a30 (the reserves have run off), so the figure is payments of \u00a35,438,745.51 less recoveries of \u00a3318,633.33. That gives \u00a35,120,112.18.\n- **Average:** \u00a35,120,112.18 \u00f7 1,676 = \u00a33,054.96.\n\nIf you want reported cost gross of recoveries, it is \u00a35,438,745.51 \u00f7 1,676, or about \u00a33,245. I used the net figure because that is the usual definition of incurred cost.\n\nANSWER: 3054.96",
+ "stop_reason": "end_turn",
+ "tool_calls": [
+  {
+   "tool": "run_sql",
+   "input": {
+    "query": "select c.peril, ct.txn_type, ct.cost_type, count(*), sum(amount) from claim c join claim_txn ct using(claim_id) where year(accident_date)=2024 group by all order by all"
+   },
+   "output": "peril,txn_type,cost_type,count_star(),sum(amount)\nBODILY_INJURY,PAYMENT,ALAE,82,224303.26\nBODILY_INJURY,PAYMENT,INDEMNITY,412,3386926.91\nBODILY_INJURY,RESERVE,INDEMNITY,926,4744253.82\nOWN_DAMAGE,PAYMENT,INDEMNITY,2954,5438745.51\nOWN_DAMAGE,RECOVERY,INDEMNITY,153,-318633.33\nOWN_DAMAGE,RESERVE,INDEMNITY,6585,0.00\nTHEFT,PAYMENT,INDEMNITY,99,833317.54\nTHEFT,RESERVE,INDEMNITY,310,0.00\nTHIRD_PARTY_PROPERTY,PAYMENT,ALAE,927,428428.09\nTHIRD_PARTY_PROPERTY,PAYMENT,INDEMNITY,1909,4299670.97\nTHIRD_PARTY_PROPERTY,RECOVERY,INDEMNITY,75,-189030.60\nTHIRD_PARTY_PROPERTY,RESERVE,INDEMNITY,4312,81787.27\nWINDSCREEN,PAYMENT,INDEMNITY,1037,550376.77\nWINDSCREEN,RESERVE,INDEMNITY,2644,0.00",
+   "error": false
+  },
+  {
+   "tool": "run_sql",
+   "input": {
+    "query": "select peril, count(*), count(distinct claim_id), min(accident_date), max(report_date) from claim where year(accident_date)=2024 group by all"
+   },
+   "output": "peril,count_star(),count(DISTINCT claim_id),min(accident_date),max(report_date)\nWINDSCREEN,1069,1069,2024-01-01,2025-01-04\nOWN_DAMAGE,1676,1676,2024-01-01,2025-01-19\nTHEFT,130,130,2024-01-01,2025-01-08\nTHIRD_PARTY_PROPERTY,1165,1165,2024-01-01,2025-05-13\nBODILY_INJURY,356,356,2024-01-01,2025-11-07",
+   "error": false
+  },
+  {
+   "tool": "run_sql",
+   "input": {
+    "query": "select sum(amount)/count(distinct c.claim_id), sum(amount), count(distinct c.claim_id) from claim c join claim_txn ct using(claim_id) where year(accident_date)=2024 and peril='OWN_DAMAGE'"
+   },
+   "output": "(sum(amount) / count(DISTINCT c.claim_id)),sum(amount),count(DISTINCT c.claim_id)\n3054.96,5120112.18,1676",
+   "error": false
+  }
+ ],
+ "usage": {
+  "input": 2698,
+  "output": 897,
+  "cache_read": 6090,
+  "cache_write": 0
+ },
+ "effort": "medium",
+ "prompt_version": "v1"
+}

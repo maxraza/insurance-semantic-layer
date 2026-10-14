@@ -1,0 +1,50 @@
+{
+ "model": "claude-haiku-5-5",
+ "condition": "docs",
+ "qid": "l03",
+ "question": "What is the accident-year 2023 loss and ALAE ratio, including IBNR?",
+ "final_text": "**Accident-year 2023 loss and ALAE ratio (including IBNR): 0.968**\n\nValued at 31 December 2025, on an accident basis:\n\n- **Reported loss:** \u00a319,438,808. This is indemnity payments net of recoveries, plus case reserves, for claims with a 2023 accident date.\n- **IBNR:** \u00a3184,881, from the 31 December 2025 valuation for accident year 2023.\n- **Paid ALAE:** \u00a31,011,507, for claims with a 2023 accident date.\n- **Earned premium:** \u00a321,311,739. This is written premium earned pro rata by day over calendar 2023, using transactions booked by 31 December 2025.\n\nRatio = (19,438,808 + 184,881 + 1,011,507) / 21,311,739 = 0.968.\n\nANSWER: 0.968",
+ "stop_reason": "end_turn",
+ "tool_calls": [
+  {
+   "tool": "run_sql",
+   "input": {
+    "query": "SELECT 'ct' t, txn_type, cost_type, COUNT(*) n, SUM(amount) s, MIN(txn_date) mn, MAX(txn_date) mx FROM claim_txn GROUP BY 1,2,3\nUNION ALL SELECT 'ibnr', CAST(valuation_date AS VARCHAR), CAST(accident_year AS VARCHAR), COUNT(*), SUM(ibnr), NULL, NULL FROM ibnr_valuation WHERE accident_year=2023 GROUP BY 1,2,3\nUNION ALL SELECT 'pt', txn_type, NULL, COUNT(*), SUM(written_premium), MIN(effective_date), MAX(cover_end_date) FROM premium_txn GROUP BY 1,2\nORDER BY 1,2,3"
+   },
+   "output": "t,txn_type,cost_type,n,s,mn,mx\nct,PAYMENT,ALAE,5482,4041773.75,2019-04-02,2025-12-31\nct,PAYMENT,INDEMNITY,34398,78097079.75,2019-02-22,2025-12-31\nct,RECOVERY,INDEMNITY,1151,-2278660.54,2019-07-11,2025-12-31\nct,RESERVE,INDEMNITY,79216,15020532.03,2019-02-04,2025-12-31\nibnr,2023-03-31,2023,1,1564851.71,None,None\nibnr,2023-06-30,2023,1,2231077.31,None,None\nibnr,2023-09-30,2023,1,2741200.56,None,None\nibnr,2023-12-31,2023,1,3068439.64,None,None\nibnr,2024-03-31,2023,1,1898002.88,None,None\nibnr,2024-06-30,2023,1,918299.78,None,None\nibnr,2024-09-30,2023,1,836928.50,None,None\nibnr,2024-12-31,2023,1,506230.09,None,None\nibnr,2025-03-31,2023,1,268790.96,None,None\nibnr,2025-06-30,2023,1,221581.16,None,None\nibnr,2025-09-30,2023,1,213529.95,None,None\nibnr,2025-12-31,2023,1,184880.76,None,None\npt,CANCEL,None,13081,-4423904.86,2019-01-28,2026-12-07\npt,MTA,None,22310,466631.74,2019-02-05,2026-12-07\npt,NEW,None,113555,74247233.10,2019-01-01,2027-01-14\npt,RENEWAL,None,96764,66470703.32,2020-01-01,2027-01-20",
+   "error": false
+  },
+  {
+   "tool": "run_sql",
+   "input": {
+    "query": "SELECT c.peril, c.accident_date, c.report_date, c.closed_date, t.txn_date, t.txn_type, t.cost_type, t.amount FROM claim c JOIN claim_txn t USING(claim_id) WHERE c.claim_id IN (SELECT claim_id FROM claim WHERE YEAR(accident_date)=2023 LIMIT 3) ORDER BY c.claim_id, t.txn_date"
+   },
+   "output": "peril,accident_date,report_date,closed_date,txn_date,txn_type,cost_type,amount\nWINDSCREEN,2023-01-01,2023-01-02,2023-01-05,2023-01-02,RESERVE,INDEMNITY,517.30\nWINDSCREEN,2023-01-01,2023-01-02,2023-01-05,2023-01-05,PAYMENT,INDEMNITY,425.32\nWINDSCREEN,2023-01-01,2023-01-02,2023-01-05,2023-01-05,RESERVE,INDEMNITY,-425.32\nWINDSCREEN,2023-01-01,2023-01-02,2023-01-05,2023-01-05,RESERVE,INDEMNITY,-91.98\nOWN_DAMAGE,2023-01-03,2023-01-15,2023-02-26,2023-01-15,RESERVE,INDEMNITY,1202.51\nOWN_DAMAGE,2023-01-03,2023-01-15,2023-02-26,2023-02-26,PAYMENT,INDEMNITY,1112.88\nOWN_DAMAGE,2023-01-03,2023-01-15,2023-02-26,2023-02-26,RESERVE,INDEMNITY,-1112.88\nOWN_DAMAGE,2023-01-03,2023-01-15,2023-02-26,2023-02-26,RESERVE,INDEMNITY,-89.63\nTHIRD_PARTY_PROPERTY,2023-01-03,2023-01-07,2023-02-22,2023-01-07,RESERVE,INDEMNITY,743.51\nTHIRD_PARTY_PROPERTY,2023-01-03,2023-01-07,2023-02-22,2023-01-23,PAYMENT,INDEMNITY,403.03\nTHIRD_PARTY_PROPERTY,2023-01-03,2023-01-07,2023-02-22,2023-01-23,RESERVE,INDEMNITY,-403.03\nTHIRD_PARTY_PROPERTY,2023-01-03,2023-01-07,2023-02-22,2023-02-21,RESERVE,INDEMNITY,183.01\nTHIRD_PARTY_PROPERTY,2023-01-03,2023-01-07,2023-02-22,2023-02-22,PAYMENT,INDEMNITY,559.27\nTHIRD_PARTY_PROPERTY,2023-01-03,2023-01-07,2023-02-22,2023-02-22,RESERVE,INDEMNITY,-523.49\nTHIRD_PARTY_PROPERTY,2023-01-03,2023-01-07,2023-02-22,2023-02-22,PAYMENT,ALAE,66.74",
+   "error": false
+  },
+  {
+   "tool": "run_sql",
+   "input": {
+    "query": "WITH cl AS (\n  SELECT c.claim_id FROM claim c WHERE YEAR(c.accident_date)=2023\n),\nrl AS (\n  SELECT SUM(CASE WHEN t.cost_type='INDEMNITY' THEN t.amount ELSE 0 END) AS reported_loss_all,\n         SUM(CASE WHEN t.cost_type='ALAE' AND t.txn_type='PAYMENT' THEN t.amount ELSE 0 END) AS paid_alae\n  FROM claim_txn t JOIN cl USING(claim_id) WHERE t.txn_date <= DATE '2025-12-31'\n),\nep AS (\n  SELECT SUM(CASE WHEN cover_end_date > effective_date THEN written_premium *\n       GREATEST(0, DATE_DIFF('day', GREATEST(effective_date, DATE '2023-01-01'), LEAST(cover_end_date, DATE '2024-01-01')))\n       / DATE_DIFF('day', effective_date, cover_end_date) ELSE 0 END) AS earned_premium\n  FROM premium_txn WHERE booked_date <= DATE '2025-12-31'\n),\nib AS (SELECT ibnr FROM ibnr_valuation WHERE accident_year=2023 AND valuation_date=DATE '2025-12-31')\nSELECT rl.reported_loss_all, rl.paid_alae, ib.ibnr, ep.earned_premium,\n  (rl.reported_loss_all + ib.ibnr + rl.paid_alae)/ep.earned_premium AS loss_alae_ratio_ultimate\nFROM rl, ep, ib\""
+   },
+   "output": "error: Parser Error: unterminated quoted identifier at or near \"\"\"\n\nLINE 18: FROM rl, ep, ib\"\n                        ^",
+   "error": true
+  },
+  {
+   "tool": "run_sql",
+   "input": {
+    "query": "WITH cl AS (\n  SELECT c.claim_id FROM claim c WHERE YEAR(c.accident_date)=2023\n),\nrl AS (\n  SELECT SUM(CASE WHEN t.cost_type='INDEMNITY' THEN t.amount ELSE 0 END) AS reported_loss_all,\n         SUM(CASE WHEN t.cost_type='ALAE' AND t.txn_type='PAYMENT' THEN t.amount ELSE 0 END) AS paid_alae\n  FROM claim_txn t JOIN cl USING(claim_id) WHERE t.txn_date <= DATE '2025-12-31'\n),\nep AS (\n  SELECT SUM(CASE WHEN cover_end_date > effective_date THEN written_premium *\n       GREATEST(0, DATE_DIFF('day', GREATEST(effective_date, DATE '2023-01-01'), LEAST(cover_end_date, DATE '2024-01-01')))\n       / DATE_DIFF('day', effective_date, cover_end_date) ELSE 0 END) AS earned_premium\n  FROM premium_txn WHERE booked_date <= DATE '2025-12-31'\n),\nib AS (SELECT ibnr FROM ibnr_valuation WHERE accident_year=2023 AND valuation_date=DATE '2025-12-31')\nSELECT rl.reported_loss_all, rl.paid_alae, ib.ibnr, ep.earned_premium,\n  (rl.reported_loss_all + ib.ibnr + rl.paid_alae)/ep.earned_premium AS loss_alae_ratio_ultimate\nFROM rl, ep, ib"
+   },
+   "output": "reported_loss_all,paid_alae,ibnr,earned_premium,loss_alae_ratio_ultimate\n19438808.25,1011506.65,184880.76,21311739.45,0.968255",
+   "error": false
+  }
+ ],
+ "usage": {
+  "input": 11658,
+  "output": 3720,
+  "cache_read": 21252,
+  "cache_write": 0
+ },
+ "effort": "medium",
+ "prompt_version": "v1"
+}

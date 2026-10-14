@@ -1,0 +1,33 @@
+{
+ "model": "claude-sonnet-5-5",
+ "condition": "semantic",
+ "qid": "b03",
+ "question": "What is the policy-year (underwriting-year) 2023 reported loss ratio as at 31 December 2025?",
+ "final_text": "The policy-year 2023 reported loss ratio, valued at 31 December 2025, is 0.853. That is paid indemnity plus case reserves, divided by earned premium, for policies that started in 2023. It excludes IBNR and ALAE, so it isn't an ultimate loss ratio.\n\nANSWER: 0.852876",
+ "stop_reason": "end_turn",
+ "tool_calls": [
+  {
+   "tool": "query_metrics",
+   "input": {
+    "metrics": [
+     "loss_ratio_reported"
+    ],
+    "basis": "policy",
+    "as_of": "2025-12-31",
+    "grain": "year",
+    "period_from": "2023-01-01",
+    "period_to": "2023-12-31"
+   },
+   "output": "period,loss_ratio_reported\n2023,0.852876",
+   "error": false
+  }
+ ],
+ "usage": {
+  "input": 439,
+  "output": 302,
+  "cache_read": 7364,
+  "cache_write": 0
+ },
+ "effort": "medium",
+ "prompt_version": "v1"
+}

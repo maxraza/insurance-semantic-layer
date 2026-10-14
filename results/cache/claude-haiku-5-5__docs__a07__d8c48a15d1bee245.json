@@ -1,0 +1,66 @@
+{
+ "model": "claude-haiku-5-5",
+ "condition": "docs",
+ "qid": "a07",
+ "question": "What is the loss ratio for the London region in 2024?",
+ "final_text": "The London loss ratio for 2024 is **0.79** on the reported basis. That is the closest figure the data supports, not the full ultimate ratio.\n\n- **Basis used:** calendar 2024, with London as the region (stored as `LONDON`). Reported loss is indemnity paid plus the change in case reserves booked in 2024, net of recoveries. ALAE is excluded.\n- **Figures:** reported loss \u00a34,273,623 over earned premium \u00a35,401,939 gives 0.791.\n- **Ultimate not available:** the standard loss ratio (reported plus IBNR) can't be split by region, because IBNR is held only at total-company level. So the ultimate London ratio can't be computed from this data.\n- **Accident-year cross-check:** accident-year 2024 losses reported to date give 0.761 on the same earned premium. This excludes IBNR, so it is also incomplete for the most recent accident year.\n\nANSWER: 0.79",
+ "stop_reason": "end_turn",
+ "tool_calls": [
+  {
+   "tool": "run_sql",
+   "input": {
+    "query": "SELECT DISTINCT region, COUNT(*) FROM policy_term GROUP BY region ORDER BY region;"
+   },
+   "output": "region,count_star()\nLONDON,37305\nMIDLANDS,42008\nNORTH,45910\nSCOTLAND,25674\nSOUTH,59422",
+   "error": false
+  },
+  {
+   "tool": "run_sql",
+   "input": {
+    "query": "SELECT MIN(booked_date), MAX(booked_date), COUNT(*) FROM premium_txn;"
+   },
+   "output": "min(booked_date),max(booked_date),count_star()\n2019-01-01,2025-12-31,245710",
+   "error": false
+  },
+  {
+   "tool": "run_sql",
+   "input": {
+    "query": "SELECT txn_type, cost_type, COUNT(*), MIN(amount), MAX(amount), SUM(amount) FROM claim_txn GROUP BY 1,2 ORDER BY 1,2;"
+   },
+   "output": "txn_type,cost_type,count_star(),min(amount),max(amount),sum(amount)\nPAYMENT,ALAE,5482,5.38,129243.82,4041773.75\nPAYMENT,INDEMNITY,34398,0.10,1214443.66,78097079.75\nRECOVERY,INDEMNITY,1151,-24511.92,-26.63,-2278660.54\nRESERVE,INDEMNITY,79216,-1214443.66,1529370.74,15020532.03",
+   "error": false
+  },
+  {
+   "tool": "run_sql",
+   "input": {
+    "query": "SELECT txn_type, COUNT(*), MIN(written_premium), MAX(written_premium), MIN(exposure_units), MAX(exposure_units), SUM(CASE WHEN effective_date>cover_end_date THEN 1 ELSE 0 END) bad FROM premium_txn GROUP BY 1;"
+   },
+   "output": "txn_type,count_star(),min(written_premium),max(written_premium),min(exposure_units),max(exposure_units),bad\nMTA,22310,-328.34,611.67,0.000,0.000,0\nRENEWAL,96764,249.83,4058.78,1.000,1.000,0\nCANCEL,13081,-3105.45,-6.31,-1.000,-1.000,0\nNEW,113555,188.75,3902.59,1.000,1.000,0",
+   "error": false
+  },
+  {
+   "tool": "run_sql",
+   "input": {
+    "query": "\nWITH ep AS (\n  SELECT SUM(p.written_premium * GREATEST(0, DATE_DIFF('day', GREATEST(p.effective_date, DATE '2024-01-01'), LEAST(p.cover_end_date, DATE '2025-01-01')))\n             / NULLIF(DATE_DIFF('day', p.effective_date, p.cover_end_date),0)) AS earned_prem\n  FROM premium_txn p JOIN policy_term t ON t.term_id=p.term_id\n  WHERE t.region='LONDON'\n),\nrl AS (\n  SELECT SUM(c.amount) AS reported_loss_chg\n  FROM claim_txn c JOIN claim cl ON cl.claim_id=c.claim_id JOIN policy_term t ON t.term_id=cl.term_id\n  WHERE t.region='LONDON' AND c.cost_type='INDEMNITY' AND c.txn_date>=DATE '2024-01-01' AND c.txn_date<DATE '2025-01-01'\n)\nSELECT ep.earned_prem, rl.reported_loss_chg, rl.reported_loss_chg/ep.earned_prem AS loss_ratio_reported_cal\nFROM ep, rl;\n"
+   },
+   "output": "earned_prem,reported_loss_chg,loss_ratio_reported_cal\n5401939.37,4273622.90,0.791128",
+   "error": false
+  },
+  {
+   "tool": "run_sql",
+   "input": {
+    "query": "\nWITH ep AS (\n  SELECT SUM(p.written_premium * GREATEST(0, DATE_DIFF('day', GREATEST(p.effective_date, DATE '2024-01-01'), LEAST(p.cover_end_date, DATE '2025-01-01')))\n             / NULLIF(DATE_DIFF('day', p.effective_date, p.cover_end_date),0)) AS earned_prem\n  FROM premium_txn p JOIN policy_term t ON t.term_id=p.term_id WHERE t.region='LONDON'\n),\nrl AS (\n  SELECT SUM(c.amount) AS rl_acc\n  FROM claim_txn c JOIN claim cl ON cl.claim_id=c.claim_id JOIN policy_term t ON t.term_id=cl.term_id\n  WHERE t.region='LONDON' AND c.cost_type='INDEMNITY' AND cl.accident_date>=DATE '2024-01-01' AND cl.accident_date<DATE '2025-01-01'\n)\nSELECT ep.earned_prem, rl.rl_acc, rl.rl_acc/ep.earned_prem AS lr_acc_reported_to_date FROM ep, rl;\n"
+   },
+   "output": "earned_prem,rl_acc,lr_acc_reported_to_date\n5401939.37,4108593.27,0.760577",
+   "error": false
+  }
+ ],
+ "usage": {
+  "input": 9413,
+  "output": 3571,
+  "cache_read": 26565,
+  "cache_write": 0
+ },
+ "effort": "medium",
+ "prompt_version": "v1"
+}

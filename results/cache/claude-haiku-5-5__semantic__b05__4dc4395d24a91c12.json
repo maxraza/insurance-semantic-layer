@@ -1,0 +1,33 @@
+{
+ "model": "claude-haiku-5-5",
+ "condition": "semantic",
+ "qid": "b05",
+ "question": "How much indemnity did we pay out during calendar year 2025, regardless of when the accidents happened?",
+ "final_text": "We paid \u00a320,236,714.68 in indemnity during calendar year 2025.\n\nThis is the calendar-basis paid loss, which counts payments made in 2025 whatever the accident date. It excludes ALAE (legal and expert costs), which is reported separately.\n\nANSWER: 20236714.68",
+ "stop_reason": "end_turn",
+ "tool_calls": [
+  {
+   "tool": "query_metrics",
+   "input": {
+    "metrics": [
+     "paid_loss"
+    ],
+    "basis": "calendar",
+    "as_of": "2025-12-31",
+    "grain": "year",
+    "period_from": "2025-01-01",
+    "period_to": "2025-12-31"
+   },
+   "output": "period,paid_loss\n2025,20236714.68",
+   "error": false
+  }
+ ],
+ "usage": {
+  "input": 506,
+  "output": 368,
+  "cache_read": 7364,
+  "cache_write": 0
+ },
+ "effort": "medium",
+ "prompt_version": "v1"
+}

@@ -1,0 +1,38 @@
+{
+ "model": "claude-haiku-5-5",
+ "condition": "semantic",
+ "qid": "r01",
+ "question": "What was the accident-year 2024 reported loss ratio for drivers aged 17-24?",
+ "final_text": "The accident-year 2024 reported loss ratio for drivers aged 17-24 is 0.747. This is reported loss of \u00a33,232,833 over earned premium of \u00a34,327,481, valued at 31 December 2025.\n\nANSWER: 0.747047",
+ "stop_reason": "end_turn",
+ "tool_calls": [
+  {
+   "tool": "query_metrics",
+   "input": {
+    "metrics": [
+     "loss_ratio_reported",
+     "earned_premium",
+     "reported_loss"
+    ],
+    "basis": "accident",
+    "as_of": "2025-12-31",
+    "filters": {
+     "driver_age_band": "17-24"
+    },
+    "grain": "year",
+    "period_from": "2024-01-01",
+    "period_to": "2024-12-31"
+   },
+   "output": "period,loss_ratio_reported,earned_premium,reported_loss\n2024,0.747047,4327481.00,3232832.53",
+   "error": false
+  }
+ ],
+ "usage": {
+  "input": 572,
+  "output": 399,
+  "cache_read": 7364,
+  "cache_write": 0
+ },
+ "effort": "medium",
+ "prompt_version": "v1"
+}

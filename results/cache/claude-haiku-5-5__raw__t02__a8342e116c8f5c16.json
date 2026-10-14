@@ -1,0 +1,42 @@
+{
+ "model": "claude-haiku-5-5",
+ "condition": "raw",
+ "qid": "t02",
+ "question": "As at 30 September 2025, what is the year-to-date renewal retention rate for 2025?",
+ "final_text": "The year-to-date renewal retention rate for 2025 as at 30 September 2025 is about 0.6785.\n\nI took renewal offers with a due date from 1 January to 30 September 2025: 23,991 offers, of which 16,278 were renewed (a renewed term ID is recorded). The data checks were clean: each offer maps to a distinct expiring term, every renewed term exists in the policy term table, and no renewals fall after the cut-off.\n\nRetention = 16,278 / 23,991 \u2248 0.6785. This uses offer due date as the period basis and counts any recorded renewal as retained; I did not adjust for cancellations or for offers still pending.\n\nANSWER: 0.6785",
+ "stop_reason": "end_turn",
+ "tool_calls": [
+  {
+   "tool": "run_sql",
+   "input": {
+    "query": "SELECT COUNT(*) AS offers, COUNT(renewed_term_id) AS renewed, MIN(due_date), MAX(due_date), MIN(offer_date), MAX(offer_date), SUM(CASE WHEN renewed_term_id IS NOT NULL AND due_date > DATE '2025-09-30' THEN 1 ELSE 0 END) AS renewed_after_cutoff FROM renewal_offer WHERE due_date BETWEEN DATE '2025-01-01' AND DATE '2025-09-30'"
+   },
+   "output": "offers,renewed,min(due_date),max(due_date),min(offer_date),max(offer_date),renewed_after_cutoff\n23991,16278,2025-01-01,2025-09-30,2024-12-11,2025-09-09,0",
+   "error": false
+  },
+  {
+   "tool": "run_sql",
+   "input": {
+    "query": "SELECT due_date, offer_date, renewed_term_id IS NOT NULL AS renewed, COUNT(*) FROM renewal_offer WHERE due_date >= DATE '2025-09-01' AND due_date <= DATE '2025-10-31' GROUP BY 1,2,3 ORDER BY 1,2,3 LIMIT 60"
+   },
+   "output": "due_date,offer_date,renewed,count_star()\n2025-09-01,2025-08-11,False,23\n2025-09-01,2025-08-11,True,56\n2025-09-02,2025-08-12,False,24\n2025-09-02,2025-08-12,True,55\n2025-09-03,2025-08-13,False,22\n2025-09-03,2025-08-13,True,46\n2025-09-04,2025-08-14,False,18\n2025-09-04,2025-08-14,True,57\n2025-09-05,2025-08-15,False,19\n2025-09-05,2025-08-15,True,60\n2025-09-06,2025-08-16,False,30\n2025-09-06,2025-08-16,True,59\n2025-09-07,2025-08-17,False,13\n2025-09-07,2025-08-17,True,43\n2025-09-08,2025-08-18,False,18\n2025-09-08,2025-08-18,True,48\n2025-09-09,2025-08-19,False,14\n2025-09-09,2025-08-19,True,49\n2025-09-10,2025-08-20,False,24\n2025-09-10,2025-08-20,True,55\n2025-09-11,2025-08-21,False,25\n2025-09-11,2025-08-21,True,69\n2025-09-12,2025-08-22,False,23\n2025-09-12,2025-08-22,True,55\n2025-09-13,2025-08-23,False,27\n2025-09-13,2025-08-23,True,50\n2025-09-14,2025-08-24,False,29\n2025-09-14,2025-08-24,True,52\n2025-09-15,2025-08-25,False,26\n2025-09-15,2025-08-25,True,55\n2025-09-16,2025-08-26,False,13\n2025-09-16,2025-08-26,True,67\n2025-09-17,2025-08-27,False,20\n2025-09-17,2025-08-27,True,59\n2025-09-18,2025-08-28,False,21\n2025-09-18,2025-08-28,True,62\n2025-09-19,2025-08-29,False,25\n2025-09-19,2025-08-29,True,60\n2025-09-20,2025-08-30,False,24\n2025-09-20,2025-08-30,True,55\n2025-09-21,2025-08-31,False,22\n2025-09-21,2025-08-31,True,56\n2025-09-22,2025-09-01,False,24\n2025-09-22,2025-09-01,True,63\n2025-09-23,2025-09-02,False,23\n2025-09-23,2025-09-02,True,64\n2025-09-24,2025-09-03,False,21\n2025-09-24,2025-09-03,True,43\n2025-09-25,2025-09-04,False,26\n2025-09-25,2025-09-04,True,60\n2025-09-26,2025-09-05,False,20\n2025-09-26,2025-09-05,True,55\n2025-09-27,2025-09-06,False,24\n2025-09-27,2025-09-06,True,63\n2025-09-28,2025-09-07,False,20\n2025-09-28,2025-09-07,True,69\n2025-09-29,2025-09-08,False,20\n2025-09-29,2025-09-08,True,55\n2025-09-30,2025-09-09,False,16\n2025-09-30,2025-09-09,True,80",
+   "error": false
+  },
+  {
+   "tool": "run_sql",
+   "input": {
+    "query": "SELECT COUNT(*) AS offers, COUNT(DISTINCT expiring_term_id) AS distinct_expiring, SUM(CASE WHEN renewed_term_id IS NOT NULL AND renewed_term_id NOT IN (SELECT term_id FROM policy_term) THEN 1 ELSE 0 END) AS orphan_renewals, SUM(CASE WHEN renewed_term_id IS NOT NULL THEN 1 ELSE 0 END) AS renewed, COUNT(DISTINCT renewed_term_id) AS distinct_renewed FROM renewal_offer WHERE due_date BETWEEN DATE '2025-01-01' AND DATE '2025-09-30'"
+   },
+   "output": "offers,distinct_expiring,orphan_renewals,renewed,distinct_renewed\n23991,23991,0,16278,16278",
+   "error": false
+  }
+ ],
+ "usage": {
+  "input": 4471,
+  "output": 1390,
+  "cache_read": 6090,
+  "cache_write": 0
+ },
+ "effort": "medium",
+ "prompt_version": "v1"
+}

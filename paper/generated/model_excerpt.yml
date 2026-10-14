@@ -1,0 +1,50 @@
+measures:
+  earned_premium:
+    description: >-
+      Written premium earned pro rata (daily) over each transaction's cover period. On an accident basis
+      the denominator is the premium earned in the same period (standard pairing), so it equals calendar.
+    source: premium
+    amount: p.written_premium
+    bases:
+      calendar: {kind: earned, start: p.effective_date, end: p.cover_end_date}
+      accident: {kind: earned, start: p.effective_date, end: p.cover_end_date}
+      policy:   {kind: earned, start: p.effective_date, end: p.cover_end_date, cohort: t.inception_date}
+
+  case_reserve:
+    description: Outstanding case reserves set by claims handlers. Semi-additive on a calendar basis.
+    source: claim_txn
+    amount: x.amount
+    where: "x.txn_type = 'RESERVE'"
+    bases:
+      calendar: {kind: snapshot, where: "x.txn_date <= {d}"}
+      accident: {kind: flow, date: c.accident_date}
+      policy:   {kind: flow, date: t.inception_date}
+
+  reported_loss:
+    description: >-
+      Paid indemnity plus case reserves ("case incurred", Friedland's "reported"). Excludes IBNR and ALAE.
+      On a calendar basis it is the change in reported loss during the period.
+    source: claim_txn
+    amount: x.amount
+    where: "x.cost_type = 'INDEMNITY'"
+    bases:
+      calendar: {kind: flow, date: x.txn_date}
+      accident: {kind: flow, date: c.accident_date}
+      policy:   {kind: flow, date: t.inception_date}
+
+  ibnr:
+    description: >-
+      Bulk IBNR (incurred but not reported, including development on known claims), booked by the
+      reserving team each quarter-end by accident year. Calendar basis: the change in total IBNR over
+      the period. No policy-year basis and no segment dimensions.
+    source: ibnr
+    amount: v.ibnr
+    bases:
+      accident: {kind: valuation, cohort_year: v.accident_year}
+      calendar: {kind: valuation, change: true}
+
+
+metrics:
+  ...
+  loss_ratio_ultimate:
+    expr: (reported_loss + ibnr) / earned_premium

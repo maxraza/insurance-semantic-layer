@@ -1,0 +1,36 @@
+{
+ "model": "claude-haiku-5-5",
+ "condition": "semantic",
+ "qid": "c07",
+ "question": "How much written premium did the broker channel book in 2023?",
+ "final_text": "The broker channel booked \u00a37,279,940.35 of written premium in calendar 2023, valued at 31 December 2025 on a calendar basis.\n\nANSWER: 7279940.35",
+ "stop_reason": "end_turn",
+ "tool_calls": [
+  {
+   "tool": "query_metrics",
+   "input": {
+    "metrics": [
+     "written_premium"
+    ],
+    "basis": "calendar",
+    "as_of": "2025-12-31",
+    "filters": {
+     "channel": "BROKER"
+    },
+    "grain": "year",
+    "period_from": "2023-01-01",
+    "period_to": "2023-12-31"
+   },
+   "output": "period,written_premium\n2023,7279940.35",
+   "error": false
+  }
+ ],
+ "usage": {
+  "input": 426,
+  "output": 282,
+  "cache_read": 7364,
+  "cache_write": 0
+ },
+ "effort": "medium",
+ "prompt_version": "v1"
+}

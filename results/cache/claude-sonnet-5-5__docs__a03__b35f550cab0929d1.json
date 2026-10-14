@@ -1,0 +1,26 @@
+{
+ "model": "claude-sonnet-5-5",
+ "condition": "docs",
+ "qid": "a03",
+ "question": "What was our expense ratio for 2024?",
+ "final_text": "The 2024 expense ratio is about 14.2%. This is calendar-basis expenses divided by calendar-basis earned premium, valued at 31 December 2025.\n\n- **Expenses:** \u00a33,365,613.78. This is every expense row with an expense month in 2024 and booked by 31 December 2025.\n- **Earned premium:** \u00a323,748,557.88. Each premium transaction is earned daily over its cover period, and I took the part that falls in 2024.\n- **Ratio:** 3,365,613.78 \u00f7 23,748,557.88 \u2248 0.1417.\n\nThis uses the statutory-style definition, with earned premium as the denominator. On the trade basis, which divides by written premium, the ratio would be different.\n\nANSWER: 0.1417",
+ "stop_reason": "end_turn",
+ "tool_calls": [
+  {
+   "tool": "run_sql",
+   "input": {
+    "query": "select (select sum(amount) from expense where expense_month>=date '2024-01-01' and expense_month<date '2025-01-01' and booked_date<=date '2025-12-31') e,\n(select sum(written_premium*greatest(0,date_diff('day',greatest(effective_date,date '2024-01-01'),least(cover_end_date,date '2025-01-01')))*1.0/date_diff('day',effective_date,cover_end_date)) from premium_txn where booked_date<=date '2025-12-31' and cover_end_date>effective_date) ep"
+   },
+   "output": "e,ep\n3365613.78,23748557.88",
+   "error": false
+  }
+ ],
+ "usage": {
+  "input": 623,
+  "output": 797,
+  "cache_read": 10824,
+  "cache_write": 0
+ },
+ "effort": "medium",
+ "prompt_version": "v1"
+}

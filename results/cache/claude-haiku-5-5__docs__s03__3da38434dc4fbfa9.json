@@ -1,0 +1,34 @@
+{
+ "model": "claude-haiku-5-5",
+ "condition": "docs",
+ "qid": "s03",
+ "question": "How many claims were open at 31 December 2024?",
+ "final_text": "There were 1,437 claims open at 31 December 2024.\n\nI counted claims with a report date on or before 31 December 2024 that had no closed date or a closed date after that day. The data has no claims closed before they were reported, so the count is consistent.\n\nANSWER: 1437",
+ "stop_reason": "end_turn",
+ "tool_calls": [
+  {
+   "tool": "run_sql",
+   "input": {
+    "query": "SELECT COUNT(*) AS open_claims_2024_12_31\nFROM claim\nWHERE report_date <= DATE '2024-12-31'\n  AND (closed_date IS NULL OR closed_date > DATE '2024-12-31');"
+   },
+   "output": "open_claims_2024_12_31\n1437",
+   "error": false
+  },
+  {
+   "tool": "run_sql",
+   "input": {
+    "query": "SELECT COUNT(*) AS closed_before_report FROM claim WHERE closed_date IS NOT NULL AND closed_date < report_date;"
+   },
+   "output": "closed_before_report\n0",
+   "error": false
+  }
+ ],
+ "usage": {
+  "input": 891,
+  "output": 448,
+  "cache_read": 15939,
+  "cache_write": 0
+ },
+ "effort": "medium",
+ "prompt_version": "v1"
+}

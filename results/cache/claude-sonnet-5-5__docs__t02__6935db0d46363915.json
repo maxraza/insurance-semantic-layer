@@ -1,0 +1,26 @@
+{
+ "model": "claude-sonnet-5-5",
+ "condition": "docs",
+ "qid": "t02",
+ "question": "As at 30 September 2025, what is the year-to-date renewal retention rate for 2025?",
+ "final_text": "Retention is 16,278 / 23,991 = 0.6785.\n\nI counted renewal invitations with a due date from 1 January to 30 September 2025 that had been offered by 30 September. That gives 23,991 matured invitations. Of those, 16,278 were accepted, meaning the renewed term was bound by 30 September.\n\nANSWER: 0.6785",
+ "stop_reason": "end_turn",
+ "tool_calls": [
+  {
+   "tool": "run_sql",
+   "input": {
+    "query": "select count(*) due, count(case when t.term_id is not null and t.bound_date<=date '2025-09-30' then 1 end) acc, count(case when o.renewed_term_id is not null then 1 end) acc_raw from renewal_offer o left join policy_term t on t.term_id=o.renewed_term_id where o.due_date between date '2025-01-01' and date '2025-09-30' and o.offer_date<=date '2025-09-30'"
+   },
+   "output": "due,acc,acc_raw\n23991,16278,16278",
+   "error": false
+  }
+ ],
+ "usage": {
+  "input": 555,
+  "output": 439,
+  "cache_read": 10626,
+  "cache_write": 0
+ },
+ "effort": "medium",
+ "prompt_version": "v1"
+}

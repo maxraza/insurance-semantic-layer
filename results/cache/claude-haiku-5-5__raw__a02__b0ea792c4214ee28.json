@@ -1,0 +1,74 @@
+{
+ "model": "claude-haiku-5-5",
+ "condition": "raw",
+ "qid": "a02",
+ "question": "What were incurred losses in 2025?",
+ "final_text": "Incurred losses for calendar year 2025 come to about **\u00a322.51m**, made up as follows:\n\n- **Claim payments in 2025** (indemnity and ALAE): \u00a321,954,592.05\n- **Case reserve movements in 2025**: +\u00a3365,659.47\n- **Recoveries in 2025** (salvage/subrogation, booked as negatives): \u2212\u00a3499,070.43\n- **Claims subtotal**: \u00a321,821,181.09\n- **IBNR movement** (total IBNR at 31 Dec 2025 of \u00a35,248,275.43 less \u00a34,562,282.08 at 31 Dec 2024): +\u00a3685,993.35\n\nTwo judgement calls: I treated recoveries as reducing incurred losses, and I used calendar-year movements rather than accident year 2025 (which gives \u00a317.82m on claim transactions alone). Excluding the IBNR movement gives \u00a321.82m.\n\nANSWER: 22507174.44",
+ "stop_reason": "end_turn",
+ "tool_calls": [
+  {
+   "tool": "run_sql",
+   "input": {
+    "query": "SELECT txn_type, cost_type, COUNT(*) n, SUM(amount) amt, MIN(txn_date) mn, MAX(txn_date) mx FROM claim_txn GROUP BY 1,2 ORDER BY 1,2"
+   },
+   "output": "txn_type,cost_type,n,amt,mn,mx\nPAYMENT,ALAE,5482,4041773.75,2019-04-02,2025-12-31\nPAYMENT,INDEMNITY,34398,78097079.75,2019-02-22,2025-12-31\nRECOVERY,INDEMNITY,1151,-2278660.54,2019-07-11,2025-12-31\nRESERVE,INDEMNITY,79216,15020532.03,2019-02-04,2025-12-31",
+   "error": false
+  },
+  {
+   "tool": "run_sql",
+   "input": {
+    "query": "SELECT * FROM ibnr_valuation ORDER BY valuation_date, accident_year"
+   },
+   "output": "valuation_date,accident_year,ibnr\n2019-12-31,2019,450298.72\n2020-03-31,2019,356582.03\n2020-03-31,2020,683142.67\n2020-06-30,2019,341514.05\n2020-06-30,2020,824481.35\n2020-09-30,2019,165779.06\n2020-09-30,2020,1891648.46\n2020-12-31,2019,97378.08\n2020-12-31,2020,1911713.85\n2021-03-31,2019,86329.61\n2021-03-31,2020,905461.64\n2021-03-31,2021,920121.97\n2021-06-30,2019,22351.59\n2021-06-30,2020,277377.64\n2021-06-30,2021,1511261.10\n2021-09-30,2019,1543.50\n2021-09-30,2020,194333.49\n2021-09-30,2021,1515044.78\n2021-12-31,2019,0.00\n2021-12-31,2020,22311.98\n2021-12-31,2021,1351498.40\n2022-03-31,2019,0.00\n2022-03-31,2020,59952.40\n2022-03-31,2021,760092.87\n2022-03-31,2022,951355.79\n2022-06-30,2019,0.00\n2022-06-30,2020,0.00\n2022-06-30,2021,0.00\n2022-06-30,2022,815343.77\n2022-09-30,2019,0.00\n2022-09-30,2020,0.00\n2022-09-30,2021,104469.41\n2022-09-30,2022,2029753.62\n2022-12-31,2019,0.00\n2022-12-31,2020,7662.80\n2022-12-31,2021,194613.54\n2022-12-31,2022,2433916.61\n2023-03-31,2019,0.00\n2023-03-31,2020,0.00\n2023-03-31,2021,80286.90\n2023-03-31,2022,1131532.72\n2023-03-31,2023,1564851.71\n2023-06-30,2019,277.51\n2023-06-30,2020,6679.01\n2023-06-30,2021,66339.38\n2023-06-30,2022,1022786.36\n2023-06-30,2023,2231077.31\n2023-09-30,2019,0.00\n2023-09-30,2020,58414.96\n2023-09-30,2021,104788.35\n2023-09-30,2022,724197.53\n2023-09-30,2023,2741200.56\n2023-12-31,2019,0.00\n2023-12-31,2020,0.00\n2023-12-31,2021,12485.20\n2023-12-31,2022,309968.00\n2023-12-31,2023,3068439.64\n2024-03-31,2019,64837.26\n2024-03-31,2020,212592.74\n2024-03-31,2021,179429.31\n... 49 more rows",
+   "error": false
+  },
+  {
+   "tool": "run_sql",
+   "input": {
+    "query": "WITH c AS (SELECT claim_id, SUM(CASE WHEN txn_type='RESERVE' THEN amount ELSE 0 END) res, SUM(CASE WHEN txn_type='PAYMENT' THEN amount ELSE 0 END) pd, SUM(CASE WHEN txn_type='RECOVERY' THEN amount ELSE 0 END) rec, COUNT(*) n FROM claim_txn GROUP BY 1)\nSELECT COUNT(*) claims, SUM(CASE WHEN res<0 THEN 1 ELSE 0 END) neg_res_claims, SUM(res) res_sum, SUM(pd) pd_sum, SUM(rec) rec_sum FROM c;\nSELECT txn_type, cost_type, SUM(CASE WHEN amount<0 THEN 1 ELSE 0 END) neg, SUM(CASE WHEN amount>0 THEN 1 ELSE 0 END) pos FROM claim_txn GROUP BY 1,2;\nSELECT c.claim_id, c.accident_date, c.closed_date, t.txn_date, t.txn_type, t.cost_type, t.amount FROM claim c JOIN claim_txn t USING(claim_id) WHERE c.claim_id IN (SELECT claim_id FROM claim_txn ORDER BY random() LIMIT 3) ORDER BY 1,4;"
+   },
+   "output": "claim_id,accident_date,closed_date,txn_date,txn_type,cost_type,amount\n16950,2022-05-14,2022-06-20,2022-05-15,RESERVE,INDEMNITY,1173.62\n16950,2022-05-14,2022-06-20,2022-06-20,PAYMENT,INDEMNITY,1506.27\n16950,2022-05-14,2022-06-20,2022-06-20,RESERVE,INDEMNITY,-1173.62\n17274,2023-05-07,2024-01-28,2023-05-20,RESERVE,INDEMNITY,968.05\n17274,2023-05-07,2024-01-28,2023-07-16,PAYMENT,INDEMNITY,420.49\n17274,2023-05-07,2024-01-28,2023-07-16,RESERVE,INDEMNITY,-420.49\n17274,2023-05-07,2024-01-28,2023-10-04,PAYMENT,INDEMNITY,92.29\n17274,2023-05-07,2024-01-28,2023-10-04,RESERVE,INDEMNITY,-92.29\n17274,2023-05-07,2024-01-28,2023-12-20,RESERVE,INDEMNITY,168.53\n17274,2023-05-07,2024-01-28,2023-12-21,PAYMENT,INDEMNITY,252.84\n17274,2023-05-07,2024-01-28,2023-12-21,RESERVE,INDEMNITY,-252.84\n17274,2023-05-07,2024-01-28,2024-01-28,PAYMENT,INDEMNITY,381.03\n17274,2023-05-07,2024-01-28,2024-01-28,RESERVE,INDEMNITY,-370.96\n17274,2023-05-07,2024-01-28,2024-01-28,PAYMENT,ALAE,112.33\n24395,2023-06-24,2023-09-11,2023-07-01,RESERVE,INDEMNITY,723.41\n24395,2023-06-24,2023-09-11,2023-07-28,PAYMENT,INDEMNITY,389.12\n24395,2023-06-24,2023-09-11,2023-07-28,RESERVE,INDEMNITY,-389.12\n24395,2023-06-24,2023-09-11,2023-09-10,RESERVE,INDEMNITY,-155.21\n24395,2023-06-24,2023-09-11,2023-09-11,PAYMENT,INDEMNITY,167.33\n24395,2023-06-24,2023-09-11,2023-09-11,RESERVE,INDEMNITY,-167.33\n24395,2023-06-24,2023-09-11,2023-09-11,RESERVE,INDEMNITY,-11.75\n24395,2023-06-24,2023-09-11,2024-01-10,RECOVERY,INDEMNITY,-498.31",
+   "error": false
+  },
+  {
+   "tool": "run_sql",
+   "input": {
+    "query": "SELECT 'CY2025 all txns' k, SUM(amount) v FROM claim_txn WHERE txn_date BETWEEN '2025-01-01' AND '2025-12-31'\nUNION ALL SELECT 'CY2025 excl recoveries', SUM(amount) FROM claim_txn WHERE txn_date BETWEEN '2025-01-01' AND '2025-12-31' AND txn_type<>'RECOVERY'\nUNION ALL SELECT 'CY2025 paid', SUM(amount) FROM claim_txn WHERE txn_date BETWEEN '2025-01-01' AND '2025-12-31' AND txn_type='PAYMENT'\nUNION ALL SELECT 'CY2025 reserve movement', SUM(amount) FROM claim_txn WHERE txn_date BETWEEN '2025-01-01' AND '2025-12-31' AND txn_type='RESERVE'\nUNION ALL SELECT 'CY2025 recoveries', SUM(amount) FROM claim_txn WHERE txn_date BETWEEN '2025-01-01' AND '2025-12-31' AND txn_type='RECOVERY'\nUNION ALL SELECT 'AY2025 all txns', SUM(t.amount) FROM claim_txn t JOIN claim c USING(claim_id) WHERE YEAR(c.accident_date)=2025\nUNION ALL SELECT 'AY2025 excl recoveries', SUM(t.amount) FROM claim_txn t JOIN claim c USING(claim_id) WHERE YEAR(c.accident_date)=2025 AND t.txn_type<>'RECOVERY'\nUNION ALL SELECT 'IBNR latest AY2025', MAX(ibnr) FROM ibnr_valuation WHERE accident_year=2025 AND valuation_date=(SELECT MAX(valuation_date) FROM ibnr_valuation)\nUNION ALL SELECT 'IBNR latest valuation date', 0 FROM (SELECT MAX(valuation_date) d FROM ibnr_valuation) WHERE d IS NOT NULL\""
+   },
+   "output": "error: Parser Error: unterminated quoted identifier at or near \"\"\"\n\nLINE 9: ... MAX(valuation_date) d FROM ibnr_valuation) WHERE d IS NOT NULL\"\n                                                                          ^",
+   "error": true
+  },
+  {
+   "tool": "run_sql",
+   "input": {
+    "query": "SELECT 'CY2025 all txns' k, SUM(amount) v FROM claim_txn WHERE txn_date BETWEEN '2025-01-01' AND '2025-12-31'\nUNION ALL SELECT 'CY2025 excl recoveries', SUM(amount) FROM claim_txn WHERE txn_date BETWEEN '2025-01-01' AND '2025-12-31' AND txn_type<>'RECOVERY'\nUNION ALL SELECT 'CY2025 paid', SUM(amount) FROM claim_txn WHERE txn_date BETWEEN '2025-01-01' AND '2025-12-31' AND txn_type='PAYMENT'\nUNION ALL SELECT 'CY2025 reserve movement', SUM(amount) FROM claim_txn WHERE txn_date BETWEEN '2025-01-01' AND '2025-12-31' AND txn_type='RESERVE'\nUNION ALL SELECT 'CY2025 recoveries', SUM(amount) FROM claim_txn WHERE txn_date BETWEEN '2025-01-01' AND '2025-12-31' AND txn_type='RECOVERY'\nUNION ALL SELECT 'AY2025 all txns', SUM(t.amount) FROM claim_txn t JOIN claim c USING(claim_id) WHERE YEAR(c.accident_date)=2025\nUNION ALL SELECT 'AY2025 excl recoveries', SUM(t.amount) FROM claim_txn t JOIN claim c USING(claim_id) WHERE YEAR(c.accident_date)=2025 AND t.txn_type<>'RECOVERY'\nUNION ALL SELECT 'IBNR AY2025 latest', MAX(ibnr) FROM ibnr_valuation WHERE accident_year=2025 AND valuation_date=(SELECT MAX(valuation_date) FROM ibnr_valuation)\""
+   },
+   "output": "error: Parser Error: unterminated quoted identifier at or near \"\"\"\n\nLINE 8: ...ation_date=(SELECT MAX(valuation_date) FROM ibnr_valuation)\"\n                                                                      ^",
+   "error": true
+  },
+  {
+   "tool": "run_sql",
+   "input": {
+    "query": "SELECT 'CY2025 all txns' k, SUM(amount) v FROM claim_txn WHERE txn_date BETWEEN '2025-01-01' AND '2025-12-31'\nUNION ALL SELECT 'CY2025 excl recoveries', SUM(amount) FROM claim_txn WHERE txn_date BETWEEN '2025-01-01' AND '2025-12-31' AND txn_type<>'RECOVERY'\nUNION ALL SELECT 'CY2025 paid', SUM(amount) FROM claim_txn WHERE txn_date BETWEEN '2025-01-01' AND '2025-12-31' AND txn_type='PAYMENT'\nUNION ALL SELECT 'CY2025 reserve movement', SUM(amount) FROM claim_txn WHERE txn_date BETWEEN '2025-01-01' AND '2025-12-31' AND txn_type='RESERVE'\nUNION ALL SELECT 'CY2025 recoveries', SUM(amount) FROM claim_txn WHERE txn_date BETWEEN '2025-01-01' AND '2025-12-31' AND txn_type='RECOVERY'\nUNION ALL SELECT 'AY2025 all txns', SUM(t.amount) FROM claim_txn t JOIN claim c USING(claim_id) WHERE YEAR(c.accident_date)=2025\nUNION ALL SELECT 'AY2025 excl recoveries', SUM(t.amount) FROM claim_txn t JOIN claim c USING(claim_id) WHERE YEAR(c.accident_date)=2025 AND t.txn_type<>'RECOVERY'\nUNION ALL SELECT 'IBNR AY2025 latest', MAX(ibnr) FROM ibnr_valuation WHERE accident_year=2025 AND valuation_date=(SELECT MAX(valuation_date) FROM ibnr_valuation)"
+   },
+   "output": "k,v\nCY2025 all txns,21821181.09\nCY2025 excl recoveries,22320251.52\nCY2025 paid,21954592.05\nCY2025 reserve movement,365659.47\nCY2025 recoveries,-499070.43\nAY2025 all txns,17821569.72\nAY2025 excl recoveries,18017554.03\nIBNR AY2025 latest,4249084.97",
+   "error": false
+  },
+  {
+   "tool": "run_sql",
+   "input": {
+    "query": "SELECT valuation_date, SUM(ibnr) total_ibnr FROM ibnr_valuation WHERE valuation_date IN ('2024-12-31','2025-12-31') GROUP BY 1 ORDER BY 1"
+   },
+   "output": "valuation_date,total_ibnr\n2024-12-31,4562282.08\n2025-12-31,5248275.43",
+   "error": false
+  }
+ ],
+ "usage": {
+  "input": 27967,
+  "output": 4744,
+  "cache_read": 14210,
+  "cache_write": 0
+ },
+ "effort": "medium",
+ "prompt_version": "v1"
+}

@@ -1,0 +1,50 @@
+{
+ "model": "claude-sonnet-5-5",
+ "condition": "raw",
+ "qid": "r07",
+ "question": "What was the accident-year 2023 claim frequency for vehicle group E?",
+ "final_text": "Vehicle group E had a claim frequency of about 0.163 claims per earned car-year in accident year 2023.\n\n- **Claims:** 547 claims with an accident date in 2023 on vehicle group E terms. I counted all perils.\n- **Exposure:** about 3,346.9 earned car-years in 2023. I took each vehicle group E term's cover from inception to the earlier of cancellation or expiry, clipped to 2023, and divided the days by 365.\n- **Frequency:** 547 \u00f7 3,346.9 \u2248 0.1634.\n\nI worked exposure out from the term dates and did not cross-check it against the premium transaction exposure units.\n\nANSWER: 0.1634",
+ "stop_reason": "end_turn",
+ "tool_calls": [
+  {
+   "tool": "run_sql",
+   "input": {
+    "query": "select txn_type, count(*), min(exposure_units), max(exposure_units), min(effective_date), max(cover_end_date), sum(vehicle_delta) from premium_txn group by 1"
+   },
+   "output": "txn_type,count_star(),min(exposure_units),max(exposure_units),min(effective_date),max(cover_end_date),sum(vehicle_delta)\nRENEWAL,96764,1.000000,1.000000,2020-01-01,2027-01-20,96764\nNEW,113555,1.000000,1.000000,2019-01-01,2027-01-14,113555\nCANCEL,13081,-0.961749,-0.021858,2019-01-28,2026-12-07,-13081\nMTA,22310,0.000000,0.000000,2019-02-05,2026-12-07,0",
+   "error": false
+  },
+  {
+   "tool": "run_sql",
+   "input": {
+    "query": "select * from premium_txn order by term_id, premium_txn_id limit 12"
+   },
+   "output": "premium_txn_id,term_id,txn_type,booked_date,effective_date,cover_end_date,written_premium,exposure_units,vehicle_delta\n1,1,NEW,2019-01-01,2019-01-13,2020-01-13,301.57,1.000000,1\n2,2,NEW,2019-01-01,2019-01-03,2020-01-03,1071.49,1.000000,1\n3,3,NEW,2019-01-01,2019-01-07,2020-01-07,418.20,1.000000,1\n4,3,MTA,2019-03-15,2019-03-13,2020-01-07,-20.62,0.000000,0\n5,4,NEW,2019-01-01,2019-01-11,2020-01-11,337.96,1.000000,1\n6,5,NEW,2019-01-01,2019-01-01,2020-01-01,356.50,1.000000,1\n7,6,NEW,2019-01-01,2019-01-06,2020-01-06,437.02,1.000000,1\n8,7,NEW,2019-01-01,2019-01-03,2020-01-03,346.29,1.000000,1\n9,7,CANCEL,2019-10-05,2019-10-01,2020-01-03,-89.18,-0.257534,-1\n10,8,NEW,2019-01-01,2019-01-05,2020-01-05,560.53,1.000000,1\n11,9,NEW,2019-01-01,2019-01-08,2020-01-08,315.58,1.000000,1\n12,10,NEW,2019-01-01,2019-01-15,2020-01-15,1879.14,1.000000,1",
+   "error": false
+  },
+  {
+   "tool": "run_sql",
+   "input": {
+    "query": "select peril, count(*) from claim group by 1"
+   },
+   "output": "peril,count_star()\nBODILY_INJURY,1691\nOWN_DAMAGE,9055\nTHEFT,872\nTHIRD_PARTY_PROPERTY,6280\nWINDSCREEN,5651",
+   "error": false
+  },
+  {
+   "tool": "run_sql",
+   "input": {
+    "query": "with e as (select sum(greatest(0, date_diff('day', greatest(inception_date,date '2023-01-01'), least(coalesce(cancel_date,expiry_date),date '2024-01-01')))) /365.0 ex from policy_term where vehicle_group='E'),\nc as (select count(*) n, count(distinct claim_id) d from claim c join policy_term t using(term_id) where t.vehicle_group='E' and year(accident_date)=2023)\nselect * , n/ex from e,c"
+   },
+   "output": "ex,n,d,(n / ex)\n3346.86,547,547,0.163437",
+   "error": false
+  }
+ ],
+ "usage": {
+  "input": 3220,
+  "output": 1016,
+  "cache_read": 6159,
+  "cache_write": 0
+ },
+ "effort": "medium",
+ "prompt_version": "v1"
+}

@@ -1,0 +1,50 @@
+{
+ "model": "claude-sonnet-5-5",
+ "condition": "raw",
+ "qid": "b01",
+ "question": "What is the accident-year 2023 loss ratio on a reported basis (paid plus case reserves, excluding IBNR and ALAE), valued at 31 December 2025?",
+ "final_text": "The accident-year 2023 reported loss ratio at 31 December 2025 is about 0.912.\n\n- **Reported losses:** \u00a319.44m. This is indemnity payments of \u00a318.27m, plus recoveries, plus the case reserves still outstanding. Reserve transactions are movements in the outstanding reserve, and they net to zero on closed claims. Summing them therefore gives the open case reserve. ALAE and IBNR are excluded.\n- **Earned premium:** \u00a321.31m. I took the part of each premium transaction (new business, renewals, mid-term adjustments and cancellations) that falls in 2023, assuming premium is earned evenly over the cover period.\n- **Ratio:** \u00a319.44m \u00f7 \u00a321.31m = 0.912.\n\nThe data has no earned-premium field, so the straight-line earning is my assumption.\n\nANSWER: 0.912",
+ "stop_reason": "end_turn",
+ "tool_calls": [
+  {
+   "tool": "run_sql",
+   "input": {
+    "query": "select txn_type, cost_type, count(*), sum(amount), min(txn_date), max(txn_date) from claim_txn group by all order by 1,2"
+   },
+   "output": "txn_type,cost_type,count_star(),sum(amount),min(txn_date),max(txn_date)\nPAYMENT,ALAE,5482,4041773.75,2019-04-02,2025-12-31\nPAYMENT,INDEMNITY,34398,78097079.75,2019-02-22,2025-12-31\nRECOVERY,INDEMNITY,1151,-2278660.54,2019-07-11,2025-12-31\nRESERVE,INDEMNITY,79216,15020532.03,2019-02-04,2025-12-31",
+   "error": false
+  },
+  {
+   "tool": "run_sql",
+   "input": {
+    "query": "select txn_type, count(*), sum(written_premium), sum(exposure_units), min(effective_date), max(cover_end_date), max(booked_date) from premium_txn group by all"
+   },
+   "output": "txn_type,count_star(),sum(written_premium),sum(exposure_units),min(effective_date),max(cover_end_date),max(booked_date)\nMTA,22310,466631.74,0.000,2019-02-05,2026-12-07,2025-12-31\nRENEWAL,96764,66470703.32,96764.000,2020-01-01,2027-01-20,2025-12-31\nCANCEL,13081,-4423904.86,-13081.000,2019-01-28,2026-12-07,2025-12-31\nNEW,113555,74247233.10,113555.000,2019-01-01,2027-01-14,2025-12-31",
+   "error": false
+  },
+  {
+   "tool": "run_sql",
+   "input": {
+    "query": "with p as (select written_premium wp, effective_date s, cover_end_date e from premium_txn),\nep as (select sum(wp * greatest(0, date_diff('day', greatest(s,date '2023-01-01'), least(e,date '2024-01-01')))::double / nullif(date_diff('day', s, e),0)) earned from p),\nc as (select sum(case when t.txn_type in ('PAYMENT','RECOVERY') then t.amount when t.txn_type='RESERVE' then t.amount end) inc, sum(case when t.txn_type='PAYMENT' then amount end) paid from claim_txn t join claim c using(claim_id) where year(c.accident_date)=2023 and t.cost_type='INDEMNITY' and t.txn_date<=date '2025-12-31')\nselect * , inc/earned from ep, c"
+   },
+   "output": "earned,inc,paid,(inc / earned)\n21311739.45,19438808.25,18265620.16,0.912117",
+   "error": false
+  },
+  {
+   "tool": "run_sql",
+   "input": {
+    "query": "select (c.closed_date is not null) closed, sum(case when txn_type='RESERVE' then amount end) r, sum(case when txn_type='RESERVE' and amount<0 then amount end) neg, sum(case when txn_type='PAYMENT' and cost_type='INDEMNITY' then amount end) p from claim_txn t join claim c using(claim_id) where year(accident_date)=2023 group by all"
+   },
+   "output": "closed,r,neg,p\nFalse,1665781.33,-1144941.98,1197832.09\nTrue,0.00,-20613667.98,17067788.07",
+   "error": false
+  }
+ ],
+ "usage": {
+  "input": 4134,
+  "output": 1457,
+  "cache_read": 8120,
+  "cache_write": 0
+ },
+ "effort": "medium",
+ "prompt_version": "v1"
+}

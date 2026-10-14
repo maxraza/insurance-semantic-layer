@@ -1,0 +1,26 @@
+{
+ "model": "claude-sonnet-5-5",
+ "condition": "docs",
+ "qid": "b06",
+ "question": "What is the accident-year 2024 claim frequency, in reported claims per earned car-year?",
+ "final_text": "Accident-year 2024 claim frequency is about 0.1331 reported claims per earned car-year.\n\n- **Claims:** 4,396 claims had an accident date in 2024 and were reported on or before 31 December 2025. This count includes claims later closed without payment.\n- **Exposure:** 33,017 car-years were earned during 2024. I took each premium transaction's exposure units and spread them evenly over its cover period. I then kept the part falling in 2024. I used only transactions booked by 31 December 2025.\n- **Ratio:** 4,396 \u00f7 33,017 \u2248 0.1331.\n\nANSWER: 0.1331",
+ "stop_reason": "end_turn",
+ "tool_calls": [
+  {
+   "tool": "run_sql",
+   "input": {
+    "query": "with e as (select sum(exposure_units*greatest(0,date_diff('day',greatest(effective_date,date '2024-01-01'),least(cover_end_date,date '2025-01-01')))*1.0/date_diff('day',effective_date,cover_end_date)) ex from premium_txn where booked_date<=date '2025-12-31' and date_diff('day',effective_date,cover_end_date)>0),\nc as (select count(*) n from claim where accident_date between date '2024-01-01' and date '2024-12-31' and report_date<=date '2025-12-31')\nselect n, ex, n/ex from c,e"
+   },
+   "output": "n,ex,(n / ex)\n4396,33017.02,0.133143",
+   "error": false
+  }
+ ],
+ "usage": {
+  "input": 671,
+  "output": 646,
+  "cache_read": 10824,
+  "cache_write": 0
+ },
+ "effort": "medium",
+ "prompt_version": "v1"
+}

@@ -1,0 +1,82 @@
+{
+ "model": "claude-haiku-5-5",
+ "condition": "raw",
+ "qid": "u03",
+ "question": "What is the accident-year 2024 ultimate loss ratio, including booked IBNR, for the price comparison website channel?",
+ "final_text": "I can't give a PCW-specific ultimate loss ratio from this data, because the booked IBNR isn't held by channel.\n\n- **IBNR:** `ibnr_valuation` is keyed only by valuation date and accident year, with no channel or region. The AY2024 figure at 31 Dec 2025 is \u00a3611,436 for the whole company. Any PCW share would be an allocation I'd have to assume (for example, pro rata to premium or claims), and the data doesn't support that choice.\n- **Excluding IBNR**, the PCW AY2024 figures are:\n  - Incurred claims: \u00a36,403,770 (paid \u00a34,339,762 plus outstanding reserves \u00a32,064,008). Reserve rows are movements that net to zero on closed claims, so summing them gives the outstanding amount.\n  - Earned premium: about \u00a36,909,031. This is my calendar-day pro-rata of PCW written premium, including cancellations and MTAs, over 2024.\n  - Reported (ex-IBNR) loss ratio: about 0.93.\n\nAdding the company-wide IBNR would move the ratio up, but I can't attribute that amount to PCW from this data.\n\nANSWER: UNANSWERABLE",
+ "stop_reason": "end_turn",
+ "tool_calls": [
+  {
+   "tool": "run_sql",
+   "input": {
+    "query": "SELECT 'policy_term' src, channel, COUNT(*) n FROM policy_term GROUP BY channel UNION ALL SELECT 'quote', channel, COUNT(*) FROM quote GROUP BY channel UNION ALL SELECT 'policy', channel, COUNT(*) FROM policy GROUP BY channel UNION ALL SELECT 'txn_types', txn_type, COUNT(*) FROM premium_txn GROUP BY txn_type UNION ALL SELECT 'claim_txn', txn_type || '/' || cost_type, COUNT(*) FROM claim_txn GROUP BY 2 UNION ALL SELECT 'ibnr', CAST(valuation_date AS VARCHAR) || ' AY' || accident_year, COUNT(*) FROM ibnr_valuation GROUP BY valuation_date, accident_year ORDER BY 1,2;"
+   },
+   "output": "src,channel,n\nclaim_txn,PAYMENT/ALAE,5482\nclaim_txn,PAYMENT/INDEMNITY,34398\nclaim_txn,RECOVERY/INDEMNITY,1151\nclaim_txn,RESERVE/INDEMNITY,79216\nibnr,2019-12-31 AY2019,1\nibnr,2020-03-31 AY2019,1\nibnr,2020-03-31 AY2020,1\nibnr,2020-06-30 AY2019,1\nibnr,2020-06-30 AY2020,1\nibnr,2020-09-30 AY2019,1\nibnr,2020-09-30 AY2020,1\nibnr,2020-12-31 AY2019,1\nibnr,2020-12-31 AY2020,1\nibnr,2021-03-31 AY2019,1\nibnr,2021-03-31 AY2020,1\nibnr,2021-03-31 AY2021,1\nibnr,2021-06-30 AY2019,1\nibnr,2021-06-30 AY2020,1\nibnr,2021-06-30 AY2021,1\nibnr,2021-09-30 AY2019,1\nibnr,2021-09-30 AY2020,1\nibnr,2021-09-30 AY2021,1\nibnr,2021-12-31 AY2019,1\nibnr,2021-12-31 AY2020,1\nibnr,2021-12-31 AY2021,1\nibnr,2022-03-31 AY2019,1\nibnr,2022-03-31 AY2020,1\nibnr,2022-03-31 AY2021,1\nibnr,2022-03-31 AY2022,1\nibnr,2022-06-30 AY2019,1\nibnr,2022-06-30 AY2020,1\nibnr,2022-06-30 AY2021,1\nibnr,2022-06-30 AY2022,1\nibnr,2022-09-30 AY2019,1\nibnr,2022-09-30 AY2020,1\nibnr,2022-09-30 AY2021,1\nibnr,2022-09-30 AY2022,1\nibnr,2022-12-31 AY2019,1\nibnr,2022-12-31 AY2020,1\nibnr,2022-12-31 AY2021,1\nibnr,2022-12-31 AY2022,1\nibnr,2023-03-31 AY2019,1\nibnr,2023-03-31 AY2020,1\nibnr,2023-03-31 AY2021,1\nibnr,2023-03-31 AY2022,1\nibnr,2023-03-31 AY2023,1\nibnr,2023-06-30 AY2019,1\nibnr,2023-06-30 AY2020,1\nibnr,2023-06-30 AY2021,1\nibnr,2023-06-30 AY2022,1\nibnr,2023-06-30 AY2023,1\nibnr,2023-09-30 AY2019,1\nibnr,2023-09-30 AY2020,1\nibnr,2023-09-30 AY2021,1\nibnr,2023-09-30 AY2022,1\nibnr,2023-09-30 AY2023,1\nibnr,2023-12-31 AY2019,1\nibnr,2023-12-31 AY2020,1\nibnr,2023-12-31 AY2021,1\nibnr,2023-12-31 AY2022,1\n... 66 more rows",
+   "error": false
+  },
+  {
+   "tool": "run_sql",
+   "input": {
+    "query": "SELECT 'policy_term' src, channel, COUNT(*) n FROM policy_term GROUP BY channel UNION ALL SELECT 'quote', channel, COUNT(*) FROM quote GROUP BY channel UNION ALL SELECT 'policy', channel, COUNT(*) FROM policy GROUP BY channel UNION ALL SELECT 'txn_type', txn_type, COUNT(*) FROM premium_txn GROUP BY txn_type UNION ALL SELECT 'ibnr_latest', CAST(valuation_date AS VARCHAR), COUNT(*) FROM ibnr_valuation WHERE accident_year=2024 GROUP BY valuation_date ORDER BY 1,2;"
+   },
+   "output": "src,channel,n\nibnr_latest,2024-03-31,1\nibnr_latest,2024-06-30,1\nibnr_latest,2024-09-30,1\nibnr_latest,2024-12-31,1\nibnr_latest,2025-03-31,1\nibnr_latest,2025-06-30,1\nibnr_latest,2025-09-30,1\nibnr_latest,2025-12-31,1\npolicy,BROKER,32227\npolicy,DIRECT,38985\npolicy,PCW,42343\npolicy_term,BROKER,64936\npolicy_term,DIRECT,78111\npolicy_term,PCW,67272\nquote,BROKER,107402\nquote,DIRECT,178313\nquote,PCW,606581\ntxn_type,CANCEL,13081\ntxn_type,MTA,22310\ntxn_type,NEW,113555\ntxn_type,RENEWAL,96764",
+   "error": false
+  },
+  {
+   "tool": "run_sql",
+   "input": {
+    "query": "SELECT p.txn_type, COUNT(*), SUM(written_premium), MIN(effective_date), MAX(effective_date), MIN(cover_end_date), MAX(cover_end_date), SUM(CASE WHEN written_premium<0 THEN 1 ELSE 0 END) neg, AVG(exposure_units) FROM premium_txn p JOIN policy_term t USING(term_id) WHERE t.channel='PCW' GROUP BY 1;"
+   },
+   "output": "txn_type,count_star(),sum(written_premium),min(effective_date),max(effective_date),min(cover_end_date),max(cover_end_date),neg,avg(exposure_units)\nRENEWAL,24929,16859006.31,2020-01-03,2026-01-19,2021-01-03,2027-01-19,0,1\nMTA,7050,141447.02,2019-02-05,2025-12-31,2020-01-03,2026-12-03,2786,0\nNEW,42343,25873133.91,2019-01-01,2026-01-14,2020-01-01,2027-01-14,0,1\nCANCEL,4180,-1337562.84,2019-02-20,2025-12-30,2020-01-03,2026-11-25,4180,-1",
+   "error": false
+  },
+  {
+   "tool": "run_sql",
+   "input": {
+    "query": "SELECT c.txn_type, c.cost_type, COUNT(*), SUM(amount), MIN(txn_date), MAX(txn_date), SUM(CASE WHEN amount<0 THEN 1 ELSE 0 END) neg FROM claim_txn c JOIN claim k USING(claim_id) JOIN policy_term t USING(term_id) WHERE t.channel='PCW' AND year(k.accident_date)=2024 GROUP BY 1,2;"
+   },
+   "output": "txn_type,cost_type,count_star(),sum(amount),min(txn_date),max(txn_date),neg\nPAYMENT,ALAE,312,182536.65,2024-02-24,2025-12-31,0\nRECOVERY,INDEMNITY,63,-122457.40,2024-05-17,2025-12-17,63\nRESERVE,INDEMNITY,4406,2064007.82,2024-01-02,2025-12-31,2822\nPAYMENT,INDEMNITY,1897,4279682.71,2024-01-09,2025-12-31,0",
+   "error": false
+  },
+  {
+   "tool": "run_sql",
+   "input": {
+    "query": "SELECT * FROM ibnr_valuation WHERE accident_year=2024 ORDER BY valuation_date;"
+   },
+   "output": "valuation_date,accident_year,ibnr\n2024-03-31,2024,1564164.64\n2024-06-30,2024,2440226.21\n2024-09-30,2024,3427063.37\n2024-12-31,2024,3882380.39\n2025-03-31,2024,2352791.90\n2025-06-30,2024,1576668.45\n2025-09-30,2024,1008199.39\n2025-12-31,2024,611435.82",
+   "error": false
+  },
+  {
+   "tool": "run_sql",
+   "input": {
+    "query": "WITH e AS (SELECT p.written_premium w, GREATEST(0, DATE_DIFF('day', GREATEST(p.effective_date, DATE '2024-01-01'), LEAST(p.cover_end_date, DATE '2024-12-31') + 1)) ov, DATE_DIFF('day', p.effective_date, p.cover_end_date + 1) len FROM premium_txn p JOIN policy_term t USING(term_id) WHERE t.channel='PCW' AND p.booked_date <= DATE '2025-12-31') SELECT SUM(w*ov/len) earned_2024_pcw, COUNT(*) FROM e WHERE len>0;"
+   },
+   "output": "earned_2024_pcw,count_star()\n6909030.62,78502",
+   "error": false
+  },
+  {
+   "tool": "run_sql",
+   "input": {
+    "query": "WITH e AS (SELECT p.written_premium w, p.booked_date FROM premium_txn p) SELECT (SELECT COUNT(*) FROM premium_txn WHERE booked_date > DATE '2025-12-31') future_booked, (SELECT COUNT(*) FROM premium_txn WHERE cover_end_date < effective_date) bad_dates, (SELECT COUNT(*) FROM claim c JOIN policy_term t USING(term_id) WHERE t.channel='PCW' AND year(c.accident_date)=2024) pcw_claims_ay24;"
+   },
+   "output": "future_booked,bad_dates,pcw_claims_ay24\n0,0,1336",
+   "error": false
+  },
+  {
+   "tool": "run_sql",
+   "input": {
+    "query": "WITH c AS (SELECT k.claim_id, k.closed_date, SUM(CASE WHEN x.txn_type='RESERVE' THEN x.amount ELSE 0 END) res, SUM(CASE WHEN x.txn_type IN ('PAYMENT','RECOVERY') THEN x.amount ELSE 0 END) pd FROM claim k JOIN policy_term t USING(term_id) LEFT JOIN claim_txn x USING(claim_id) WHERE t.channel='PCW' AND year(k.accident_date)=2024 GROUP BY 1,2) SELECT COUNT(*) n, SUM(CASE WHEN closed_date IS NOT NULL AND ABS(res)>0.005 THEN 1 ELSE 0 END) closed_nonzero_res, SUM(CASE WHEN res<-0.005 THEN 1 ELSE 0 END) neg_res_claims, SUM(res) total_res, SUM(pd) total_paid FROM c;"
+   },
+   "output": "n,closed_nonzero_res,neg_res_claims,total_res,total_paid\n1336,0,0,2064007.82,4339761.96",
+   "error": false
+  }
+ ],
+ "usage": {
+  "input": 19826,
+  "output": 4335,
+  "cache_read": 12180,
+  "cache_write": 0
+ },
+ "effort": "medium",
+ "prompt_version": "v1"
+}

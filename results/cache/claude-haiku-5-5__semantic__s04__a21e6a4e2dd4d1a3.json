@@ -1,0 +1,33 @@
+{
+ "model": "claude-haiku-5-5",
+ "condition": "semantic",
+ "qid": "s04",
+ "question": "What was the average number of vehicles in force across the four quarter-ends of 2025?",
+ "final_text": "The average number of vehicles in force across the four 2025 quarter-ends is **37,569.75**.\n\nQuarter-end counts (in-force is a point-in-time measure, so each quarter shows its end-of-quarter value):\n\n| Quarter-end | Vehicles in force |\n|---|---|\n| Q1 (31 Mar 2025) | 35,539 |\n| Q2 (30 Jun 2025) | 36,722 |\n| Q3 (30 Sep 2025) | 38,098 |\n| Q4 (31 Dec 2025) | 39,920 |\n\nSum = 150,279; divided by 4 = 37,569.75.\n\nANSWER: 37569.75",
+ "stop_reason": "end_turn",
+ "tool_calls": [
+  {
+   "tool": "query_metrics",
+   "input": {
+    "metrics": [
+     "in_force_count"
+    ],
+    "basis": "calendar",
+    "as_of": "2025-12-31",
+    "grain": "quarter",
+    "period_from": "2025-01-01",
+    "period_to": "2025-12-31"
+   },
+   "output": "period,in_force_count\n2025-Q1,35539.00\n2025-Q2,36722.00\n2025-Q3,38098.00\n2025-Q4,39920.00",
+   "error": false
+  }
+ ],
+ "usage": {
+  "input": 555,
+  "output": 589,
+  "cache_read": 7364,
+  "cache_write": 0
+ },
+ "effort": "medium",
+ "prompt_version": "v1"
+}

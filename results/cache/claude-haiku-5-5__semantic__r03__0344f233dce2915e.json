@@ -1,0 +1,36 @@
+{
+ "model": "claude-haiku-5-5",
+ "condition": "semantic",
+ "qid": "r03",
+ "question": "What was the price comparison website channel's accident-year 2024 reported loss ratio?",
+ "final_text": "The price comparison website (PCW) channel's accident-year 2024 reported loss ratio, valued at 31 December 2025, is 0.900. This is (paid + case reserves) divided by earned premium, on an accident-year basis, with no IBNR or ALAE.\n\nANSWER: 0.900315",
+ "stop_reason": "end_turn",
+ "tool_calls": [
+  {
+   "tool": "query_metrics",
+   "input": {
+    "metrics": [
+     "loss_ratio_reported"
+    ],
+    "basis": "accident",
+    "as_of": "2025-12-31",
+    "filters": {
+     "channel": "PCW"
+    },
+    "grain": "year",
+    "period_from": "2024-01-01",
+    "period_to": "2024-12-31"
+   },
+   "output": "period,loss_ratio_reported\n2024,0.900315",
+   "error": false
+  }
+ ],
+ "usage": {
+  "input": 523,
+  "output": 394,
+  "cache_read": 7364,
+  "cache_write": 0
+ },
+ "effort": "medium",
+ "prompt_version": "v1"
+}

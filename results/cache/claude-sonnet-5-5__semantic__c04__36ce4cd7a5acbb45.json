@@ -1,0 +1,38 @@
+{
+ "model": "claude-sonnet-5-5",
+ "condition": "semantic",
+ "qid": "c04",
+ "question": "What was the quote-to-bind conversion rate for price comparison website quotes in 2025?",
+ "final_text": "PCW quote-to-bind conversion in 2025 was about 7.0%. That is 6,957 bound quotes out of 99,720 quotes issued through the PCW channel.\n\nANSWER: 0.0697653",
+ "stop_reason": "end_turn",
+ "tool_calls": [
+  {
+   "tool": "query_metrics",
+   "input": {
+    "metrics": [
+     "quote_conversion",
+     "quotes",
+     "bound_quotes"
+    ],
+    "basis": "calendar",
+    "as_of": "2025-12-31",
+    "grain": "year",
+    "period_from": "2025-01-01",
+    "period_to": "2025-12-31",
+    "filters": {
+     "channel": "PCW"
+    }
+   },
+   "output": "period,quote_conversion,quotes,bound_quotes\n2025,0.0697653,99720.00,6957.00",
+   "error": false
+  }
+ ],
+ "usage": {
+  "input": 487,
+  "output": 305,
+  "cache_read": 7364,
+  "cache_write": 0
+ },
+ "effort": "medium",
+ "prompt_version": "v1"
+}

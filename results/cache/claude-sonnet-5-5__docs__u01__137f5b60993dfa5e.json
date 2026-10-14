@@ -1,0 +1,26 @@
+{
+ "model": "claude-sonnet-5-5",
+ "condition": "docs",
+ "qid": "u01",
+ "question": "What was the accident-year 2024 loss ratio for windscreen claims?",
+ "final_text": "The accident-year 2024 reported loss ratio for windscreen claims is about 2.3%.\n\n- **Windscreen reported loss:** \u00a3550,377 of indemnity, which is paid plus case reserves for claims with a 2024 accident date, as at 31 Dec 2025. All of it is paid, so no case reserves remain on these claims.\n- **Earned premium:** \u00a323,748,558 for 2024. On an accident basis this equals calendar earned premium.\n- **Ratio:** 550,377 / 23,748,558 \u2248 0.0232.\n\nI took \"loss ratio\" to mean the reported loss ratio, which excludes IBNR and ALAE. IBNR isn't split by peril, so an ultimate loss ratio for windscreen alone can't be produced. Premium also isn't split by peril, so the denominator is total earned premium across all perils. That means this is windscreen's contribution to the overall loss ratio, not a windscreen-specific loss ratio.\n\nANSWER: 0.0232",
+ "stop_reason": "end_turn",
+ "tool_calls": [
+  {
+   "tool": "run_sql",
+   "input": {
+    "query": "with ep as (select sum(written_premium*greatest(0,(least(cover_end_date,date '2025-01-01')-greatest(effective_date,date '2024-01-01')))::double/(cover_end_date-effective_date)) e from premium_txn where booked_date<=date '2025-12-31'),\ncl as (select sum(case when t.txn_type in('PAYMENT','RECOVERY') then amount end) paid, sum(amount) filter(where t.txn_type in('PAYMENT','RECOVERY','RESERVE')) rep from claim_txn t join claim c using(claim_id) where t.cost_type='INDEMNITY' and c.peril='WINDSCREEN' and year(c.accident_date)=2024 and t.txn_date<=date '2025-12-31')\nselect e,paid,rep,paid/e,rep/e from ep,cl"
+   },
+   "output": "e,paid,rep,(paid / e),(rep / e)\n23748557.88,550376.77,550376.77,0.0231752,0.0231752",
+   "error": false
+  }
+ ],
+ "usage": {
+  "input": 836,
+  "output": 972,
+  "cache_read": 10626,
+  "cache_write": 0
+ },
+ "effort": "medium",
+ "prompt_version": "v1"
+}

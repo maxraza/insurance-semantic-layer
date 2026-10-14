@@ -1,0 +1,90 @@
+{
+ "model": "claude-haiku-5-5",
+ "condition": "raw",
+ "qid": "a01",
+ "question": "What was our loss ratio in 2024?",
+ "final_text": "The 2024 loss ratio is about **0.846** on an accident-year basis, including IBNR.\n\n- **Earned premium, calendar 2024:** \u00a323,748,558. I pro-rated each premium transaction (new, renewal, mid-term adjustment, cancellation) over its cover period and took the part falling in 2024.\n- **Incurred claims, accident year 2024:** \u00a319,480,146 reported (paid plus case reserves, all cost types, net of recoveries) across 4,396 claims, plus \u00a3611,436 IBNR at 31 December 2025, giving \u00a320,091,582.\n- **Ratio:** 20,091,582 / 23,748,558 = 0.846.\n\nFor reference, the reported-only accident-year ratio is 0.820. On a calendar-year basis, claim transactions booked in 2024 total \u00a320,931,731, giving 0.881, but that figure mixes in development on earlier accident years and excludes IBNR movements, so it isn't like-for-like. The 0.846 figure assumes \"loss ratio in 2024\" means accident year 2024, which is the usual basis for a reserved ratio.\n\nANSWER: 0.846",
+ "stop_reason": "end_turn",
+ "tool_calls": [
+  {
+   "tool": "run_sql",
+   "input": {
+    "query": "SELECT txn_type, COUNT(*) n, SUM(written_premium) wp, SUM(exposure_units) eu, MIN(effective_date) mn, MAX(effective_date) mx FROM premium_txn GROUP BY txn_type"
+   },
+   "output": "txn_type,n,wp,eu,mn,mx\nRENEWAL,96764,66470703.32,96764.000,2020-01-01,2026-01-20\nMTA,22310,466631.74,0.000,2019-02-05,2025-12-31\nCANCEL,13081,-4423904.86,-13081.000,2019-01-28,2025-12-31\nNEW,113555,74247233.10,113555.000,2019-01-01,2026-01-14",
+   "error": false
+  },
+  {
+   "tool": "run_sql",
+   "input": {
+    "query": "SELECT txn_type, cost_type, COUNT(*) n, SUM(amount) amt, MIN(txn_date), MAX(txn_date) FROM claim_txn GROUP BY txn_type, cost_type"
+   },
+   "output": "txn_type,cost_type,n,amt,min(txn_date),max(txn_date)\nPAYMENT,ALAE,5482,4041773.75,2019-04-02,2025-12-31\nRECOVERY,INDEMNITY,1151,-2278660.54,2019-07-11,2025-12-31\nPAYMENT,INDEMNITY,34398,78097079.75,2019-02-22,2025-12-31\nRESERVE,INDEMNITY,79216,15020532.03,2019-02-04,2025-12-31",
+   "error": false
+  },
+  {
+   "tool": "run_sql",
+   "input": {
+    "query": "SELECT accident_year, valuation_date, ibnr FROM ibnr_valuation ORDER BY 1,2"
+   },
+   "output": "accident_year,valuation_date,ibnr\n2019,2019-12-31,450298.72\n2019,2020-03-31,356582.03\n2019,2020-06-30,341514.05\n2019,2020-09-30,165779.06\n2019,2020-12-31,97378.08\n2019,2021-03-31,86329.61\n2019,2021-06-30,22351.59\n2019,2021-09-30,1543.50\n2019,2021-12-31,0.00\n2019,2022-03-31,0.00\n2019,2022-06-30,0.00\n2019,2022-09-30,0.00\n2019,2022-12-31,0.00\n2019,2023-03-31,0.00\n2019,2023-06-30,277.51\n2019,2023-09-30,0.00\n2019,2023-12-31,0.00\n2019,2024-03-31,64837.26\n2019,2024-06-30,12833.65\n2019,2024-09-30,0.00\n2019,2024-12-31,0.00\n2019,2025-03-31,0.00\n2019,2025-06-30,958.06\n2019,2025-09-30,0.00\n2019,2025-12-31,0.00\n2020,2020-03-31,683142.67\n2020,2020-06-30,824481.35\n2020,2020-09-30,1891648.46\n2020,2020-12-31,1911713.85\n2020,2021-03-31,905461.64\n2020,2021-06-30,277377.64\n2020,2021-09-30,194333.49\n2020,2021-12-31,22311.98\n2020,2022-03-31,59952.40\n2020,2022-06-30,0.00\n2020,2022-09-30,0.00\n2020,2022-12-31,7662.80\n2020,2023-03-31,0.00\n2020,2023-06-30,6679.01\n2020,2023-09-30,58414.96\n2020,2023-12-31,0.00\n2020,2024-03-31,212592.74\n2020,2024-06-30,77167.04\n2020,2024-09-30,80268.28\n2020,2024-12-31,42519.03\n2020,2025-03-31,16922.54\n2020,2025-06-30,17727.97\n2020,2025-09-30,6356.61\n2020,2025-12-31,1540.89\n2021,2021-03-31,920121.97\n2021,2021-06-30,1511261.10\n2021,2021-09-30,1515044.78\n2021,2021-12-31,1351498.40\n2021,2022-03-31,760092.87\n2021,2022-06-30,0.00\n2021,2022-09-30,104469.41\n2021,2022-12-31,194613.54\n2021,2023-03-31,80286.90\n2021,2023-06-30,66339.38\n2021,2023-09-30,104788.35\n... 49 more rows",
+   "error": false
+  },
+  {
+   "tool": "run_sql",
+   "input": {
+    "query": "SELECT c.claim_id, c.peril, c.accident_date, c.report_date, c.closed_date, t.txn_date, t.txn_type, t.cost_type, t.amount FROM claim c JOIN claim_txn t USING(claim_id) WHERE c.claim_id IN (SELECT claim_id FROM claim_txn GROUP BY claim_id HAVING COUNT(*)>=5 LIMIT 3) ORDER BY 1,6"
+   },
+   "output": "claim_id,peril,accident_date,report_date,closed_date,txn_date,txn_type,cost_type,amount\n1,THIRD_PARTY_PROPERTY,2019-11-10,2019-11-13,2020-01-03,2019-11-13,RESERVE,INDEMNITY,1511.36\n1,THIRD_PARTY_PROPERTY,2019-11-10,2019-11-13,2020-01-03,2019-11-23,PAYMENT,INDEMNITY,40.80\n1,THIRD_PARTY_PROPERTY,2019-11-10,2019-11-13,2020-01-03,2019-11-23,RESERVE,INDEMNITY,-40.80\n1,THIRD_PARTY_PROPERTY,2019-11-10,2019-11-13,2020-01-03,2019-11-28,RESERVE,INDEMNITY,-18.26\n1,THIRD_PARTY_PROPERTY,2019-11-10,2019-11-13,2020-01-03,2019-11-29,PAYMENT,INDEMNITY,1339.91\n1,THIRD_PARTY_PROPERTY,2019-11-10,2019-11-13,2020-01-03,2019-11-29,RESERVE,INDEMNITY,-1339.91\n1,THIRD_PARTY_PROPERTY,2019-11-10,2019-11-13,2020-01-03,2020-01-03,PAYMENT,INDEMNITY,355.89\n1,THIRD_PARTY_PROPERTY,2019-11-10,2019-11-13,2020-01-03,2020-01-03,RESERVE,INDEMNITY,-112.39\n1,THIRD_PARTY_PROPERTY,2019-11-10,2019-11-13,2020-01-03,2020-01-03,PAYMENT,ALAE,194.55\n27,THIRD_PARTY_PROPERTY,2019-04-29,2019-05-10,2019-06-30,2019-05-10,RESERVE,INDEMNITY,882.96\n27,THIRD_PARTY_PROPERTY,2019-04-29,2019-05-10,2019-06-30,2019-06-04,PAYMENT,INDEMNITY,458.60\n27,THIRD_PARTY_PROPERTY,2019-04-29,2019-05-10,2019-06-30,2019-06-04,RESERVE,INDEMNITY,-458.60\n27,THIRD_PARTY_PROPERTY,2019-04-29,2019-05-10,2019-06-30,2019-06-19,RESERVE,INDEMNITY,106.64\n27,THIRD_PARTY_PROPERTY,2019-04-29,2019-05-10,2019-06-30,2019-06-20,PAYMENT,INDEMNITY,138.30\n27,THIRD_PARTY_PROPERTY,2019-04-29,2019-05-10,2019-06-30,2019-06-20,RESERVE,INDEMNITY,-138.30\n27,THIRD_PARTY_PROPERTY,2019-04-29,2019-05-10,2019-06-30,2019-06-30,PAYMENT,INDEMNITY,393.91\n27,THIRD_PARTY_PROPERTY,2019-04-29,2019-05-10,2019-06-30,2019-06-30,RESERVE,INDEMNITY,-392.70\n27,THIRD_PARTY_PROPERTY,2019-04-29,2019-05-10,2019-06-30,2019-06-30,PAYMENT,ALAE,141.25\n27,THIRD_PARTY_PROPERTY,2019-04-29,2019-05-10,2019-06-30,2019-09-08,RECOVERY,INDEMNITY,-597.62\n56,OWN_DAMAGE,2019-01-21,2019-02-10,2019-03-28,2019-02-10,RESERVE,INDEMNITY,1719.58\n56,OWN_DAMAGE,2019-01-21,2019-02-10,2019-03-28,2019-03-09,PAYMENT,INDEMNITY,755.76\n56,OWN_DAMAGE,2019-01-21,2019-02-10,2019-03-28,2019-03-09,RESERVE,INDEMNITY,-755.76\n56,OWN_DAMAGE,2019-01-21,2019-02-10,2019-03-28,2019-03-27,RESERVE,INDEMNITY,524.86\n56,OWN_DAMAGE,2019-01-21,2019-02-10,2019-03-28,2019-03-28,PAYMENT,INDEMNITY,1306.58\n56,OWN_DAMAGE,2019-01-21,2019-02-10,2019-03-28,2019-03-28,RESERVE,INDEMNITY,-1306.58\n56,OWN_DAMAGE,2019-01-21,2019-02-10,2019-03-28,2019-03-28,RESERVE,INDEMNITY,-182.10",
+   "error": false
+  },
+  {
+   "tool": "run_sql",
+   "input": {
+    "query": "SELECT t.term_id, t.txn_type, t.booked_date, t.effective_date, t.cover_end_date, t.written_premium, t.exposure_units, pt.inception_date, pt.expiry_date, pt.cancel_date FROM premium_txn t JOIN policy_term pt USING(term_id) WHERE t.term_id IN (SELECT term_id FROM premium_txn WHERE txn_type IN ('CANCEL','MTA') LIMIT 3) ORDER BY 1,3"
+   },
+   "output": "term_id,txn_type,booked_date,effective_date,cover_end_date,written_premium,exposure_units,inception_date,expiry_date,cancel_date\n3,NEW,2019-01-01,2019-01-07,2020-01-07,418.20,1.000,2019-01-07,2020-01-07,None\n3,MTA,2019-03-15,2019-03-13,2020-01-07,-20.62,0.000,2019-01-07,2020-01-07,None\n7,NEW,2019-01-01,2019-01-03,2020-01-03,346.29,1.000,2019-01-03,2020-01-03,2019-10-01\n7,CANCEL,2019-10-05,2019-10-01,2020-01-03,-89.18,-1.000,2019-01-03,2020-01-03,2019-10-01\n17,NEW,2019-01-01,2019-01-02,2020-01-02,555.54,1.000,2019-01-02,2020-01-02,None\n17,MTA,2019-10-24,2019-10-24,2020-01-02,-6.39,0.000,2019-01-02,2020-01-02,None",
+   "error": false
+  },
+  {
+   "tool": "run_sql",
+   "input": {
+    "query": "WITH e AS (\n SELECT SUM(written_premium * GREATEST(0, DATE_DIFF('day', GREATEST(effective_date, DATE '2024-01-01'), LEAST(cover_end_date, DATE '2025-01-01'))) / NULLIF(DATE_DIFF('day', effective_date, cover_end_date),0)) AS earned_cy2024,\n SUM(written_premium) FILTER (WHERE effective_date >= '2024-01-01' AND effective_date < '2025-01-01') AS wp_eff2024,\n SUM(CASE WHEN DATE_DIFF('day', effective_date, cover_end_date)=0 THEN 1 ELSE 0 END) zero_len\n FROM premium_txn)\nSELECT * FROM e\""
+   },
+   "output": "error: Parser Error: unterminated quoted identifier at or near \"\"\"\n\nLINE 6: SELECT * FROM e\"\n                       ^",
+   "error": true
+  },
+  {
+   "tool": "run_sql",
+   "input": {
+    "query": "WITH c AS (\n SELECT c.claim_id, c.accident_date, c.term_id FROM claim c WHERE YEAR(c.accident_date)=2024)\nSELECT 'AY2024 incurred paid+reserve' k, SUM(t.amount) v FROM claim_txn t JOIN c USING(claim_id)\nUNION ALL SELECT 'AY2024 claim count', COUNT(*) FROM c\nUNION ALL SELECT 'CY2024 incurred (all claims, txns in 2024)', (SELECT SUM(amount) FROM claim_txn WHERE txn_date >= '2024-01-01' AND txn_date < '2025-01-01')\nUNION ALL SELECT 'IBNR AY2024 @2025-12-31', (SELECT ibnr FROM ibnr_valuation WHERE accident_year=2024 AND valuation_date='2025-12-31')\nUNION ALL SELECT 'Paid AY2024', (SELECT SUM(t.amount) FROM claim_txn t JOIN c USING(claim_id) WHERE t.txn_type='PAYMENT' OR t.cost_type='RECOVERY')\""
+   },
+   "output": "error: Parser Error: unterminated quoted identifier at or near \"\"\"\n\nLINE 7: ...m_id) WHERE t.txn_type='PAYMENT' OR t.cost_type='RECOVERY')\"\n                                                                      ^",
+   "error": true
+  },
+  {
+   "tool": "run_sql",
+   "input": {
+    "query": "WITH e AS (\n SELECT SUM(written_premium * GREATEST(0, DATE_DIFF('day', GREATEST(effective_date, DATE '2024-01-01'), LEAST(cover_end_date, DATE '2025-01-01'))) / NULLIF(DATE_DIFF('day', effective_date, cover_end_date),0)) AS earned_cy2024,\n SUM(CASE WHEN DATE_DIFF('day', effective_date, cover_end_date)=0 THEN 1 ELSE 0 END) zero_len\n FROM premium_txn)\nSELECT * FROM e"
+   },
+   "output": "earned_cy2024,zero_len\n23748557.88,0",
+   "error": false
+  },
+  {
+   "tool": "run_sql",
+   "input": {
+    "query": "WITH c AS (SELECT claim_id FROM claim WHERE YEAR(accident_date)=2024)\nSELECT 'AY2024 incurred' k, SUM(t.amount) v FROM claim_txn t JOIN c USING(claim_id)\nUNION ALL SELECT 'AY2024 claim count', COUNT(*) FROM c\nUNION ALL SELECT 'CY2024 claim txns', (SELECT SUM(amount) FROM claim_txn WHERE txn_date >= '2024-01-01' AND txn_date < '2025-01-01')\nUNION ALL SELECT 'IBNR AY2024 at 2025-12-31', (SELECT ibnr FROM ibnr_valuation WHERE accident_year=2024 AND valuation_date='2025-12-31')\nUNION ALL SELECT 'IBNR AY2024 at 2024-12-31', (SELECT ibnr FROM ibnr_valuation WHERE accident_year=2024 AND valuation_date='2024-12-31')"
+   },
+   "output": "k,v\nAY2024 incurred,19480146.21\nAY2024 claim count,4396.00\nCY2024 claim txns,20931730.95\nIBNR AY2024 at 2025-12-31,611435.82\nIBNR AY2024 at 2024-12-31,3882380.39",
+   "error": false
+  }
+ ],
+ "usage": {
+  "input": 20749,
+  "output": 4510,
+  "cache_read": 10150,
+  "cache_write": 0
+ },
+ "effort": "medium",
+ "prompt_version": "v1"
+}

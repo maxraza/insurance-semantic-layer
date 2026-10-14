@@ -1,0 +1,26 @@
+{
+ "model": "claude-sonnet-5-5",
+ "condition": "docs",
+ "qid": "b05",
+ "question": "How much indemnity did we pay out during calendar year 2025, regardless of when the accidents happened?",
+ "final_text": "Indemnity paid in calendar 2025 was about \u00a320.24m net of recoveries. I took it from claim transactions dated in 2025, whatever the accident date, counting indemnity payments plus recoveries and leaving out ALAE.\n\n- Indemnity payments were \u00a320,735,785.11.\n- Recoveries were \u2212\u00a3499,070.43. They are stored as negative amounts, so adding them reduces the total.\n- Net paid is 20,735,785.11 \u2212 499,070.43 = \u00a320,236,714.68.\n\nANSWER: 20236714.68",
+ "stop_reason": "end_turn",
+ "tool_calls": [
+  {
+   "tool": "run_sql",
+   "input": {
+    "query": "select txn_type, sum(amount), count(*) from claim_txn where cost_type='INDEMNITY' and txn_type in ('PAYMENT','RECOVERY') and txn_date>='2025-01-01' and txn_date<='2025-12-31' group by 1"
+   },
+   "output": "txn_type,sum(amount),count_star()\nRECOVERY,-499070.43,248\nPAYMENT,20735785.11,7185",
+   "error": false
+  }
+ ],
+ "usage": {
+  "input": 444,
+  "output": 400,
+  "cache_read": 10626,
+  "cache_write": 0
+ },
+ "effort": "medium",
+ "prompt_version": "v1"
+}

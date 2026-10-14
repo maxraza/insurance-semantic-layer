@@ -1,0 +1,58 @@
+{
+ "model": "claude-sonnet-5-5",
+ "condition": "raw",
+ "qid": "a07",
+ "question": "What is the loss ratio for the London region in 2024?",
+ "final_text": "London's 2024 loss ratio is about 0.790 on a case-incurred basis. It excludes IBNR, because IBNR isn't held by region.\n\n- **Earned premium:** \u00a35,401,939. Each premium transaction (new, renewal, mid-term adjustment and cancellation) is spread evenly over its cover period. I counted only the days that fall in 2024 and only terms in the London region.\n- **Incurred claims:** \u00a34,268,479. This covers claims with a 2024 accident date on London terms, as at 31 December 2025. It is payments plus recoveries plus outstanding case reserves, and includes legal and other claim handling costs (ALAE).\n- **IBNR:** it is held only by accident year (\u00a3611k for 2024 across the whole book), so I didn't allocate any to London. Adding a premium-based share would push the ratio higher.\n\nANSWER: 0.790",
+ "stop_reason": "end_turn",
+ "tool_calls": [
+  {
+   "tool": "run_sql",
+   "input": {
+    "query": "select 'pt' k, txn_type a, count(*) n, sum(written_premium) s from premium_txn group by 2 union all select 'ct', txn_type||'/'||cost_type, count(*), sum(amount) from claim_txn group by 2 union all select 'reg', region, count(*),0 from policy_term group by 2 union all select 'ibnr', valuation_date||'/'||accident_year, 1, ibnr from ibnr_valuation"
+   },
+   "output": "k,a,n,s\npt,RENEWAL,96764,66470703.32\npt,CANCEL,13081,-4423904.86\npt,MTA,22310,466631.74\npt,NEW,113555,74247233.10\nct,PAYMENT/INDEMNITY,34398,78097079.75\nct,RECOVERY/INDEMNITY,1151,-2278660.54\nct,PAYMENT/ALAE,5482,4041773.75\nct,RESERVE/INDEMNITY,79216,15020532.03\nreg,MIDLANDS,42008,0.00\nreg,SOUTH,59422,0.00\nreg,LONDON,37305,0.00\nreg,NORTH,45910,0.00\nreg,SCOTLAND,25674,0.00\nibnr,2019-12-31/2019,1,450298.72\nibnr,2020-03-31/2019,1,356582.03\nibnr,2020-03-31/2020,1,683142.67\nibnr,2020-06-30/2019,1,341514.05\nibnr,2020-06-30/2020,1,824481.35\nibnr,2020-09-30/2019,1,165779.06\nibnr,2020-09-30/2020,1,1891648.46\nibnr,2020-12-31/2019,1,97378.08\nibnr,2020-12-31/2020,1,1911713.85\nibnr,2021-03-31/2019,1,86329.61\nibnr,2021-03-31/2020,1,905461.64\nibnr,2021-03-31/2021,1,920121.97\nibnr,2021-06-30/2019,1,22351.59\nibnr,2021-06-30/2020,1,277377.64\nibnr,2021-06-30/2021,1,1511261.10\nibnr,2021-09-30/2019,1,1543.50\nibnr,2021-09-30/2020,1,194333.49\nibnr,2021-09-30/2021,1,1515044.78\nibnr,2021-12-31/2019,1,0.00\nibnr,2021-12-31/2020,1,22311.98\nibnr,2021-12-31/2021,1,1351498.40\nibnr,2022-03-31/2019,1,0.00\nibnr,2022-03-31/2020,1,59952.40\nibnr,2022-03-31/2021,1,760092.87\nibnr,2022-03-31/2022,1,951355.79\nibnr,2022-06-30/2019,1,0.00\nibnr,2022-06-30/2020,1,0.00\nibnr,2022-06-30/2021,1,0.00\nibnr,2022-06-30/2022,1,815343.77\nibnr,2022-09-30/2019,1,0.00\nibnr,2022-09-30/2020,1,0.00\nibnr,2022-09-30/2021,1,104469.41\nibnr,2022-09-30/2022,1,2029753.62\nibnr,2022-12-31/2019,1,0.00\nibnr,2022-12-31/2020,1,7662.80\nibnr,2022-12-31/2021,1,194613.54\nibnr,2022-12-31/2022,1,2433916.61\nibnr,2023-03-31/2019,1,0.00\nibnr,2023-03-31/2020,1,0.00\nibnr,2023-03-31/2021,1,80286.90\nibnr,2023-03-31/2022,1,1131532.72\nibnr,2023-03-31/2023,1,1564851.71\nibnr,2023-06-30/2019,1,277.51\nibnr,2023-06-30/2020,1,6679.01\nibnr,2023-06-30/2021,1,66339.38\nibnr,2023-06-30/2022,1,1022786.36\nibnr,2023-06-30/2023,1,2231077.31\n... 62 more rows",
+   "error": false
+  },
+  {
+   "tool": "run_sql",
+   "input": {
+    "query": "select * from premium_txn where term_id in (select term_id from premium_txn where txn_type='CANCEL' limit 2) order by term_id, booked_date;\n"
+   },
+   "output": "premium_txn_id,term_id,txn_type,booked_date,effective_date,cover_end_date,written_premium,exposure_units\n8,7,NEW,2019-01-01,2019-01-03,2020-01-03,346.29,1.000\n9,7,CANCEL,2019-10-05,2019-10-01,2020-01-03,-89.18,-1.000\n27,24,NEW,2019-01-01,2019-01-14,2020-01-14,398.49,1.000\n28,24,CANCEL,2019-09-19,2019-09-17,2020-01-14,-129.92,-1.000",
+   "error": false
+  },
+  {
+   "tool": "run_sql",
+   "input": {
+    "query": "select c.claim_id, c.accident_date,c.closed_date, t.txn_date,t.txn_type,t.cost_type,t.amount from claim c join claim_txn t using(claim_id) where c.claim_id in (select claim_id from claim_txn where txn_type='RECOVERY' limit 2) or c.claim_id in (select claim_id from claim_txn where cost_type='ALAE' limit 2) order by 1,4"
+   },
+   "output": "claim_id,accident_date,closed_date,txn_date,txn_type,cost_type,amount\n1,2019-11-10,2020-01-03,2019-11-13,RESERVE,INDEMNITY,1511.36\n1,2019-11-10,2020-01-03,2019-11-23,PAYMENT,INDEMNITY,40.80\n1,2019-11-10,2020-01-03,2019-11-23,RESERVE,INDEMNITY,-40.80\n1,2019-11-10,2020-01-03,2019-11-28,RESERVE,INDEMNITY,-18.26\n1,2019-11-10,2020-01-03,2019-11-29,PAYMENT,INDEMNITY,1339.91\n1,2019-11-10,2020-01-03,2019-11-29,RESERVE,INDEMNITY,-1339.91\n1,2019-11-10,2020-01-03,2020-01-03,PAYMENT,INDEMNITY,355.89\n1,2019-11-10,2020-01-03,2020-01-03,RESERVE,INDEMNITY,-112.39\n1,2019-11-10,2020-01-03,2020-01-03,PAYMENT,ALAE,194.55\n2,2019-11-13,2020-02-15,2019-11-14,RESERVE,INDEMNITY,96.92\n2,2019-11-13,2020-02-15,2020-02-15,PAYMENT,ALAE,24.55\n2,2019-11-13,2020-02-15,2020-02-15,RESERVE,INDEMNITY,-96.92\n2,2019-11-13,2020-02-15,2020-02-15,PAYMENT,INDEMNITY,179.10\n2,2019-11-13,2020-02-15,2020-04-21,RECOVERY,INDEMNITY,-87.11\n27,2019-04-29,2019-06-30,2019-05-10,RESERVE,INDEMNITY,882.96\n27,2019-04-29,2019-06-30,2019-06-04,PAYMENT,INDEMNITY,458.60\n27,2019-04-29,2019-06-30,2019-06-04,RESERVE,INDEMNITY,-458.60\n27,2019-04-29,2019-06-30,2019-06-19,RESERVE,INDEMNITY,106.64\n27,2019-04-29,2019-06-30,2019-06-20,PAYMENT,INDEMNITY,138.30\n27,2019-04-29,2019-06-30,2019-06-20,RESERVE,INDEMNITY,-138.30\n27,2019-04-29,2019-06-30,2019-06-30,PAYMENT,INDEMNITY,393.91\n27,2019-04-29,2019-06-30,2019-06-30,RESERVE,INDEMNITY,-392.70\n27,2019-04-29,2019-06-30,2019-06-30,PAYMENT,ALAE,141.25\n27,2019-04-29,2019-06-30,2019-09-08,RECOVERY,INDEMNITY,-597.62",
+   "error": false
+  },
+  {
+   "tool": "run_sql",
+   "input": {
+    "query": "with ep as (select sum(p.written_premium * greatest(0, date_diff('day', greatest(p.effective_date, date '2024-01-01'), least(p.cover_end_date, date '2025-01-01'))) / nullif(date_diff('day', p.effective_date, p.cover_end_date),0)) e from premium_txn p join policy_term t using(term_id) where t.region='LONDON'),\ninc as (select sum(x.amount) i, sum(case when x.txn_type='RESERVE' then x.amount end) os from claim c join claim_txn x using(claim_id) join policy_term t on t.term_id=c.term_id where t.region='LONDON' and year(c.accident_date)=2024 and x.txn_date<=date '2025-12-31')\nselect e,i,os,i/e from ep, inc;\n"
+   },
+   "output": "e,i,os,(i / e)\n5401939.37,4268478.54,807704.31,0.790175",
+   "error": false
+  },
+  {
+   "tool": "run_sql",
+   "input": {
+    "query": "select * from ibnr_valuation where valuation_date='2025-12-31' and accident_year=2024"
+   },
+   "output": "valuation_date,accident_year,ibnr\n2025-12-31,2024,611435.82",
+   "error": false
+  }
+ ],
+ "usage": {
+  "input": 9464,
+  "output": 1804,
+  "cache_read": 8120,
+  "cache_write": 0
+ },
+ "effort": "medium",
+ "prompt_version": "v1"
+}

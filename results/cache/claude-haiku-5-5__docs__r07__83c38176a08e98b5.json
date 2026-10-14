@@ -1,0 +1,26 @@
+{
+ "model": "claude-haiku-5-5",
+ "condition": "docs",
+ "qid": "r07",
+ "question": "What was the accident-year 2023 claim frequency for vehicle group E?",
+ "final_text": "The accident-year 2023 claim frequency for vehicle group E is about 0.164 (547 reported claims over 3,343.74 earned car-years).\n\n- **Numerator:** claims with an accident date in 2023, joined to their policy term with vehicle group E. Valued at 31 December 2025, which is the full data cut.\n- **Denominator:** earned exposure on an accident basis. Each premium transaction's exposure units are spread pro rata by day over its cover period, and only the days falling in 2023 are counted. Cancellation rows carry their negative exposure, so they reduce the total.\n\nI did not spot-check individual cancellation rows, so the denominator relies on the schema's stated pro-rata treatment.\n\nANSWER: 0.164",
+ "stop_reason": "end_turn",
+ "tool_calls": [
+  {
+   "tool": "run_sql",
+   "input": {
+    "query": "\nWITH claims AS (\n  SELECT c.claim_id, c.term_id FROM claim c\n  JOIN policy_term t ON t.term_id = c.term_id\n  WHERE t.vehicle_group = 'E' AND c.accident_date >= DATE '2023-01-01' AND c.accident_date < DATE '2024-01-01'\n),\nrc AS (SELECT COUNT(*) AS reported_claims FROM claims),\nexp AS (\n  SELECT SUM(p.exposure_units * GREATEST(0, DATE_DIFF('day', GREATEST(p.effective_date, DATE '2023-01-01'), LEAST(p.cover_end_date, DATE '2024-01-01')))\n             / NULLIF(DATE_DIFF('day', p.effective_date, p.cover_end_date), 0)) AS earned_exp\n  FROM premium_txn p JOIN policy_term t ON t.term_id = p.term_id\n  WHERE t.vehicle_group = 'E'\n)\nSELECT (SELECT reported_claims FROM rc) AS reported_claims, (SELECT earned_exp FROM exp) AS earned_exposure,\n(SELECT reported_claims FROM rc) / (SELECT earned_exp FROM exp) AS frequency\n"
+   },
+   "output": "reported_claims,earned_exposure,frequency\n547,3343.74,0.163589",
+   "error": false
+  }
+ ],
+ "usage": {
+  "input": 1078,
+  "output": 1262,
+  "cache_read": 10824,
+  "cache_write": 0
+ },
+ "effort": "medium",
+ "prompt_version": "v1"
+}

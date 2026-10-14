@@ -1,0 +1,42 @@
+{
+ "model": "claude-sonnet-5-5",
+ "condition": "raw",
+ "qid": "e03",
+ "question": "How many car-years of exposure did we earn in 2025?",
+ "final_text": "We earned about **36,813 car-years** of exposure in 2025.\n\nEach new or renewal transaction books one unit of exposure over its cover period, from effective date to cover end date. Cancellations book negative exposure for the unexpired period.\n\nI spread each transaction's exposure evenly over its cover dates and added up the part that falls between 1 January and 31 December 2025. The cancellation reversals are included in that total.\n\nANSWER: 36813.19",
+ "stop_reason": "end_turn",
+ "tool_calls": [
+  {
+   "tool": "run_sql",
+   "input": {
+    "query": "select txn_type, count(*), sum(exposure_units), min(effective_date), max(cover_end_date), sum(vehicle_delta), min(exposure_units), max(exposure_units) from premium_txn group by 1"
+   },
+   "output": "txn_type,count_star(),sum(exposure_units),min(effective_date),max(cover_end_date),sum(vehicle_delta),min(exposure_units),max(exposure_units)\nNEW,113555,113555.000000,2019-01-01,2027-01-14,113555,1.000000,1.000000\nRENEWAL,96764,96764.000000,2020-01-01,2027-01-20,96764,1.000000,1.000000\nMTA,22310,0.000000,2019-02-05,2026-12-07,0,0.000000,0.000000\nCANCEL,13081,-6630.491786,2019-01-28,2026-12-07,-13081,-0.961749,-0.021858",
+   "error": false
+  },
+  {
+   "tool": "run_sql",
+   "input": {
+    "query": "select p.*, t.inception_date, t.expiry_date, t.cancel_date from premium_txn p join policy_term t using(term_id) order by term_id, booked_date limit 15"
+   },
+   "output": "premium_txn_id,term_id,txn_type,booked_date,effective_date,cover_end_date,written_premium,exposure_units,vehicle_delta,inception_date,expiry_date,cancel_date\n1,1,NEW,2019-01-01,2019-01-13,2020-01-13,301.57,1.000000,1,2019-01-13,2020-01-13,None\n2,2,NEW,2019-01-01,2019-01-03,2020-01-03,1071.49,1.000000,1,2019-01-03,2020-01-03,None\n3,3,NEW,2019-01-01,2019-01-07,2020-01-07,418.20,1.000000,1,2019-01-07,2020-01-07,None\n4,3,MTA,2019-03-15,2019-03-13,2020-01-07,-20.62,0.000000,0,2019-01-07,2020-01-07,None\n5,4,NEW,2019-01-01,2019-01-11,2020-01-11,337.96,1.000000,1,2019-01-11,2020-01-11,None\n6,5,NEW,2019-01-01,2019-01-01,2020-01-01,356.50,1.000000,1,2019-01-01,2020-01-01,None\n7,6,NEW,2019-01-01,2019-01-06,2020-01-06,437.02,1.000000,1,2019-01-06,2020-01-06,None\n8,7,NEW,2019-01-01,2019-01-03,2020-01-03,346.29,1.000000,1,2019-01-03,2020-01-03,2019-10-01\n9,7,CANCEL,2019-10-05,2019-10-01,2020-01-03,-89.18,-0.257534,-1,2019-01-03,2020-01-03,2019-10-01\n10,8,NEW,2019-01-01,2019-01-05,2020-01-05,560.53,1.000000,1,2019-01-05,2020-01-05,None\n11,9,NEW,2019-01-01,2019-01-08,2020-01-08,315.58,1.000000,1,2019-01-08,2020-01-08,None\n12,10,NEW,2019-01-01,2019-01-15,2020-01-15,1879.14,1.000000,1,2019-01-15,2020-01-15,None\n13,11,NEW,2019-01-01,2019-01-09,2020-01-09,383.50,1.000000,1,2019-01-09,2020-01-09,None\n14,12,NEW,2019-01-01,2019-01-01,2020-01-01,619.64,1.000000,1,2019-01-01,2020-01-01,None\n15,13,NEW,2019-01-01,2019-01-04,2020-01-04,523.28,1.000000,1,2019-01-04,2020-01-04,None",
+   "error": false
+  },
+  {
+   "tool": "run_sql",
+   "input": {
+    "query": "select sum(exposure_units * greatest(0, date_diff('day', greatest(effective_date, date '2025-01-01'), least(cover_end_date, date '2026-01-01')))::double / date_diff('day', effective_date, cover_end_date)) from premium_txn where exposure_units<>0"
+   },
+   "output": "sum(((exposure_units * CAST(greatest(0, date_diff('day', greatest(effective_date, CAST('2025-01-01' AS \"DATE\")), least(cover_end_date, CAST('2026-01-01' AS \"DATE\")))) AS \"DOUBLE\")) / date_diff('day', effective_date, cover_end_date)))\n36813.19",
+   "error": false
+  }
+ ],
+ "usage": {
+  "input": 3855,
+  "output": 886,
+  "cache_read": 4106,
+  "cache_write": 2053
+ },
+ "effort": "medium",
+ "prompt_version": "v1"
+}

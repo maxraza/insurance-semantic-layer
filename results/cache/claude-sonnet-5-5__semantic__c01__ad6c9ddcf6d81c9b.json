@@ -1,0 +1,33 @@
+{
+ "model": "claude-sonnet-5-5",
+ "condition": "semantic",
+ "qid": "c01",
+ "question": "How many quotes did we issue in 2024?",
+ "final_text": "We issued 140,274 quotes in 2024. This is on a calendar basis, valued at 31 December 2025, and covers quotes from all channels.\n\nANSWER: 140274",
+ "stop_reason": "end_turn",
+ "tool_calls": [
+  {
+   "tool": "query_metrics",
+   "input": {
+    "metrics": [
+     "quotes"
+    ],
+    "basis": "calendar",
+    "as_of": "2025-12-31",
+    "grain": "year",
+    "period_from": "2024-01-01",
+    "period_to": "2024-12-31"
+   },
+   "output": "period,quotes\n2024,140274.00",
+   "error": false
+  }
+ ],
+ "usage": {
+  "input": 384,
+  "output": 246,
+  "cache_read": 3682,
+  "cache_write": 3682
+ },
+ "effort": "medium",
+ "prompt_version": "v1"
+}

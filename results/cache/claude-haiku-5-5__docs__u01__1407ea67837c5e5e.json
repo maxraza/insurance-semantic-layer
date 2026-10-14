@@ -1,0 +1,34 @@
+{
+ "model": "claude-haiku-5-5",
+ "condition": "docs",
+ "qid": "u01",
+ "question": "What was the accident-year 2024 loss ratio for windscreen claims?",
+ "final_text": "I can't produce a windscreen-specific accident-year 2024 loss ratio from this data.\n\n- **Numerator (windscreen, AY2024, valued at 31 Dec 2025):** Reported loss is about \u00a3550,377 across 1,069 windscreen claims. This is paid indemnity net of recoveries, with case reserves at zero. Paid ALAE on these claims is zero in the data.\n- **Denominator:** Earned premium is not split by peril. The schema has no peril on `premium_txn`, and the glossary lists no peril split for earned premium. Using whole-book earned premium would divide windscreen losses by premium from all perils, which is not a windscreen loss ratio.\n- **IBNR:** The glossary says IBNR can be split by nothing, so it cannot be attributed to windscreen either.\n\nA windscreen loss ratio would need a peril-level earned premium and a peril-level IBNR, and neither exists here. The closest defensible figure is the book-level AY2024 loss ratio, which I have not computed because you asked for windscreen specifically.\n\nANSWER: UNANSWERABLE",
+ "stop_reason": "end_turn",
+ "tool_calls": [
+  {
+   "tool": "run_sql",
+   "input": {
+    "query": "SELECT SUM(CASE WHEN t.txn_type IN ('PAYMENT','RECOVERY') AND t.cost_type='INDEMNITY' THEN t.amount ELSE 0 END) AS paid_indemnity_net,\nSUM(CASE WHEN t.txn_type='RESERVE' THEN t.amount ELSE 0 END) AS case_reserve,\nSUM(CASE WHEN t.txn_type IN ('PAYMENT','RECOVERY') AND t.cost_type='ALAE' THEN t.amount ELSE 0 END) AS paid_alae,\nCOUNT(DISTINCT c.claim_id) AS claims\nFROM claim c JOIN claim_txn t ON t.claim_id=c.claim_id\nWHERE c.peril='WINDSCREEN' AND c.accident_date >= DATE '2024-01-01' AND c.accident_date < DATE '2025-01-01';"
+   },
+   "output": "paid_indemnity_net,case_reserve,paid_alae,claims\n550376.77,0.00,0.00,1069",
+   "error": false
+  },
+  {
+   "tool": "run_sql",
+   "input": {
+    "query": "SELECT SUM(written_premium) FROM premium_txn WHERE effective_date < DATE '2025-01-01' AND cover_end_date > DATE '2024-01-01';"
+   },
+   "output": "sum(written_premium)\n48059046.36",
+   "error": false
+  }
+ ],
+ "usage": {
+  "input": 1468,
+  "output": 1763,
+  "cache_read": 10626,
+  "cache_write": 0
+ },
+ "effort": "medium",
+ "prompt_version": "v1"
+}

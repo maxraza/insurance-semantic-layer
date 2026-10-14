@@ -1,0 +1,34 @@
+{
+ "model": "claude-sonnet-5-5",
+ "condition": "raw",
+ "qid": "e05",
+ "question": "What was the average written premium per vehicle (per written car-year) in 2025?",
+ "final_text": "In 2025, average written premium per written car-year was about \u00a3753.28.\n\nI took every premium transaction booked in 2025, covering new business, renewals, mid-term adjustments and cancellations. Written premium came to \u00a330,274,839.20. Written car-years (the sum of exposure units) came to 40,190.52, and cancellations reduce that figure. Dividing the first by the second gives \u00a3753.28.\n\nI used booked date to decide what counts as 2025. A transaction booked in 2025 with an effective date in another year is still included.\n\nANSWER: 753.28",
+ "stop_reason": "end_turn",
+ "tool_calls": [
+  {
+   "tool": "run_sql",
+   "input": {
+    "query": "select txn_type, count(*), sum(written_premium), sum(exposure_units), sum(vehicle_delta), min(booked_date), max(booked_date), sum(case when year(booked_date)<>year(effective_date) then 1 else 0 end) diffyr from premium_txn group by 1"
+   },
+   "output": "txn_type,count_star(),sum(written_premium),sum(exposure_units),sum(vehicle_delta),min(booked_date),max(booked_date),diffyr\nCANCEL,13081,-4423904.86,-6630.491786,-13081,2019-02-02,2025-12-31,82\nMTA,22310,466631.74,0.000000,0,2019-02-08,2025-12-31,71\nRENEWAL,96764,66470703.32,96764.000000,96764,2019-12-15,2025-12-31,3551\nNEW,113555,74247233.10,113555.000000,113555,2019-01-01,2025-12-31,2413",
+   "error": false
+  },
+  {
+   "tool": "run_sql",
+   "input": {
+    "query": "select sum(written_premium), sum(exposure_units), sum(written_premium)/sum(exposure_units) from premium_txn where year(booked_date)=2025"
+   },
+   "output": "sum(written_premium),sum(exposure_units),(sum(written_premium) / sum(exposure_units))\n30274839.20,40190.522530,753.28",
+   "error": false
+  }
+ ],
+ "usage": {
+  "input": 1385,
+  "output": 540,
+  "cache_read": 6159,
+  "cache_write": 0
+ },
+ "effort": "medium",
+ "prompt_version": "v1"
+}

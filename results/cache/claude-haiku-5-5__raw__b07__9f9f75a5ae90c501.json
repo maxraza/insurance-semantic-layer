@@ -1,0 +1,58 @@
+{
+ "model": "claude-haiku-5-5",
+ "condition": "raw",
+ "qid": "b07",
+ "question": "What is the total written premium for policies that incepted in 2022 (policy-year basis)?",
+ "final_text": "Total written premium for policies with a first inception in 2022 is **\u00a319,372,089.98**, across 16,177 policies.\n\nI took every premium transaction (NEW, RENEWAL, MTA and CANCEL) on all terms of those policies, so the figure is net of cancellations and includes renewals in later years. The policy's first inception date matches its earliest term's inception date for every policy, so the cohort definition is consistent.\n\nBreakdown by transaction type:\n- NEW: \u00a39,735,823.32\n- RENEWAL: \u00a310,222,100.51\n- MTA: \u00a370,994.68\n- CANCEL: \u2212\u00a3656,828.53\n\nANSWER: 19372089.98",
+ "stop_reason": "end_turn",
+ "tool_calls": [
+  {
+   "tool": "run_sql",
+   "input": {
+    "query": "SELECT txn_type, COUNT(*) n, SUM(written_premium) wp, MIN(effective_date), MAX(effective_date) FROM premium_txn GROUP BY txn_type;"
+   },
+   "output": "txn_type,n,wp,min(effective_date),max(effective_date)\nCANCEL,13081,-4423904.86,2019-01-28,2025-12-31\nRENEWAL,96764,66470703.32,2020-01-01,2026-01-20\nMTA,22310,466631.74,2019-02-05,2025-12-31\nNEW,113555,74247233.10,2019-01-01,2026-01-14",
+   "error": false
+  },
+  {
+   "tool": "run_sql",
+   "input": {
+    "query": "SELECT p.policy_id, p.first_inception, COUNT(t.term_id) terms, MIN(t.inception_date) min_inc, MIN(t.term_number) min_tn FROM policy p LEFT JOIN policy_term t ON p.policy_id=t.policy_id GROUP BY 1,2 ORDER BY random() LIMIT 10;"
+   },
+   "output": "policy_id,first_inception,terms,min_inc,min_tn\n104490,2025-07-07,1,2025-07-07,1\n17329,2020-04-01,1,2020-04-01,1\n54713,2022-09-20,2,2022-09-20,1\n49779,2022-05-11,1,2022-05-11,1\n66377,2023-05-16,1,2023-05-16,1\n103668,2025-06-27,1,2025-06-27,1\n53887,2022-09-01,2,2022-09-01,1\n36228,2021-07-06,2,2021-07-06,1\n6336,2019-06-13,5,2019-06-13,1\n101758,2025-05-12,1,2025-05-12,1",
+   "error": false
+  },
+  {
+   "tool": "run_sql",
+   "input": {
+    "query": "SELECT COUNT(*) bad FROM policy p JOIN (SELECT policy_id, MIN(inception_date) mi FROM policy_term GROUP BY 1) t USING(policy_id) WHERE t.mi <> p.first_inception;\nSELECT SUM(pt.written_premium) total_all, SUM(CASE WHEN pt.txn_type='NEW' THEN 0 ELSE 0 END) x, COUNT(DISTINCT p.policy_id) pols\nFROM premium_txn pt JOIN policy_term t USING(term_id) JOIN policy p USING(policy_id)\nWHERE p.first_inception BETWEEN '2022-01-01' AND '2022-12-31';\nSELECT pt.txn_type, SUM(pt.written_premium) wp FROM premium_txn pt JOIN policy_term t USING(term_id) JOIN policy p USING(policy_id)\nWHERE p.first_inception BETWEEN '2022-01-01' AND '2022-12-31' GROUP BY 1;"
+   },
+   "output": "txn_type,wp\nRENEWAL,10222100.51\nCANCEL,-656828.53\nMTA,70994.68\nNEW,9735823.32",
+   "error": false
+  },
+  {
+   "tool": "run_sql",
+   "input": {
+    "query": "SELECT COUNT(*) bad FROM policy p JOIN (SELECT policy_id, MIN(inception_date) mi FROM policy_term GROUP BY 1) t USING(policy_id) WHERE t.mi <> p.first_inception;"
+   },
+   "output": "bad\n0",
+   "error": false
+  },
+  {
+   "tool": "run_sql",
+   "input": {
+    "query": "SELECT SUM(pt.written_premium) total, COUNT(DISTINCT p.policy_id) pols FROM premium_txn pt JOIN policy_term t USING(term_id) JOIN policy p USING(policy_id) WHERE p.first_inception BETWEEN '2022-01-01' AND '2022-12-31';"
+   },
+   "output": "total,pols\n19372089.98,16177",
+   "error": false
+  }
+ ],
+ "usage": {
+  "input": 4932,
+  "output": 1872,
+  "cache_read": 8120,
+  "cache_write": 0
+ },
+ "effort": "medium",
+ "prompt_version": "v1"
+}

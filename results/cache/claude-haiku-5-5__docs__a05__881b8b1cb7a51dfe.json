@@ -1,0 +1,26 @@
+{
+ "model": "claude-haiku-5-5",
+ "condition": "docs",
+ "qid": "a05",
+ "question": "What was claim frequency in 2023?",
+ "final_text": "Claim frequency for 2023 on a calendar basis is **0.1298** reported claims per earned car-year (4,346 claims reported in 2023 over 33,487.6 earned car-years).\n\n- **Numerator:** claims with a report date in 2023.\n- **Denominator:** exposure units earned pro rata by day over each transaction's cover period, counting only the part falling in 2023. Cancellations are included as negative exposure.\n- **Basis:** you didn't specify one, so I used calendar, the glossary's default for this metric. On an accident-year count (4,379 claims by accident date) the figure would be about 0.1308 over the same exposure. I did not compute a matching accident-basis exposure, so that alternative is only indicative.\n\nANSWER: 0.1298",
+ "stop_reason": "end_turn",
+ "tool_calls": [
+  {
+   "tool": "run_sql",
+   "input": {
+    "query": "\nWITH ex AS (\n  SELECT SUM(exposure_units * GREATEST(0, DATE_DIFF('day', GREATEST(effective_date, DATE '2023-01-01'), LEAST(cover_end_date, DATE '2024-01-01'))) / NULLIF(DATE_DIFF('day', effective_date, cover_end_date),0)) AS earned_exp_cal\n  FROM premium_txn\n  WHERE cover_end_date > effective_date\n),\ncl AS (\n  SELECT\n    COUNT(*) FILTER (WHERE report_date >= DATE '2023-01-01' AND report_date < DATE '2024-01-01') AS reported_cal,\n    COUNT(*) FILTER (WHERE accident_date >= DATE '2023-01-01' AND accident_date < DATE '2024-01-01') AS reported_acc\n  FROM claim\n)\nSELECT ex.earned_exp_cal, cl.reported_cal, cl.reported_acc,\n       cl.reported_cal / ex.earned_exp_cal AS freq_cal,\n       cl.reported_acc / ex.earned_exp_cal AS freq_acc_naive\nFROM ex, cl\n"
+   },
+   "output": "earned_exp_cal,reported_cal,reported_acc,freq_cal,freq_acc_naive\n33487.57,4346,4379,0.129779,0.130765",
+   "error": false
+  }
+ ],
+ "usage": {
+  "input": 1064,
+  "output": 1811,
+  "cache_read": 10824,
+  "cache_write": 0
+ },
+ "effort": "medium",
+ "prompt_version": "v1"
+}

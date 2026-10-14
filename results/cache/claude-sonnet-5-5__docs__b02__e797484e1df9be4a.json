@@ -1,0 +1,26 @@
+{
+ "model": "claude-sonnet-5-5",
+ "condition": "docs",
+ "qid": "b02",
+ "question": "What was the calendar-year 2024 reported loss ratio (paid plus change in case reserves, excluding IBNR)?",
+ "final_text": "The calendar-year 2024 reported loss ratio is about 0.844.\n\n- **Reported loss:** \u00a320,037,477. This is the change in reported loss during 2024, taken as all indemnity claim transactions (payments, recoveries and reserve changes) dated in 2024. ALAE and IBNR are excluded.\n- **Earned premium:** \u00a323,748,558. This is each premium transaction earned daily over its cover period, counting only the part falling in 2024.\n- **Ratio:** \u00a320,037,477 / \u00a323,748,558 \u2248 0.8437.\n\nRestricting premium to transactions booked by 31 December 2024 gives \u00a323,748,643. The ratio is unchanged at this precision.\n\nANSWER: 0.8437",
+ "stop_reason": "end_turn",
+ "tool_calls": [
+  {
+   "tool": "run_sql",
+   "input": {
+    "query": "select (select sum(amount) from claim_txn where cost_type='INDEMNITY' and txn_date between '2024-01-01' and '2024-12-31') loss,\n(select sum(written_premium*greatest(0,(least(cover_end_date,date '2025-01-01')-greatest(effective_date,date '2024-01-01')))/(cover_end_date-effective_date)) from premium_txn where booked_date<='2025-12-31') ep_all,\n(select sum(written_premium*greatest(0,(least(cover_end_date,date '2025-01-01')-greatest(effective_date,date '2024-01-01')))/(cover_end_date-effective_date)) from premium_txn where booked_date<='2024-12-31') ep_24"
+   },
+   "output": "loss,ep_all,ep_24\n20037477.44,23748557.88,23748643.48",
+   "error": false
+  }
+ ],
+ "usage": {
+  "input": 847,
+  "output": 961,
+  "cache_read": 10626,
+  "cache_write": 0
+ },
+ "effort": "medium",
+ "prompt_version": "v1"
+}

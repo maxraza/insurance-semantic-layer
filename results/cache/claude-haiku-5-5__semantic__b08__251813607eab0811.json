@@ -1,0 +1,33 @@
+{
+ "model": "claude-haiku-5-5",
+ "condition": "semantic",
+ "qid": "b08",
+ "question": "How many claims with an accident date in 2024 have been reported to us so far?",
+ "final_text": "A total of 4,396 claims with accident dates in 2024 have been reported as at 31 December 2025. This counts all reported claims, including any later closed without payment.\n\nANSWER: 4396",
+ "stop_reason": "end_turn",
+ "tool_calls": [
+  {
+   "tool": "query_metrics",
+   "input": {
+    "metrics": [
+     "reported_claim_count"
+    ],
+    "basis": "accident",
+    "as_of": "2025-12-31",
+    "grain": "year",
+    "period_from": "2024-01-01",
+    "period_to": "2024-12-31"
+   },
+   "output": "period,reported_claim_count\n2024,4396.00",
+   "error": false
+  }
+ ],
+ "usage": {
+  "input": 470,
+  "output": 314,
+  "cache_read": 7364,
+  "cache_write": 0
+ },
+ "effort": "medium",
+ "prompt_version": "v1"
+}

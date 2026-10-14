@@ -1,0 +1,26 @@
+{
+ "model": "claude-haiku-5-5",
+ "condition": "docs",
+ "qid": "b04",
+ "question": "What are the paid losses (indemnity, net of recoveries) for accidents that happened in 2022?",
+ "final_text": "Paid indemnity losses for 2022 accidents, net of recoveries, come to **\u00a314,308,271.12** as at 31 December 2025.\n\nI took claims with accident dates in 2022 and summed their indemnity payments plus recoveries. Recoveries are stored as negative amounts, so they reduce the total. ALAE is excluded.\n\n- Indemnity payments: \u00a314,751,796.79\n- Indemnity recoveries: \u2212\u00a3443,525.67\n- Net paid loss: \u00a314,308,271.12\n\nANSWER: 14308271.12",
+ "stop_reason": "end_turn",
+ "tool_calls": [
+  {
+   "tool": "run_sql",
+   "input": {
+    "query": "SELECT t.txn_type, t.cost_type, COUNT(*) n, SUM(t.amount) total, MIN(t.amount) mn, MAX(t.amount) mx\nFROM claim_txn t JOIN claim c ON c.claim_id = t.claim_id\nWHERE c.accident_date >= DATE '2022-01-01' AND c.accident_date < DATE '2023-01-01' AND t.txn_date <= DATE '2025-12-31'\nGROUP BY 1,2 ORDER BY 1,2"
+   },
+   "output": "txn_type,cost_type,n,total,mn,mx\nPAYMENT,ALAE,1010,836833.26,10.72,129243.82\nPAYMENT,INDEMNITY,6030,14751796.79,0.21,724800.47\nRECOVERY,INDEMNITY,215,-443525.67,-11825.31,-64.82\nRESERVE,INDEMNITY,13665,766711.02,-724800.47,795227.90",
+   "error": false
+  }
+ ],
+ "usage": {
+  "input": 736,
+  "output": 682,
+  "cache_read": 10626,
+  "cache_write": 0
+ },
+ "effort": "medium",
+ "prompt_version": "v1"
+}
