@@ -1,0 +1,26 @@
+cff-version: 1.2.0
+message: "If you use this software or ISL-Bench, please cite it as below."
+title: "Insurance Semantic Layer: time basis and valuation date as first-class semantics, with ISL-Bench"
+type: software
+authors:
+  - family-names: Raza
+    given-names: Hassan
+    email: max@rfstudio.co
+repository-code: "https://github.com/maxraza/insurance-semantic-layer"
+url: "https://hraza.online/labs/insurance-semantic-layer"
+license: Apache-2.0
+date-released: "2026-10-14"
+keywords:
+  - insurance
+  - actuarial
+  - semantic layer
+  - text-to-SQL
+  - LLM evaluation
+preferred-citation:
+  type: article
+  title: "What Was the Loss Ratio? Time Basis and Valuation Date as First-Class Semantics in an Insurance Semantic Layer, with a Benchmark for LLM Analytics"
+  authors:
+    - family-names: Raza
+      given-names: Hassan
+  year: 2026
+  month: 10
